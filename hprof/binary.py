@@ -88,6 +88,9 @@ class BinaryStream(object):
 		n = struct.calcsize(fmt)
 		return self._consume_bytes(n, lambda b: struct.unpack(fmt, b)[0])
 
+	def read_byte(self):
+		return self._read_value('B')
+
 	def read_uint(self):
 		return self._read_value('I')
 

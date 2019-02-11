@@ -17,6 +17,40 @@ class TestCorners(TestCase):
 		self.assertIsNone(bf._data)
 		self.assertIsNone(bf._f)
 
+class TestByteReads(TestCase):
+	def setUp(self):
+		self.f = hprof.BinaryFile(find('basic_reads.hprof'))
+
+	def tearDown(self):
+		self.f.close()
+
+	def test_read_byte(self):
+		self.assertEqual(self.f.read_byte( 0), 0x41)
+		self.assertEqual(self.f.read_byte( 1), 0x42)
+		self.assertEqual(self.f.read_byte( 2), 0x43)
+		self.assertEqual(self.f.read_byte( 3), 0x44)
+		self.assertEqual(self.f.read_byte( 4), 0)
+		self.assertEqual(self.f.read_byte( 5), 0)
+		self.assertEqual(self.f.read_byte( 6), 0)
+		self.assertEqual(self.f.read_byte( 7), 0)
+		self.assertEqual(self.f.read_byte( 8), 0xc3)
+		self.assertEqual(self.f.read_byte( 9), 0xb6)
+		self.assertEqual(self.f.read_byte(10), 0x46)
+		self.assertEqual(self.f.read_byte(11), 0x00)
+		self.assertEqual(self.f.read_byte(12), 0xaa)
+		self.assertEqual(self.f.read_byte(13), 0x46)
+		self.assertEqual(self.f.read_byte(14), 0x47)
+		self.assertEqual(self.f.read_byte(15), 0x48)
+		self.assertEqual(self.f.read_byte(16), 0x49)
+
+	def test_read_byte_outside(self):
+		with self.assertRaises(hprof.EofError):
+			self.f.read_byte(17)
+
+	def test_read_byte_negative(self):
+		with self.assertRaises(hprof.EofError):
+			self.f.read_byte(-1)
+
 class TestUintReads(TestCase):
 	def setUp(self):
 		self.f = hprof.BinaryFile(find('basic_reads.hprof'))
