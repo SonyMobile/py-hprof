@@ -3,7 +3,7 @@
 
 from unittest import main, TestCase
 
-from env import hprof, find
+from .env import hprof, find
 
 class TestCorners(TestCase):
 	def test_modify_data(self):
@@ -395,8 +395,4 @@ class TestStream(TestCase):
 		self.assertEqual(s.read_ascii(), 'ABCD')
 		self.assertEqual(self.f.read_ascii(13, 3), 'FGH')
 		self.assertEqual(s.read_uint(), 0xc3)
-
-
-if __name__ == '__main__':
-    main()
 
