@@ -42,10 +42,13 @@ class BinaryFile(object):
 
 	def __getattr__(self, name):
 		''' return a wrapper for a single read through a Stream, if such a function exists. '''
-		def stream_wrapper(addr, *args, **kwargs):
-			s = self.stream(addr)
+		def stream_wrapper(*args, **kwargs):
+			s = self.stream(0)
 			f = getattr(s, name)
-			return f(*args, **kwargs)
+			if len(args) < 1 or type(args[0]) is not int:
+				raise TypeError('random reads must supply a start address')
+			s.skip(args[0])
+			return f(*args[1:], **kwargs)
 		return stream_wrapper
 
 class BinaryStream(object):

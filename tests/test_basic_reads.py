@@ -37,6 +37,30 @@ class TestCorners(TestCase):
 		with self.assertRaises(TypeError):
 			hprof.BinaryFile(7)
 
+	def test_missing_func_no_args(self):
+		with hprof.BinaryFile(inputfile) as bf:
+			with self.assertRaisesRegex(AttributeError, 'missing_func'):
+				bf.missing_func()
+
+	def test_missing_func_str_arg(self):
+		with hprof.BinaryFile(inputfile) as bf:
+			with self.assertRaisesRegex(AttributeError, 'missing_func'):
+				bf.missing_func('3')
+
+	def test_missing_func_int_arg(self):
+		with hprof.BinaryFile(inputfile) as bf:
+			with self.assertRaisesRegex(AttributeError, 'missing_func'):
+				bf.missing_func(3)
+
+	def test_read_without_addr(self):
+		with hprof.BinaryFile(inputfile) as bf:
+			with self.assertRaisesRegex(TypeError, 'addr'):
+				bf.read_bytes()
+
+	def test_read_without_nbytes(self):
+		with hprof.BinaryFile(inputfile) as bf:
+			with self.assertRaisesRegex(TypeError, 'missing.*nbytes'):
+				bf.read_bytes(0)
 
 class TestByteReads(TestCase):
 	def setUp(self):
