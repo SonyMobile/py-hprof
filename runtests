@@ -4,6 +4,6 @@ python3-coverage erase
 python3-coverage run -m unittest discover
 echo
 echo "Coverage report (see 'coverage' dir for annotated sources):"
-python3-coverage report
+python3-coverage report --omit='tests/*'
 mkdir -p coverage
-python3-coverage annotate -d coverage
+python3-coverage annotate -d coverage --omit='tests/*'
