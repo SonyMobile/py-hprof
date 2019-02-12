@@ -3,16 +3,21 @@
 
 from unittest import main, TestCase
 
-from .env import hprof, find
+import os.path
+
+import hprof
+
+inputfile = os.path.abspath(os.path.join(os.path.dirname(__file__), 'basic_reads.hprof'))
+
 
 class TestCorners(TestCase):
 	def test_modify_data(self):
-		with hprof.BinaryFile(find('basic_reads.hprof')) as bf:
+		with hprof.BinaryFile(inputfile) as bf:
 			with self.assertRaises(TypeError):
 				bf._data[0] = 0x20
 
 	def test_exit_cleanup(self):
-		with hprof.BinaryFile(find('basic_reads.hprof')) as bf:
+		with hprof.BinaryFile(inputfile) as bf:
 			pass
 		self.assertIsNone(bf._data)
 		self.assertIsNone(bf._f)
@@ -35,7 +40,7 @@ class TestCorners(TestCase):
 
 class TestByteReads(TestCase):
 	def setUp(self):
-		self.f = hprof.BinaryFile(find('basic_reads.hprof'))
+		self.f = hprof.BinaryFile(inputfile)
 
 	def tearDown(self):
 		self.f.close()
@@ -69,7 +74,7 @@ class TestByteReads(TestCase):
 
 class TestUintReads(TestCase):
 	def setUp(self):
-		self.f = hprof.BinaryFile(find('basic_reads.hprof'))
+		self.f = hprof.BinaryFile(inputfile)
 
 	def tearDown(self):
 		self.f.close()
@@ -104,7 +109,7 @@ class TestUintReads(TestCase):
 
 class TestIntReads(TestCase):
 	def setUp(self):
-		self.f = hprof.BinaryFile(find('basic_reads.hprof'))
+		self.f = hprof.BinaryFile(inputfile)
 
 	def tearDown(self):
 		self.f.close()
@@ -140,7 +145,7 @@ class TestIntReads(TestCase):
 
 class TestAsciiReads(TestCase):
 	def setUp(self):
-		self.f = hprof.BinaryFile(find('basic_reads.hprof'))
+		self.f = hprof.BinaryFile(inputfile)
 
 	def tearDown(self):
 		self.f.close()
@@ -214,7 +219,7 @@ class TestAsciiReads(TestCase):
 
 class TestUtf8Reads(TestCase):
 	def setUp(self):
-		self.f = hprof.BinaryFile(find('basic_reads.hprof'))
+		self.f = hprof.BinaryFile(inputfile)
 
 	def tearDown(self):
 		self.f.close()
@@ -275,7 +280,7 @@ class TestUtf8Reads(TestCase):
 
 class TestStream(TestCase):
 	def setUp(self):
-		self.f = hprof.BinaryFile(find('basic_reads.hprof'))
+		self.f = hprof.BinaryFile(inputfile)
 
 	def tearDown(self):
 		self.f.close()
