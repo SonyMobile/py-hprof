@@ -6,6 +6,10 @@ import struct
 
 from .errors import *
 
+def untuple(t):
+	assert len(t) == 1
+	return t[0]
+
 class BinaryFile(object):
 	def __init__(self, path):
 		self._f = open(path, 'rb')
@@ -72,11 +76,6 @@ class BinaryStream(object):
 		self._addr = next # conversion succeeded; consume the bytes.
 		return out
 
-	def read_bytes(self, nbytes=None):
-		''' Read and consume nbytes of data. If nbytes is none, read and
-		    consume a zero byte-terminated byte string. '''
-		return self._consume_bytes(nbytes, lambda b: b)
-
 	def read_ascii(self, nbytes=None):
 		''' Read an ascii string of nbytes. If nbytes is None, read until a zero byte is found. '''
 		return self._consume_bytes(nbytes, lambda b: b.decode('ascii'))
@@ -86,11 +85,9 @@ class BinaryStream(object):
 		return self._consume_bytes(nbytes, lambda b: b.decode('utf8'))
 
 	def _read_value(self, fmt):
-		if type(fmt) is not str or len(fmt) != 1:
-			raise TypeError('invalid format char', fmt)
 		fmt = '>' + fmt
 		n = struct.calcsize(fmt)
-		return self._consume_bytes(n, lambda b: struct.unpack(fmt, b)[0])
+		return self._consume_bytes(n, lambda b: untuple(struct.unpack(fmt, b)))
 
 	def read_byte(self):
 		return self._read_value('B')
