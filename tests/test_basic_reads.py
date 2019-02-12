@@ -487,3 +487,26 @@ class TestStream(TestCase):
 		self.assertEqual(self.f.read_ascii(13, 3), 'FGH')
 		self.assertEqual(s.read_uint(), 0xc3)
 
+	def test_new_stream_negative(self):
+		with self.assertRaisesRegex(hprof.EofError, '-1'):
+			s = self.f.stream(-1)
+
+	def test_new_stream_at_zero(self):
+		s = self.f.stream(0)
+		self.assertEqual(s.read_bytes(4), b'ABCD')
+
+	def test_new_stream_no_arg(self):
+		s = self.f.stream()
+		self.assertEqual(s.read_bytes(3), b'ABC')
+
+	def test_new_stream_at_offset(self):
+		s = self.f.stream(2)
+		self.assertEqual(s.read_bytes(4), b'CD\0\0')
+
+	def test_new_stream_at_end(self):
+		s = self.f.stream(17)
+		self.assertEqual(s.read_bytes(0), b'')
+
+	def test_new_stream_outside(self):
+		with self.assertRaisesRegex(hprof.EofError, '18.*17'):
+			self.f.stream(18)

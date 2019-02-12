@@ -53,8 +53,9 @@ class BinaryFile(object):
 
 class BinaryStream(object):
 	def __init__(self, data, startaddr):
+		self._addr = 0
 		self._data = data
-		self._addr = startaddr
+		self.jump_to(startaddr)
 
 	def skip(self, nbytes):
 		self.jump_to(self._addr + nbytes)
@@ -67,8 +68,6 @@ class BinaryStream(object):
 	def _consume_bytes(self, nbytes, conversion):
 		start = self._addr
 		length = len(self._data)
-		if start < 0 or start > length:
-			raise EofError(start, length)
 		if nbytes is not None:
 			if nbytes < 0:
 				raise ValueError('invalid nbytes', nbytes)
