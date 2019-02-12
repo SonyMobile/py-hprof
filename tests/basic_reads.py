@@ -180,6 +180,10 @@ class TestAsciiReads(TestCase):
 		with self.assertRaises(hprof.EofError):
 			self.f.read_ascii(-1, 1)
 
+	def test_read_ascii_fixed_negative_len(self):
+		with self.assertRaises(ValueError):
+			self.f.read_ascii(3, -2)
+
 	def test_read_terminated_ascii_spill(self):
 		with self.assertRaises(hprof.EofError):
 			self.f.read_ascii(15)
@@ -385,6 +389,12 @@ class TestStream(TestCase):
 		s.jump_to(14)
 		self.assertEqual(s.read_ascii(3), 'GHI')
 		self.assertEqual(t.read_uint(), 0x4600aa46)
+
+	def test_concurrent_stream_and_random_read(self):
+		s = self.f.stream()
+		self.assertEqual(s.read_ascii(), 'ABCD')
+		self.assertEqual(self.f.read_ascii(13, 3), 'FGH')
+		self.assertEqual(s.read_uint(), 0xc3)
 
 
 if __name__ == '__main__':
