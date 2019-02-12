@@ -13,7 +13,7 @@ inputfile = os.path.abspath(os.path.join(os.path.dirname(__file__), 'basic_reads
 class TestCorners(TestCase):
 	def test_modify_data(self):
 		with hprof.BinaryFile(inputfile) as bf:
-			with self.assertRaises(TypeError):
+			with self.assertRaisesRegex(TypeError, 'readonly'):
 				bf._data[0] = 0x20
 
 	def test_exit_cleanup(self):
@@ -29,7 +29,7 @@ class TestCorners(TestCase):
 		self.assertEqual(s.read_ascii(), 'ABCD')
 		s.skip(-1)
 		self.assertEqual(s.read_uint(), 0x00454647)
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '8.*8'):
 			s.read_byte()
 		self.assertEqual(f.read_utf8(3,4), 'D\0EF')
 
@@ -65,11 +65,11 @@ class TestByteReads(TestCase):
 		self.assertEqual(self.f.read_byte(16), 0x49)
 
 	def test_read_byte_outside(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			self.f.read_byte(17)
 
 	def test_read_byte_negative(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '-1'):
 			self.f.read_byte(-1)
 
 class TestUintReads(TestCase):
@@ -96,15 +96,15 @@ class TestUintReads(TestCase):
 		self.assertEqual(self.f.read_uint(13), 0x46474849)
 
 	def test_read_uint_spill(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			self.f.read_uint(15)
 
 	def test_read_uint_outside(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '2000.*17'):
 			self.f.read_uint(2000)
 
 	def test_read_uint_negative(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '-2'):
 			self.f.read_uint(-2)
 
 class TestIntReads(TestCase):
@@ -131,15 +131,15 @@ class TestIntReads(TestCase):
 		self.assertEqual(self.f.read_int(13), 0x46474849)
 
 	def test_read_int_spill(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			self.f.read_uint(15)
 
 	def test_read_int_outside(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '2000.*17'):
 			self.f.read_uint(2000)
 
 	def test_read_int_negative(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '-2'):
 			self.f.read_uint(-2)
 
 
@@ -190,31 +190,31 @@ class TestAsciiReads(TestCase):
 			self.f.read_ascii(8)
 
 	def test_read_ascii_fixed_spill(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			self.f.read_ascii(15,10)
 
 	def test_read_ascii_fixed_outside(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '20.*17'):
 			self.f.read_ascii(20, 2)
 
 	def test_read_ascii_fixed_negative(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '-1'):
 			self.f.read_ascii(-1, 1)
 
 	def test_read_ascii_fixed_negative_len(self):
-		with self.assertRaises(ValueError):
+		with self.assertRaisesRegex(ValueError, '-2'):
 			self.f.read_ascii(3, -2)
 
 	def test_read_terminated_ascii_spill(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			self.f.read_ascii(15)
 
 	def test_read_terminated_ascii_outside(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '20.*17'):
 			self.f.read_ascii(20)
 
 	def test_read_terminated_ascii_negative(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '-4'):
 			self.f.read_ascii(-4)
 
 class TestUtf8Reads(TestCase):
@@ -263,19 +263,19 @@ class TestUtf8Reads(TestCase):
 			self.f.read_utf8(8, 1)
 
 	def test_read_utf8_fixed_spill(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			self.f.read_utf8(15,10)
 
 	def test_read_utf8_fixed_outside(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '20.*17'):
 			self.f.read_utf8(20, 2)
 
 	def test_read_utf8_fixed_negative(self):
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '-1'):
 			self.f.read_utf8(-1, 1)
 
 	def test_read_utf8_fixed_negative_len(self):
-		with self.assertRaises(ValueError):
+		with self.assertRaisesRegex(ValueError, '-2'):
 			self.f.read_utf8(3, -2)
 
 class TestStream(TestCase):
@@ -291,7 +291,7 @@ class TestStream(TestCase):
 		self.assertEqual(s.read_uint(), 0)
 		self.assertEqual(s.read_uint(), 0xc3b64600)
 		self.assertEqual(s.read_uint(), 0xaa464748)
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			s.read_uint()
 
 	def test_int_stream(self):
@@ -300,7 +300,7 @@ class TestStream(TestCase):
 		self.assertEqual(s.read_int(), 0)
 		self.assertEqual(s.read_int(), -0x3c49ba00)
 		self.assertEqual(s.read_int(), -0x55b9b8b8)
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			s.read_int()
 
 	def test_mixed_stream(self):
@@ -309,7 +309,7 @@ class TestStream(TestCase):
 		self.assertEqual(s.read_uint(), 0xc3)
 		self.assertEqual(s.read_int(), -0x49b9ff56)
 		self.assertEqual(s.read_ascii(2), 'FG')
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			s.read_ascii(4)
 		self.assertEqual(s.read_ascii(2), 'HI')
 
@@ -336,18 +336,18 @@ class TestStream(TestCase):
 		s = self.f.stream()
 		s.read_ascii()
 		s.skip(-4)
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '-3'):
 			s.skip(-4)
 		self.assertEqual(s.read_ascii(), 'BCD')
 		s.skip(8)
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '20.*17'):
 			s.skip(7)
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '19.*17'):
 			s.skip(6)
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '18.*17'):
 			s.skip(5)
 		s.skip(4)
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '18.*17'):
 			s.skip(1)
 		s.skip(-2)
 		self.assertEqual(s.read_ascii(2), 'HI')
@@ -374,13 +374,13 @@ class TestStream(TestCase):
 	def test_jump_outside(self):
 		s = self.f.stream()
 		s.jump_to(3)
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '-2'):
 			s.jump_to(-2)
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '18.*17'):
 			s.jump_to(18)
 		self.assertEqual(s.read_ascii(), 'D')
 		s.jump_to(17)
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			s.read_ascii(1)
 
 	def test_pos_after_invalid_ascii(self):
@@ -393,7 +393,7 @@ class TestStream(TestCase):
 	def test_pos_after_spill(self):
 		s = self.f.stream()
 		s.jump_to(15)
-		with self.assertRaises(hprof.EofError):
+		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			s.read_uint()
 		self.assertEqual(s.read_ascii(2), 'HI')
 

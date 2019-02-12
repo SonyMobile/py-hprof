@@ -71,7 +71,7 @@ class BinaryStream(object):
 				raise ValueError('invalid nbytes', nbytes)
 			end = start + nbytes
 			if end > length:
-				raise EofError(end, length)
+				raise EofError(length, length)
 			next = end
 		else:
 			end = start
