@@ -81,6 +81,10 @@ class BinaryStream(object):
 		''' Read an ascii string of nbytes. If nbytes is None, read until a zero byte is found. '''
 		return self._consume_bytes(nbytes, lambda b: b.decode('ascii'))
 
+	def read_utf8(self, nbytes):
+		''' Read an utf8 string of nbytes. Note: byte count, not character count! '''
+		return self._consume_bytes(nbytes, lambda b: b.decode('utf8'))
+
 	def _read_value(self, fmt):
 		if type(fmt) is not str or len(fmt) != 1:
 			raise TypeError('invalid format char', fmt)

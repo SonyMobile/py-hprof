@@ -192,6 +192,67 @@ class TestAsciiReads(TestCase):
 		with self.assertRaises(hprof.EofError):
 			self.f.read_ascii(-4)
 
+class TestUtf8Reads(TestCase):
+	def setUp(self):
+		self.f = hprof.BinaryFile(find('basic_reads.hprof'))
+
+	def tearDown(self):
+		self.f.close()
+
+	def test_read_utf8_fixed1(self):
+		self.assertEqual(self.f.read_utf8(0, 1), 'A')
+		self.assertEqual(self.f.read_utf8(1, 1), 'B')
+		self.assertEqual(self.f.read_utf8(2, 1), 'C')
+		self.assertEqual(self.f.read_utf8(3, 1), 'D')
+		self.assertEqual(self.f.read_utf8(4, 1), '\0')
+
+	def test_read_utf8_fixed2(self):
+		self.assertEqual(self.f.read_utf8(0, 2), 'AB')
+		self.assertEqual(self.f.read_utf8(1, 2), 'BC')
+		self.assertEqual(self.f.read_utf8(2, 2), 'CD')
+		self.assertEqual(self.f.read_utf8(3, 2), 'D\0')
+
+	def test_read_utf8_fixed3(self):
+		self.assertEqual(self.f.read_utf8(0, 3), 'ABC')
+		self.assertEqual(self.f.read_utf8(1, 3), 'BCD')
+		self.assertEqual(self.f.read_utf8(2, 3), 'CD\0')
+
+	def test_read_utf8_fixed4(self):
+		self.assertEqual(self.f.read_utf8(0, 4), 'ABCD')
+		self.assertEqual(self.f.read_utf8(1, 4), 'BCD\0')
+		self.assertEqual(self.f.read_utf8(2, 4), 'CD\0\0')
+
+	def test_read_utf8_fixed5(self):
+		self.assertEqual(self.f.read_utf8(0, 5), 'ABCD\0')
+		self.assertEqual(self.f.read_utf8(1, 5), 'BCD\0\0')
+
+	def test_read_swedish_utf8(self):
+		self.assertEqual(self.f.read_utf8(8, 3), 'öF')
+
+	def test_read_incomplete_utf8(self):
+		with self.assertRaises(UnicodeError):
+			self.f.read_utf8(9, 2)
+
+	def test_read_truncated_utf8(self):
+		with self.assertRaises(UnicodeError):
+			self.f.read_utf8(8, 1)
+
+	def test_read_utf8_fixed_spill(self):
+		with self.assertRaises(hprof.EofError):
+			self.f.read_utf8(15,10)
+
+	def test_read_utf8_fixed_outside(self):
+		with self.assertRaises(hprof.EofError):
+			self.f.read_utf8(20, 2)
+
+	def test_read_utf8_fixed_negative(self):
+		with self.assertRaises(hprof.EofError):
+			self.f.read_utf8(-1, 1)
+
+	def test_read_utf8_fixed_negative_len(self):
+		with self.assertRaises(ValueError):
+			self.f.read_utf8(3, -2)
+
 class TestStream(TestCase):
 	def setUp(self):
 		self.f = hprof.BinaryFile(find('basic_reads.hprof'))
