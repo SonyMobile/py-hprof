@@ -72,6 +72,52 @@ class TestByteReads(TestCase):
 		with self.assertRaisesRegex(hprof.EofError, '-1'):
 			self.f.read_byte(-1)
 
+class TestByteArrayReads(TestCase):
+	def setUp(self):
+		self.f = hprof.BinaryFile(inputfile)
+
+	def tearDown(self):
+		self.f.close()
+
+	def test_read_bytes(self):
+		s = self.f.stream()
+		self.assertEqual(s.read_bytes(4), b'ABCD')
+		self.assertEqual(s.read_bytes(7), b'\0\0\0\0\xc3\xb6F')
+		self.assertEqual(self.f.read_bytes(6,4), b'\0\0\xc3\xb6')
+		self.assertEqual(s.read_bytes(3), b'\0\xaaF')
+
+	def test_read_zero_bytes(self):
+		self.assertEqual(self.f.read_bytes(2, 0), b'')
+		self.assertEqual(self.f.read_bytes(1, 0), b'')
+		self.assertEqual(self.f.read_bytes(0, 0), b'')
+		self.assertEqual(self.f.read_bytes(16, 0), b'')
+
+	def test_read_bytes_negative_count(self):
+		s = self.f.stream()
+		with self.assertRaisesRegex(ValueError, '-1'):
+			s.read_bytes(-1)
+		with self.assertRaisesRegex(ValueError, '-3'):
+			self.f.read_bytes(6, -3)
+
+	def test_read_bytes_outside(self):
+		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
+			self.f.read_bytes(17,1)
+
+	def test_read_bytes_negative(self):
+		with self.assertRaisesRegex(hprof.EofError, '-1'):
+			self.f.read_bytes(-1,1)
+
+	def test_read_bytes_spill(self):
+		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
+			self.f.read_bytes(16,2)
+
+	def test_read_bytes_edge(self):
+		self.assertEqual(self.f.read_bytes(15,2), b'HI')
+		self.assertEqual(self.f.read_bytes(16,1), b'I')
+		self.assertEqual(self.f.read_bytes(17,0), b'')
+		with self.assertRaisesRegex(hprof.EofError, '18.*17'):
+			self.f.read_bytes(18,0)
+
 class TestUintReads(TestCase):
 	def setUp(self):
 		self.f = hprof.BinaryFile(inputfile)

@@ -86,6 +86,10 @@ class BinaryStream(object):
 		self._addr = next # conversion succeeded; consume the bytes.
 		return out
 
+	def read_bytes(self, nbytes):
+		''' Read a byte string of nbytes. '''
+		return self._consume_bytes(nbytes, lambda b: b)
+
 	def read_ascii(self, nbytes=None):
 		''' Read an ascii string of nbytes. If nbytes is None, read until a zero byte is found. '''
 		return self._consume_bytes(nbytes, lambda b: b.decode('ascii'))
