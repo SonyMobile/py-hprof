@@ -357,50 +357,81 @@ class TestStream(TestCase):
 
 	def test_uint_stream(self):
 		s = self.f.stream()
+		self.assertEqual(s.addr, 0)
 		self.assertEqual(s.read_uint(), 0x41424344)
+		self.assertEqual(s.addr, 4)
 		self.assertEqual(s.read_uint(), 0)
+		self.assertEqual(s.addr, 8)
 		self.assertEqual(s.read_uint(), 0xc3b64600)
+		self.assertEqual(s.addr, 12)
 		self.assertEqual(s.read_uint(), 0xaa464748)
+		self.assertEqual(s.addr, 16)
 		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			s.read_uint()
+		self.assertEqual(s.addr, 16)
 
 	def test_int_stream(self):
 		s = self.f.stream()
+		self.assertEqual(s.addr, 0)
 		self.assertEqual(s.read_int(), 0x41424344)
+		self.assertEqual(s.addr, 4)
 		self.assertEqual(s.read_int(), 0)
+		self.assertEqual(s.addr, 8)
 		self.assertEqual(s.read_int(), -0x3c49ba00)
+		self.assertEqual(s.addr, 12)
 		self.assertEqual(s.read_int(), -0x55b9b8b8)
+		self.assertEqual(s.addr, 16)
 		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			s.read_int()
+		self.assertEqual(s.addr, 16)
 
 	def test_mixed_stream(self):
 		s = self.f.stream()
+		self.assertEqual(s.addr, 0)
 		self.assertEqual(s.read_ascii(), 'ABCD')
+		self.assertEqual(s.addr, 5)
 		self.assertEqual(s.read_uint(), 0xc3)
+		self.assertEqual(s.addr, 9)
 		self.assertEqual(s.read_int(), -0x49b9ff56)
+		self.assertEqual(s.addr, 13)
 		self.assertEqual(s.read_ascii(2), 'FG')
+		self.assertEqual(s.addr, 15)
 		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			s.read_ascii(4)
+		self.assertEqual(s.addr, 15)
 		self.assertEqual(s.read_ascii(2), 'HI')
+		self.assertEqual(s.addr, 17)
 
 	def test_skip(self):
 		s = self.f.stream()
+		self.assertEqual(s.addr, 0)
 		self.assertEqual(s.read_ascii(), 'ABCD')
+		self.assertEqual(s.addr, 5)
 		s.skip(3)
+		self.assertEqual(s.addr, 8)
 		self.assertEqual(s.read_uint(), 0xc3b64600)
+		self.assertEqual(s.addr, 12)
 
 	def test_skip_first(self):
 		s = self.f.stream()
+		self.assertEqual(s.addr, 0)
 		s.skip(1)
+		self.assertEqual(s.addr, 1)
 		self.assertEqual(s.read_ascii(), 'BCD')
+		self.assertEqual(s.addr, 5)
 
 	def test_skip_negative(self):
 		s = self.f.stream()
 		s.read_ascii()
+		self.assertEqual(s.addr, 5)
 		s.skip(-3)
+		self.assertEqual(s.addr, 2)
 		self.assertEqual(s.read_ascii(), 'CD')
+		self.assertEqual(s.addr, 5)
 		s.skip(-4)
+		self.assertEqual(s.addr, 1)
 		self.assertEqual(s.read_ascii(), 'BCD')
+		self.assertEqual(s.addr, 5)
 
 	def test_skip_outside(self):
 		s = self.f.stream()
@@ -410,82 +441,112 @@ class TestStream(TestCase):
 			s.skip(-4)
 		self.assertEqual(s.read_ascii(), 'BCD')
 		s.skip(8)
+		self.assertEqual(s.addr, 13)
 		with self.assertRaisesRegex(hprof.EofError, '20.*17'):
 			s.skip(7)
 		with self.assertRaisesRegex(hprof.EofError, '19.*17'):
 			s.skip(6)
 		with self.assertRaisesRegex(hprof.EofError, '18.*17'):
 			s.skip(5)
+		self.assertEqual(s.addr, 13)
 		s.skip(4)
+		self.assertEqual(s.addr, 17)
 		with self.assertRaisesRegex(hprof.EofError, '18.*17'):
 			s.skip(1)
+		self.assertEqual(s.addr, 17)
 		s.skip(-2)
+		self.assertEqual(s.addr, 15)
 		self.assertEqual(s.read_ascii(2), 'HI')
+		self.assertEqual(s.addr, 17)
 
 	def test_jump_forward(self):
 		s = self.f.stream()
 		s.read_ascii()
 		s.jump_to(10)
+		self.assertEqual(s.addr, 10)
 		self.assertEqual(s.read_ascii(1), 'F')
+		self.assertEqual(s.addr, 11)
 
 	def test_jump_forward_from_start(self):
 		s = self.f.stream()
 		s.jump_to(10)
+		self.assertEqual(s.addr, 10)
 		self.assertEqual(s.read_uint(), 0x4600aa46)
+		self.assertEqual(s.addr, 14)
 
 	def test_jump_backward(self):
 		s = self.f.stream()
 		s.read_ascii()
+		self.assertEqual(s.addr, 5)
 		s.jump_to(2)
+		self.assertEqual(s.addr, 2)
 		self.assertEqual(s.read_ascii(), 'CD')
+		self.assertEqual(s.addr, 5)
 		s.jump_to(0)
+		self.assertEqual(s.addr, 0)
 		self.assertEqual(s.read_ascii(), 'ABCD')
+		self.assertEqual(s.addr, 5)
 
 	def test_jump_outside(self):
 		s = self.f.stream()
 		s.jump_to(3)
+		self.assertEqual(s.addr, 3)
 		with self.assertRaisesRegex(hprof.EofError, '-2'):
 			s.jump_to(-2)
+		self.assertEqual(s.addr, 3)
 		with self.assertRaisesRegex(hprof.EofError, '18.*17'):
 			s.jump_to(18)
+		self.assertEqual(s.addr, 3)
 		self.assertEqual(s.read_ascii(), 'D')
+		self.assertEqual(s.addr, 5)
 		s.jump_to(17)
+		self.assertEqual(s.addr, 17)
 		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			s.read_ascii(1)
+		self.assertEqual(s.addr, 17)
 
 	def test_pos_after_invalid_ascii(self):
 		s = self.f.stream()
 		s.jump_to(8)
+		self.assertEqual(s.addr, 8)
 		with self.assertRaises(UnicodeError):
 			s.read_ascii()
-		self.assertEqual(s.read_uint(), 0xc3b64600) # the failed ascii read didn't consume anything.
+		self.assertEqual(s.addr, 8) # the failed ascii read didn't consume anything.
 
 	def test_pos_after_spill(self):
 		s = self.f.stream()
 		s.jump_to(15)
 		with self.assertRaisesRegex(hprof.EofError, '17.*17'):
 			s.read_uint()
-		self.assertEqual(s.read_ascii(2), 'HI')
+		self.assertEqual(s.addr, 15)
 
 	def test_concurrent_streams(self):
 		s = self.f.stream()
 		t = self.f.stream()
 		self.assertEqual(s.read_ascii(), 'ABCD')
+		self.assertEqual(s.addr, 5)
+		self.assertEqual(t.addr, 0)
 		self.assertEqual(t.read_ascii(), 'ABCD')
 		self.assertEqual(s.read_uint(), 0xc3)
 		self.assertEqual(t.read_ascii(), '')
 		self.assertEqual(s.read_uint(), 0xb64600aa)
 		self.assertEqual(s.read_uint(), 0x46474849)
 		self.assertEqual(t.read_uint(), 0xc3b6)
+		self.assertEqual(s.addr, 17)
+		self.assertEqual(t.addr, 10)
 		s.jump_to(14)
+		self.assertEqual(s.addr, 14)
 		self.assertEqual(s.read_ascii(3), 'GHI')
 		self.assertEqual(t.read_uint(), 0x4600aa46)
 
 	def test_concurrent_stream_and_random_read(self):
 		s = self.f.stream()
 		self.assertEqual(s.read_ascii(), 'ABCD')
+		self.assertEqual(s.addr, 5)
 		self.assertEqual(self.f.read_ascii(13, 3), 'FGH')
+		self.assertEqual(s.addr, 5)
 		self.assertEqual(s.read_uint(), 0xc3)
+		self.assertEqual(s.addr, 9)
 
 	def test_new_stream_negative(self):
 		with self.assertRaisesRegex(hprof.EofError, '-1'):
@@ -493,19 +554,27 @@ class TestStream(TestCase):
 
 	def test_new_stream_at_zero(self):
 		s = self.f.stream(0)
+		self.assertEqual(s.addr, 0)
 		self.assertEqual(s.read_bytes(4), b'ABCD')
+		self.assertEqual(s.addr, 4)
 
 	def test_new_stream_no_arg(self):
 		s = self.f.stream()
+		self.assertEqual(s.addr, 0)
 		self.assertEqual(s.read_bytes(3), b'ABC')
+		self.assertEqual(s.addr, 3)
 
 	def test_new_stream_at_offset(self):
 		s = self.f.stream(2)
+		self.assertEqual(s.addr, 2)
 		self.assertEqual(s.read_bytes(4), b'CD\0\0')
+		self.assertEqual(s.addr, 6)
 
 	def test_new_stream_at_end(self):
 		s = self.f.stream(17)
+		self.assertEqual(s.addr, 17)
 		self.assertEqual(s.read_bytes(0), b'')
+		self.assertEqual(s.addr, 17)
 
 	def test_new_stream_outside(self):
 		with self.assertRaisesRegex(hprof.EofError, '18.*17'):

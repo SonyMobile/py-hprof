@@ -57,6 +57,10 @@ class BinaryStream(object):
 		self._data = data
 		self.jump_to(startaddr)
 
+	@property
+	def addr(self):
+		return self._addr
+
 	def skip(self, nbytes):
 		self.jump_to(self._addr + nbytes)
 
