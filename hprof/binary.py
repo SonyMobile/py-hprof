@@ -11,9 +11,16 @@ def untuple(t):
 	return t[0]
 
 class BinaryFile(object):
-	def __init__(self, path):
-		self._f = open(path, 'rb')
-		self._data = mmap(self._f.fileno(), 0, MAP_PRIVATE, PROT_READ);
+	def __init__(self, data):
+		''' data may be a file path or just plain bytes. '''
+		if type(data) is bytes:
+			self._f = None
+			self._data = data
+		elif type(data) is str:
+			self._f = open(data, 'rb')
+			self._data = mmap(self._f.fileno(), 0, MAP_PRIVATE, PROT_READ);
+		else:
+			raise TypeError(type(data))
 
 	def __enter__(self):
 		return self
@@ -22,10 +29,13 @@ class BinaryFile(object):
 		self.close()
 
 	def close(self):
-		self._data.close()
-		self._data = None
-		self._f.close()
-		self._f = None
+		if self._data is not None:
+			if type(self._data) is mmap:
+				self._data.close()
+			self._data = None
+		if self._f is not None:
+			self._f.close()
+			self._f = None
 
 	def stream(self, start_addr=0):
 		return BinaryStream(self._data, start_addr)

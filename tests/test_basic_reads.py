@@ -17,6 +17,22 @@ class TestCorners(TestCase):
 		self.assertIsNone(bf._data)
 		self.assertIsNone(bf._f)
 
+	def test_read_from_bytes(self):
+		f = hprof.BinaryFile(b'ABCD\0EFG')
+		s = f.stream()
+		self.assertEqual(f.read_ascii(5,3), 'EFG')
+		self.assertEqual(s.read_ascii(), 'ABCD')
+		s.skip(-1)
+		self.assertEqual(s.read_uint(), 0x00454647)
+		with self.assertRaises(hprof.EofError):
+			s.read_byte()
+		self.assertEqual(f.read_utf8(3,4), 'D\0EF')
+
+	def test_invalid_ctor_arg(self):
+		with self.assertRaises(TypeError):
+			hprof.BinaryFile(7)
+
+
 class TestByteReads(TestCase):
 	def setUp(self):
 		self.f = hprof.BinaryFile(find('basic_reads.hprof'))
