@@ -13,3 +13,6 @@ class Utf8(Record):
 	@property
 	def id(self):
 		return self.hf.read_id(self.addr + 9)
+
+	def __str__(self):
+		return self.str

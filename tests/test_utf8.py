@@ -14,7 +14,7 @@ class TestUtf8(TestCase):
 			bytearray(b'\x00\x00\x01\x68\xE1\x43\xF2\x63'), # timestamp
 			bytearray(b'\1\0\0\0\0\0\0\0\20\0\1\2\3Hello world!'),         # a utf8 string, "Hello world!", id=0x00010203
 			bytearray(b'\1\0\1\0\0\0\0\0\11\3\2\1\1\x50\xe5\xad\xa6\x51'), # a utf8 string, "P学Q", id=0x03020101
-			bytearray(b'\1\2\0\0\0\0\0\0\10\3\4\5\6ABBA'),                 # a utf8 string, "ABBA", id=0x03040506
+			bytearray(b'\1\2\0\0\0\0\0\0\10\3\4\5\6A\r\nB'),               # a utf8 string, "A\r\nB", id=0x03040506
 		]
 		self.f = hprof.open(b''.join(self.data))
 		self.recs = self.f.records()
@@ -30,7 +30,7 @@ class TestUtf8(TestCase):
 		records = self.f.records()
 		self.assertEqual(next(records).str, 'Hello world!')
 		self.assertEqual(next(records).str, 'P学Q')
-		self.assertEqual(next(records).str, 'ABBA')
+		self.assertEqual(next(records).str, 'A\r\nB')
 
 	### generic record fields ###
 
@@ -73,3 +73,8 @@ class TestUtf8(TestCase):
 		self.assertEqual(len(next(self.recs)), 25)
 		self.assertEqual(len(next(self.recs)), 18)
 		self.assertEqual(len(next(self.recs)), 17)
+
+	def test_utf8_str(self):
+		self.assertEqual(str(next(self.recs)), 'Hello world!')
+		self.assertEqual(str(next(self.recs)), 'P学Q')
+		self.assertEqual(str(next(self.recs)), 'A\r\nB')
