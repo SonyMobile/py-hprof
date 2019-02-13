@@ -24,15 +24,11 @@ class Record(BaseRecord):
 		return timedelta(microseconds = self.hf.read_uint(self.addr + 1))
 
 	@property
-	def bodylen(self):
-		return self.hf.read_uint(self.addr + 5)
-
-	@property
-	def bodyaddr(self):
-		return self.addr + 9
+	def rawbody(self):
+		return self.hf.read_bytes(self.addr+9, len(self)-9)
 
 	def __len__(self):
-		return 9 + self.bodylen
+		return 9 + self.hf.read_uint(self.addr + 5)
 
 class Unhandled(Record):
 	pass

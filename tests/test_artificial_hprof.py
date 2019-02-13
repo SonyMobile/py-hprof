@@ -12,10 +12,10 @@ class TestArtificialHprof(TestCase):
 			bytearray(b'JAVA PROFILE 1.0.3\0'),
 			bytearray(b'\0\0\0\4'), # id size
 			bytearray(b'\x00\x00\x01\x68\xE1\x43\xF2\x63'), # timestamp
-			bytearray(b'\1\0\0\0\0\0\0\0\20\0\1\2\3Hello world!'),         # a utf8 string, "Hello world!", id=0x00010203
-			bytearray(b'\1\0\1\0\0\0\0\0\11\3\2\1\1\x50\xe5\xad\xa6\x51'), # a utf8 string, "P学Q", id=0x03020101
-			bytearray(b'\1\2\0\0\0\0\0\0\10\3\4\5\6ABBA'),                 # a utf8 string, "ABBA", id=0x03040506
-			bytearray(b'\xff\0\0\0\0\0\0\0\0'),                            # let's assume that tag 255 will always be unused
+			bytearray(b'\xff\0\0\0\0\0\0\0\20\0\1\2\3Hello world!'),
+			bytearray(b'\xff\0\1\0\0\0\0\0\11\3\2\1\1\x50\xe5\xad\xa6\x51'),
+			bytearray(b'\xff\2\0\0\0\0\0\0\10\3\4\5\6ABBA'),
+			bytearray(b'\xff\0\0\0\0\0\0\0\0'),
 		]
 		self.f = None
 
@@ -95,13 +95,6 @@ class TestArtificialHprof(TestCase):
 		self.assertEqual(len(next(records)), 18)
 		self.assertEqual(len(next(records)), 17)
 
-	def test_record_bodylen(self):
-		self.open()
-		records = self.f.records()
-		self.assertEqual(next(records).bodylen, 16)
-		self.assertEqual(next(records).bodylen, 9)
-		self.assertEqual(next(records).bodylen, 8)
-
 	def test_record_tags(self):
 		self.open()
 		for i, r in enumerate(self.f.records()):
@@ -115,12 +108,13 @@ class TestArtificialHprof(TestCase):
 		self.assertEqual(next(records).timestamp, datetime.fromtimestamp((base+0x10000)/1000000))
 		self.assertEqual(next(records).timestamp, datetime.fromtimestamp((base+0x2000000)/1000000))
 
-	def test_record_bodyaddr(self):
+	def test_record_rawbody(self):
 		self.open()
-		records = self.f.records()
-		self.assertEqual(next(records).bodyaddr, 40)
-		self.assertEqual(next(records).bodyaddr, 65)
-		self.assertEqual(next(records).bodyaddr, 83)
+		recs = self.f.records()
+		self.assertEqual(next(recs).rawbody, self.data[3][9:])
+		self.assertEqual(next(recs).rawbody, self.data[4][9:])
+		self.assertEqual(next(recs).rawbody, self.data[5][9:])
+		self.assertEqual(next(recs).rawbody, self.data[6][9:])
 
 	def test_unhandled_record(self):
 		self.open()
@@ -133,8 +127,6 @@ class TestArtificialHprof(TestCase):
 		self.assertEqual(r.tag, 255)
 		self.assertEqual(r.timestamp, datetime.fromtimestamp(0x168e143f263 / 1000))
 		self.assertEqual(r.relative_timestamp, timedelta(microseconds = 0))
-		self.assertEqual(r.bodylen, 0)
-		self.assertEqual(r.bodyaddr, 100)
 		with self.assertRaisesRegex(AttributeError, 'has no id'):
 			r.id
 		self.assertEqual(len(r), 9)

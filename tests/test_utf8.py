@@ -8,7 +8,7 @@ import hprof
 
 class TestUtf8(TestCase):
 	def setUp(self):
-		data = [
+		self.data = [
 			bytearray(b'JAVA PROFILE 1.0.3\0'),
 			bytearray(b'\0\0\0\4'), # id size
 			bytearray(b'\x00\x00\x01\x68\xE1\x43\xF2\x63'), # timestamp
@@ -16,7 +16,7 @@ class TestUtf8(TestCase):
 			bytearray(b'\1\0\1\0\0\0\0\0\11\3\2\1\1\x50\xe5\xad\xa6\x51'), # a utf8 string, "P学Q", id=0x03020101
 			bytearray(b'\1\2\0\0\0\0\0\0\10\3\4\5\6ABBA'),                 # a utf8 string, "ABBA", id=0x03040506
 		]
-		self.f = hprof.open(b''.join(data))
+		self.f = hprof.open(b''.join(self.data))
 		self.recs = self.f.records()
 
 	def tearDown(self):
@@ -64,15 +64,10 @@ class TestUtf8(TestCase):
 		self.assertEqual(next(self.recs).relative_timestamp, timedelta(microseconds=0x10000))
 		self.assertEqual(next(self.recs).relative_timestamp, timedelta(microseconds=0x2000000))
 
-	def test_utf8_bodylen(self):
-		self.assertEqual(next(self.recs).bodylen, 16)
-		self.assertEqual(next(self.recs).bodylen, 9)
-		self.assertEqual(next(self.recs).bodylen, 8)
-
-	def test_utf8_bodyaddr(self):
-		self.assertEqual(next(self.recs).bodyaddr, 40)
-		self.assertEqual(next(self.recs).bodyaddr, 65)
-		self.assertEqual(next(self.recs).bodyaddr, 83)
+	def test_utf8_rawbody(self):
+		self.assertEqual(next(self.recs).rawbody, self.data[3][9:])
+		self.assertEqual(next(self.recs).rawbody, self.data[4][9:])
+		self.assertEqual(next(self.recs).rawbody, self.data[5][9:])
 
 	def test_utf8_len(self):
 		self.assertEqual(len(next(self.recs)), 25)
