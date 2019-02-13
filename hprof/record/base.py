@@ -12,6 +12,10 @@ class Record(BaseRecord):
 		return self.hf.read_byte(self.addr)
 
 	@property
+	def id(self):
+		raise AttributeError('record type %s has no id' % type(self).__name__)
+
+	@property
 	def timestamp(self):
 		return self.hf.starttime + self.relative_timestamp
 

@@ -51,6 +51,16 @@ class HprofFile(BinaryFile):
 	def stream(self, start_addr=0):
 		return HprofStream(self, start_addr)
 
+def bytes_to_int(bytes):
+	i = 0
+	for b in bytes:
+		i = (i << 8) + b
+	return i
+
 class HprofStream(BinaryStream):
 	def __init__(self, hf, start_addr):
 		BinaryStream.__init__(self, hf._data, start_addr)
+		self._hf = hf
+
+	def read_id(self):
+		return self._consume_bytes(self._hf.idsize, bytes_to_int)

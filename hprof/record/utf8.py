@@ -9,3 +9,7 @@ class Utf8(Record):
 		# TODO: these manual offsets will become annoying when handling more complex records.
 		# TODO: maybe use slices to make sure records don't read outside their bounds?
 		return self.hf.read_utf8(self.bodyaddr + self.hf.idsize, self.bodylen - self.hf.idsize)
+
+	@property
+	def id(self):
+		return self.hf.read_id(self.bodyaddr)

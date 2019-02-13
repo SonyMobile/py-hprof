@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest import TestCase
 
 import hprof
@@ -78,15 +78,15 @@ class TestArtificialHprof(TestCase):
 		recs = list(self.f.records())
 		self.assertEqual(len(recs), 3)
 
-	def test_read_utf8_records(self):
+	def test_iteration(self):
 		self.data = self.data[:6]
 		self.open()
-		records = self.f.records()
-		self.assertEqual(next(records).str, 'Hello world!')
-		self.assertEqual(next(records).str, 'P学Q')
-		self.assertEqual(next(records).str, 'ABBA')
+		recs = self.f.records()
+		next(recs)
+		next(recs)
+		next(recs)
 		with self.assertRaises(StopIteration):
-			next(records)
+			next(recs)
 
 	def test_record_length(self):
 		self.open()
@@ -130,3 +130,11 @@ class TestArtificialHprof(TestCase):
 		next(records)
 		r = next(records)
 		self.assertIs(type(r), hprof.record.Unhandled)
+		self.assertEqual(r.tag, 255)
+		self.assertEqual(r.timestamp, datetime.fromtimestamp(0x168e143f263 / 1000))
+		self.assertEqual(r.relative_timestamp, timedelta(microseconds = 0))
+		self.assertEqual(r.bodylen, 0)
+		self.assertEqual(r.bodyaddr, 100)
+		with self.assertRaisesRegex(AttributeError, 'has no id'):
+			r.id
+		self.assertEqual(len(r), 9)
