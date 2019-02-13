@@ -82,9 +82,9 @@ class TestArtificialHprof(TestCase):
 		self.data = self.data[:6]
 		self.open()
 		records = self.f.records()
-		self.assertEqual(next(records).read(), 'Hello world!')
-		self.assertEqual(next(records).read(), 'P学Q')
-		self.assertEqual(next(records).read(), 'ABBA')
+		self.assertEqual(next(records).str, 'Hello world!')
+		self.assertEqual(next(records).str, 'P学Q')
+		self.assertEqual(next(records).str, 'ABBA')
 		with self.assertRaises(StopIteration):
 			next(records)
 
