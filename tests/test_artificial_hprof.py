@@ -11,9 +11,9 @@ class TestArtificialHprof(TestCase):
 			bytearray(b'JAVA PROFILE 1.0.3\0'),
 			bytearray(b'\0\0\0\4'), # id size
 			bytearray(b'\x00\x00\x01\x68\xE1\x43\xF2\x63'), # timestamp
-			bytearray(b'\1\0\0\0\0\0\0\0\14Hello world!'),        # a utf8 string, "Hello world!"
-			bytearray(b'\1\0\1\0\0\0\0\0\5\x50\xe5\xad\xa6\x51'), # a utf8 string, "P学Q"
-			bytearray(b'\1\2\0\0\0\0\0\0\4ABBA'),                 # a utf8 string, "ABBA"
+			bytearray(b'\1\0\0\0\0\0\0\0\20\0\1\2\3Hello world!'),         # a utf8 string, "Hello world!", id=0x00010203
+			bytearray(b'\1\0\1\0\0\0\0\0\11\3\2\1\1\x50\xe5\xad\xa6\x51'), # a utf8 string, "P学Q", id=0x03020101
+			bytearray(b'\1\2\0\0\0\0\0\0\10\3\4\5\6ABBA'),                 # a utf8 string, "ABBA", id=0x03040506
 		]
 		self.f = None
 
@@ -89,16 +89,16 @@ class TestArtificialHprof(TestCase):
 	def test_record_length(self):
 		self.open()
 		records = self.f.records()
-		self.assertEqual(len(next(records)), 21)
-		self.assertEqual(len(next(records)), 14)
-		self.assertEqual(len(next(records)), 13)
+		self.assertEqual(len(next(records)), 25)
+		self.assertEqual(len(next(records)), 18)
+		self.assertEqual(len(next(records)), 17)
 
 	def test_record_bodylen(self):
 		self.open()
 		records = self.f.records()
-		self.assertEqual(next(records).bodylen, 12)
-		self.assertEqual(next(records).bodylen, 5)
-		self.assertEqual(next(records).bodylen, 4)
+		self.assertEqual(next(records).bodylen, 16)
+		self.assertEqual(next(records).bodylen, 9)
+		self.assertEqual(next(records).bodylen, 8)
 
 	def test_record_tags(self):
 		self.open()
@@ -117,5 +117,5 @@ class TestArtificialHprof(TestCase):
 		self.open()
 		records = self.f.records()
 		self.assertEqual(next(records).bodyaddr, 40)
-		self.assertEqual(next(records).bodyaddr, 61)
-		self.assertEqual(next(records).bodyaddr, 75)
+		self.assertEqual(next(records).bodyaddr, 65)
+		self.assertEqual(next(records).bodyaddr, 83)
