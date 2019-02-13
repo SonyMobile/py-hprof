@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 #coding=utf8
 
+from datetime import datetime
 from mmap import mmap, MAP_PRIVATE, PROT_READ
 import struct
 
@@ -28,7 +29,8 @@ class HprofFile(BinaryFile):
 			raise FileFormatError('bad version: expected 1.0.3, but found %s' % version)
 
 		self.idsize = s.read_uint()
-		self.starttime_ms = (s.read_uint() << 32) + s.read_uint()
+		timestamp_ms = (s.read_uint() << 32) + s.read_uint()
+		self.starttime = datetime.fromtimestamp(timestamp_ms / 1000)
 		self._first_record_addr = s.addr
 
 	def records(self):

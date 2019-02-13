@@ -2,6 +2,7 @@
 #coding=utf8
 
 from collections import namedtuple
+from datetime import timedelta
 
 BaseRecord = namedtuple('BaseRecord', 'hf addr')
 
@@ -11,8 +12,12 @@ class Record(BaseRecord):
 		return self.hf.read_byte(self.addr)
 
 	@property
-	def timestamp_us(self):
-		return self.hf.starttime_ms * 1000 + self.hf.read_uint(self.addr + 1)
+	def timestamp(self):
+		return self.hf.starttime + self.relative_timestamp
+
+	@property
+	def relative_timestamp(self):
+		return timedelta(microseconds = self.hf.read_uint(self.addr + 1))
 
 	@property
 	def bodylen(self):

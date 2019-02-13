@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 #coding=utf8
 
+from datetime import datetime
 from unittest import TestCase
 
 import hprof
@@ -33,7 +34,7 @@ class TestArtificialHprof(TestCase):
 	def test_correct_header(self):
 		self.open()
 		self.assertEqual(self.f.idsize, 4)
-		self.assertEqual(self.f.starttime_ms, 0x168E143F263)
+		self.assertEqual(self.f.starttime, datetime.fromtimestamp(0x168E143F263/1000))
 
 	def test_correct_modified_header(self):
 		self.data[1][3] = 8
@@ -41,7 +42,7 @@ class TestArtificialHprof(TestCase):
 		self.data[2][7] = 0x64
 		self.open()
 		self.assertEqual(self.f.idsize, 8)
-		self.assertEqual(self.f.starttime_ms, 0x68E143F264)
+		self.assertEqual(self.f.starttime, datetime.fromtimestamp(0x68E143F264/1000))
 
 	def test_incorrect_header(self):
 		self.data[0][7] = ord('Y')
@@ -110,9 +111,9 @@ class TestArtificialHprof(TestCase):
 		self.open()
 		base = 0x168e143f263 * 1000
 		records = self.f.records()
-		self.assertEqual(next(records).timestamp_us, base + 0)
-		self.assertEqual(next(records).timestamp_us, base + 0x10000)
-		self.assertEqual(next(records).timestamp_us, base + 0x2000000)
+		self.assertEqual(next(records).timestamp, datetime.fromtimestamp((base+0)/1000000))
+		self.assertEqual(next(records).timestamp, datetime.fromtimestamp((base+0x10000)/1000000))
+		self.assertEqual(next(records).timestamp, datetime.fromtimestamp((base+0x2000000)/1000000))
 
 	def test_record_bodyaddr(self):
 		self.open()
