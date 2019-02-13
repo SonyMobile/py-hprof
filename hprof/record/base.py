@@ -24,3 +24,6 @@ class Record(BaseRecord):
 
 	def __len__(self):
 		return 9 + self.bodylen
+
+class Unhandled(Record):
+	pass

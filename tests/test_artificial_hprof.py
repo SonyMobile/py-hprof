@@ -14,6 +14,7 @@ class TestArtificialHprof(TestCase):
 			bytearray(b'\1\0\0\0\0\0\0\0\20\0\1\2\3Hello world!'),         # a utf8 string, "Hello world!", id=0x00010203
 			bytearray(b'\1\0\1\0\0\0\0\0\11\3\2\1\1\x50\xe5\xad\xa6\x51'), # a utf8 string, "P学Q", id=0x03020101
 			bytearray(b'\1\2\0\0\0\0\0\0\10\3\4\5\6ABBA'),                 # a utf8 string, "ABBA", id=0x03040506
+			bytearray(b'\xff\0\0\0\0\0\0\0\0'),                            # let's assume that tag 255 will always be unused
 		]
 		self.f = None
 
@@ -119,3 +120,12 @@ class TestArtificialHprof(TestCase):
 		self.assertEqual(next(records).bodyaddr, 40)
 		self.assertEqual(next(records).bodyaddr, 65)
 		self.assertEqual(next(records).bodyaddr, 83)
+
+	def test_unhandled_record(self):
+		self.open()
+		records = self.f.records()
+		next(records)
+		next(records)
+		next(records)
+		r = next(records)
+		self.assertIs(type(r), hprof.record.Unhandled)

@@ -39,7 +39,10 @@ class HprofFile(BinaryFile):
 				tag = s.read_byte()
 			except EofError:
 				break # alright, everything lined up nicely!
-			r = record.Utf8(self, start) # TODO: check the tag to determine which type to create
+			if tag == 1:
+				r = record.Utf8(self, start)
+			else:
+				r = record.Unhandled(self, start)
 			s.skip(len(r) - 1) # skip the rest of the record; -1 because we already read the tag.
 			yield r
 
