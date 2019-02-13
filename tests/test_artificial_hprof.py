@@ -6,17 +6,25 @@ from unittest import TestCase
 
 import hprof
 
+from .util import HprofBuilder, varying_idsize
+
+@varying_idsize(globals())
 class TestArtificialHprof(TestCase):
 	def setUp(self):
-		self.data = [
-			bytearray(b'JAVA PROFILE 1.0.3\0'),
-			bytearray(b'\0\0\0\4'), # id size
-			bytearray(b'\x00\x00\x01\x68\xE1\x43\xF2\x63'), # timestamp
-			bytearray(b'\xff\0\0\0\0\0\0\0\20\0\1\2\3Hello world!'),
-			bytearray(b'\xff\0\1\0\0\0\0\0\x3d\3\2\1\1\x50\xe5\xad\xa6\x51ZYXWVUTSRQPONMLKJIHGFEDCBAabcdefghijklmnopqrstuvwxyz'),
-			bytearray(b'\xff\2\0\0\0\0\0\0\10\3\4\5\6ABBA'),
-			bytearray(b'\xff\0\0\0\0\0\0\0\0'),
-		]
+		builder = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 0x168e143f263)
+		with builder.record(255, 0) as r:
+			r.uint(0x10203)
+			r.bytes('Hello world!')
+		with builder.record(255, 0x10000) as r:
+			r.uint(0x03020101)
+			r.bytes(b'\x50\xe5\xad\xa6\x51')
+			r.bytes(b'ZYXWVUTSRQPONMLKJIHGFEDCBAabcdefghijklmnopqrstuvwxyz')
+		with builder.record(255, 0x2000000) as r:
+			r.uint(0x03040506)
+			r.bytes('ABBA')
+		with builder.record(255, 0) as r:
+			pass
+		self.addrs, self.data = builder.build()
 		self.f = None
 
 	def tearDown(self):
@@ -24,7 +32,7 @@ class TestArtificialHprof(TestCase):
 
 	def open(self):
 		self.close()
-		self.f = hprof.open(b''.join(self.data))
+		self.f = hprof.open(bytes(self.data))
 
 	def close(self):
 		if self.f is not None:
@@ -33,53 +41,53 @@ class TestArtificialHprof(TestCase):
 
 	def test_correct_header(self):
 		self.open()
-		self.assertEqual(self.f.idsize, 4)
+		self.assertEqual(self.f.idsize, self.idsize)
 		self.assertEqual(self.f.starttime, datetime.fromtimestamp(0x168E143F263/1000))
 
 	def test_correct_modified_header(self):
-		self.data[1][3] = 8
-		self.data[2][2] = 0
-		self.data[2][7] = 0x64
+		self.data[22] = 8
+		self.data[25] = 0
+		self.data[30] = 0x64
 		self.open()
 		self.assertEqual(self.f.idsize, 8)
 		self.assertEqual(self.f.starttime, datetime.fromtimestamp(0x68E143F264/1000))
 
 	def test_incorrect_header(self):
-		self.data[0][7] = ord('Y')
+		self.data[7] = ord('Y')
 		with self.assertRaisesRegex(hprof.FileFormatError, 'bad header'):
 			self.open()
 
 	def test_incorrect_version(self):
-		self.data[0][13] = ord('9')
+		self.data[13] = ord('9')
 		with self.assertRaisesRegex(hprof.FileFormatError, 'bad version'):
 			self.open()
 
 	def test_list_0_records(self):
-		self.data = self.data[:3]
+		self.data = self.data[:self.addrs[0]]
 		self.open()
 		recs = list(self.f.records())
 		self.assertEqual(len(recs), 0)
 
 	def test_list_1_record(self):
-		self.data = self.data[:4]
+		self.data = self.data[:self.addrs[1]]
 		self.open()
 		recs = list(self.f.records())
 		self.assertEqual(len(recs), 1)
 
 	def test_list_2_records(self):
-		self.data = self.data[:5]
+		self.data = self.data[:self.addrs[2]]
 		self.open()
 		recs = list(self.f.records())
 		self.assertEqual(len(recs), 2)
 
 	def test_list_3_records(self):
-		self.data = self.data[:6]
+		self.data = self.data[:self.addrs[3]]
 		self.open()
 		recs = list(self.f.records())
 		self.assertEqual(len(recs), 3)
 
 	def test_iteration(self):
-		self.data = self.data[:6]
+		self.data = self.data[:self.addrs[3]]
 		self.open()
 		recs = self.f.records()
 		next(recs)
@@ -99,7 +107,7 @@ class TestArtificialHprof(TestCase):
 	def test_record_tags(self):
 		self.open()
 		for i, r in enumerate(self.f.records()):
-			self.assertEqual(r.tag, self.data[3+i][0])
+			self.assertEqual(r.tag, self.data[self.addrs[i]])
 
 	def test_record_time(self):
 		self.open()
@@ -113,10 +121,10 @@ class TestArtificialHprof(TestCase):
 	def test_record_rawbody(self):
 		self.open()
 		recs = self.f.records()
-		self.assertEqual(next(recs).rawbody, self.data[3][9:])
-		self.assertEqual(next(recs).rawbody, self.data[4][9:])
-		self.assertEqual(next(recs).rawbody, self.data[5][9:])
-		self.assertEqual(next(recs).rawbody, self.data[6][9:])
+		self.assertEqual(next(recs).rawbody, self.data[self.addrs[0]+9:self.addrs[1]])
+		self.assertEqual(next(recs).rawbody, self.data[self.addrs[1]+9:self.addrs[2]])
+		self.assertEqual(next(recs).rawbody, self.data[self.addrs[2]+9:self.addrs[3]])
+		self.assertEqual(next(recs).rawbody, self.data[self.addrs[3]+9:])
 
 	def test_record_str(self):
 		self.open()
@@ -124,10 +132,13 @@ class TestArtificialHprof(TestCase):
 			s = str(r)
 			self.assertTrue(s.startswith('Unhandled('))
 			self.assertTrue(s.endswith(')'))
-			self.assertIn(''.join('%02x' % b for b in self.data[3+i][ 9:13]), s)
-			self.assertIn(''.join('%02x' % b for b in self.data[3+i][13:17]), s)
-			self.assertIn(''.join('%02x' % b for b in self.data[3+i][17:21]), s)
-			self.assertIn(''.join('%02x' % b for b in self.data[3+i][21:25]), s)
+			start = self.addrs[i]
+			end = self.addrs[i+1] if i+1 < len(self.addrs) else len(self.data)
+			block = self.data[start:end]
+			self.assertIn(''.join('%02x' % b for b in block[ 9:13]), s)
+			self.assertIn(''.join('%02x' % b for b in block[13:17]), s)
+			self.assertIn(''.join('%02x' % b for b in block[17:21]), s)
+			self.assertIn(''.join('%02x' % b for b in block[21:25]), s)
 
 	def test_unhandled_record(self):
 		self.open()
