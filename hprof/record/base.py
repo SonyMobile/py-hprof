@@ -4,6 +4,15 @@
 from collections import namedtuple
 from datetime import timedelta
 
+from ..offset import *
+
+offsets = AutoOffsets(0,
+	'TAG',     1,
+	'TIME',    4,
+	'BODYLEN', 4,
+	'BODY'
+)
+
 BaseRecord = namedtuple('BaseRecord', 'hf addr')
 
 def _word_groups(b):
@@ -34,6 +43,12 @@ class Record(BaseRecord):
 	@property
 	def rawbody(self):
 		return self.hf.read_bytes(self.addr+9, len(self)-9)
+
+	def _read_utf8(self, offset, nbytes):
+		return self.hf.read_utf8(self.addr + offset, nbytes)
+
+	def _read_id(self, offset):
+		return self.hf.read_id(self.addr + offset)
 
 	def __len__(self):
 		return 9 + self.hf.read_uint(self.addr + 5)

@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from .base import Record
+from . import base
+from ..offset import *
 
-class Utf8(Record):
+offsets = AutoOffsets(base.offsets.BODY,
+	'ID', idoffset(1),
+	'STR'
+)
+
+class Utf8(base.Record):
 	@property
 	def str(self):
-		# TODO: these manual offsets will become annoying when handling more complex records.
-		# TODO: maybe use slices to make sure records don't read outside their bounds?
-		return self.hf.read_utf8(self.addr + 9 + self.hf.idsize, len(self) - 9 - self.hf.idsize)
+		return self._read_utf8(offsets.STR, len(self) - offsets.STR)
 
 	@property
 	def id(self):
-		return self.hf.read_id(self.addr + 9)
+		return self._read_id(offsets.ID)
 
 	def __str__(self):
 		return self.str

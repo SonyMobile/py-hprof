@@ -8,6 +8,7 @@ import builtins
 import struct
 
 from .errors import *
+from .offset import offset
 from . import record
 
 def open(path):
@@ -80,7 +81,7 @@ class HprofFile(object):
 		def stream_wrapper(*args, **kwargs):
 			s = self.stream(0)
 			f = getattr(s, name)
-			if len(args) < 1 or type(args[0]) is not int:
+			if len(args) < 1:
 				raise TypeError('random reads must supply a start address')
 			s.skip(args[0])
 			return f(*args[1:], **kwargs)
@@ -106,11 +107,15 @@ class HprofStream(object):
 		self.jump_to(self._addr + nbytes)
 
 	def jump_to(self, addr):
+		if isinstance(addr, offset):
+			addr = addr.flatten(self._hf.idsize)
 		if addr < 0 or addr > len(self._hf._data):
 			raise EofError(addr, len(self._hf._data))
 		self._addr = addr
 
 	def _consume_bytes(self, nbytes, conversion):
+		if isinstance(nbytes, offset):
+			nbytes = nbytes.flatten(self._hf.idsize)
 		start = self._addr
 		length = len(self._hf._data)
 		if nbytes is not None:
