@@ -1,32 +1,67 @@
 #!/usr/bin/env python3
 #coding=utf8
 
+from datetime import datetime
 from mmap import mmap, MAP_PRIVATE, PROT_READ
+
+import builtins
 import struct
 
 from .errors import *
+from . import record
+
+def open(path):
+	return HprofFile(path)
 
 def untuple(t):
 	assert len(t) == 1
 	return t[0]
 
-class BinaryFile(object):
+class HprofFile(object):
 	def __init__(self, data):
 		''' data may be a file path or just plain bytes. '''
 		if type(data) is bytes:
 			self._f = None
 			self._data = data
 		elif type(data) is str:
-			self._f = open(data, 'rb')
+			self._f = builtins.open(data, 'rb')
 			self._data = mmap(self._f.fileno(), 0, MAP_PRIVATE, PROT_READ);
 		else:
 			raise TypeError(type(data))
+
+		s = self.stream()
+		ident = s.read_bytes(13)
+		if ident != b'JAVA PROFILE ':
+			raise FileFormatError('bad header: expected JAVA PROFILE, but found %s' % repr(ident))
+		version = s.read_ascii()
+		if version != '1.0.3':
+			raise FileFormatError('bad version: expected 1.0.3, but found %s' % version)
+
+		self.idsize = s.read_uint()
+		timestamp_ms = (s.read_uint() << 32) + s.read_uint()
+		self.starttime = datetime.fromtimestamp(timestamp_ms / 1000)
+		self._first_record_addr = s.addr
 
 	def __enter__(self):
 		return self
 
 	def __exit__(self, exc_type, exc_value, traceback):
 		self.close()
+
+	def records(self):
+		s = self.stream(self._first_record_addr)
+		while True:
+			start = s.addr
+			try:
+				tag = s.read_byte()
+			except EofError:
+				break # alright, everything lined up nicely!
+			if tag == 1:
+				r = record.Utf8(self, start)
+			else:
+				r = record.Unhandled(self, start)
+			s.skip(len(r) - 1) # skip the rest of the record; -1 because we already read the tag.
+			yield r
 
 	def close(self):
 		if self._data is not None:
@@ -38,7 +73,7 @@ class BinaryFile(object):
 			self._f = None
 
 	def stream(self, start_addr=0):
-		return BinaryStream(self._data, start_addr)
+		return HprofStream(self, start_addr)
 
 	def __getattr__(self, name):
 		''' return a wrapper for a single read through a Stream, if such a function exists. '''
@@ -51,10 +86,16 @@ class BinaryFile(object):
 			return f(*args[1:], **kwargs)
 		return stream_wrapper
 
-class BinaryStream(object):
-	def __init__(self, data, startaddr):
+def _bytes_to_int(bytes):
+	i = 0
+	for b in bytes:
+		i = (i << 8) + b
+	return i
+
+class HprofStream(object):
+	def __init__(self, hf, startaddr):
 		self._addr = 0
-		self._data = data
+		self._hf = hf
 		self.jump_to(startaddr)
 
 	@property
@@ -65,13 +106,13 @@ class BinaryStream(object):
 		self.jump_to(self._addr + nbytes)
 
 	def jump_to(self, addr):
-		if addr < 0 or addr > len(self._data):
-			raise EofError(addr, len(self._data))
+		if addr < 0 or addr > len(self._hf._data):
+			raise EofError(addr, len(self._hf._data))
 		self._addr = addr
 
 	def _consume_bytes(self, nbytes, conversion):
 		start = self._addr
-		length = len(self._data)
+		length = len(self._hf._data)
 		if nbytes is not None:
 			if nbytes < 0:
 				raise ValueError('invalid nbytes', nbytes)
@@ -82,13 +123,13 @@ class BinaryStream(object):
 		else:
 			end = start
 			while end < length:
-				if self._data[end] == 0:
+				if self._hf._data[end] == 0:
 					break
 				end += 1
 			else:
 				raise EofError(end, length)
 			next = end + 1 # consume the zero byte as well
-		out = conversion(self._data[start:end])
+		out = conversion(self._hf._data[start:end])
 		self._addr = next # conversion succeeded; consume the bytes.
 		return out
 
@@ -117,3 +158,6 @@ class BinaryStream(object):
 
 	def read_int(self):
 		return self._read_value('i')
+
+	def read_id(self):
+		return self._consume_bytes(self._hf.idsize, _bytes_to_int)

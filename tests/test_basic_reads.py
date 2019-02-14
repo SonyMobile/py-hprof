@@ -12,59 +12,64 @@ inputfile = os.path.abspath(os.path.join(os.path.dirname(__file__), 'basic_reads
 
 class TestCorners(TestCase):
 	def test_modify_data(self):
-		with hprof.BinaryFile(inputfile) as bf:
+		with hprof.HprofFile(inputfile) as bf:
 			with self.assertRaisesRegex(TypeError, 'readonly'):
 				bf._data[0] = 0x20
 
 	def test_exit_cleanup(self):
-		with hprof.BinaryFile(inputfile) as bf:
+		with hprof.HprofFile(inputfile) as bf:
 			pass
 		self.assertIsNone(bf._data)
 		self.assertIsNone(bf._f)
 
 	def test_read_from_bytes(self):
-		f = hprof.BinaryFile(b'ABCD\0EFG')
-		s = f.stream()
-		self.assertEqual(f.read_ascii(5,3), 'EFG')
+		f = hprof.HprofFile(b'JAVA PROFILE 1.0.3\0'
+				+ b'\0\0\0\4'
+				+ b'\0\0\0\1\2\3\4\5'
+				+ b'\xff\0\0\0\0\0\0\0\10'
+				+ b'ABCD\0EFG'
+		)
+		s = f.stream(40)
+		self.assertEqual(f.read_ascii(45,3), 'EFG')
 		self.assertEqual(s.read_ascii(), 'ABCD')
 		s.skip(-1)
 		self.assertEqual(s.read_uint(), 0x00454647)
 		with self.assertRaisesRegex(hprof.EofError, '8.*8'):
 			s.read_byte()
-		self.assertEqual(f.read_utf8(3,4), 'D\0EF')
+		self.assertEqual(f.read_utf8(43,4), 'D\0EF')
 
 	def test_invalid_ctor_arg(self):
 		with self.assertRaises(TypeError):
-			hprof.BinaryFile(7)
+			hprof.HprofFile(7)
 
 	def test_missing_func_no_args(self):
-		with hprof.BinaryFile(inputfile) as bf:
+		with hprof.HprofFile(inputfile) as bf:
 			with self.assertRaisesRegex(AttributeError, 'missing_func'):
 				bf.missing_func()
 
 	def test_missing_func_str_arg(self):
-		with hprof.BinaryFile(inputfile) as bf:
+		with hprof.HprofFile(inputfile) as bf:
 			with self.assertRaisesRegex(AttributeError, 'missing_func'):
 				bf.missing_func('3')
 
 	def test_missing_func_int_arg(self):
-		with hprof.BinaryFile(inputfile) as bf:
+		with hprof.HprofFile(inputfile) as bf:
 			with self.assertRaisesRegex(AttributeError, 'missing_func'):
 				bf.missing_func(3)
 
 	def test_read_without_addr(self):
-		with hprof.BinaryFile(inputfile) as bf:
+		with hprof.HprofFile(inputfile) as bf:
 			with self.assertRaisesRegex(TypeError, 'addr'):
 				bf.read_bytes()
 
 	def test_read_without_nbytes(self):
-		with hprof.BinaryFile(inputfile) as bf:
+		with hprof.HprofFile(inputfile) as bf:
 			with self.assertRaisesRegex(TypeError, 'missing.*nbytes'):
 				bf.read_bytes(0)
 
 class TestByteReads(TestCase):
 	def setUp(self):
-		self.f = hprof.BinaryFile(inputfile)
+		self.f = hprof.HprofFile(inputfile)
 
 	def tearDown(self):
 		self.f.close()
@@ -98,7 +103,7 @@ class TestByteReads(TestCase):
 
 class TestByteArrayReads(TestCase):
 	def setUp(self):
-		self.f = hprof.BinaryFile(inputfile)
+		self.f = hprof.HprofFile(inputfile)
 
 	def tearDown(self):
 		self.f.close()
@@ -144,7 +149,7 @@ class TestByteArrayReads(TestCase):
 
 class TestUintReads(TestCase):
 	def setUp(self):
-		self.f = hprof.BinaryFile(inputfile)
+		self.f = hprof.HprofFile(inputfile)
 
 	def tearDown(self):
 		self.f.close()
@@ -179,7 +184,7 @@ class TestUintReads(TestCase):
 
 class TestIntReads(TestCase):
 	def setUp(self):
-		self.f = hprof.BinaryFile(inputfile)
+		self.f = hprof.HprofFile(inputfile)
 
 	def tearDown(self):
 		self.f.close()
@@ -215,7 +220,7 @@ class TestIntReads(TestCase):
 
 class TestAsciiReads(TestCase):
 	def setUp(self):
-		self.f = hprof.BinaryFile(inputfile)
+		self.f = hprof.HprofFile(inputfile)
 
 	def tearDown(self):
 		self.f.close()
@@ -289,7 +294,7 @@ class TestAsciiReads(TestCase):
 
 class TestUtf8Reads(TestCase):
 	def setUp(self):
-		self.f = hprof.BinaryFile(inputfile)
+		self.f = hprof.HprofFile(inputfile)
 
 	def tearDown(self):
 		self.f.close()
@@ -350,7 +355,7 @@ class TestUtf8Reads(TestCase):
 
 class TestStream(TestCase):
 	def setUp(self):
-		self.f = hprof.BinaryFile(inputfile)
+		self.f = hprof.HprofFile(inputfile)
 
 	def tearDown(self):
 		self.f.close()
