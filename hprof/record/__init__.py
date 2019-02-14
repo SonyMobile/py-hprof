@@ -3,3 +3,4 @@
 
 from .base import Record, Unhandled
 from .utf8 import Utf8
+from .classload import ClassLoad

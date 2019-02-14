@@ -70,7 +70,14 @@ class _Appender(object):
 	def id(self, ident):
 		assert type(ident) is int
 		assert ident >= 0
-		self._hb._buf.extend(ident.to_bytes(self._hb._idsize, 'big'))
+		# fold ident by xor, so it fits in idsize bytes.
+		b = 0
+		mask = (1 << (8 * self._hb._idsize)) - 1
+		while ident > 0:
+			b ^= ident & mask
+			ident >>= (8 * self._hb._idsize)
+		self._hb._buf.extend(b.to_bytes(self._hb._idsize, 'big'))
+		return b
 
 class _Record(_Appender):
 	def __init__(self, hb, tag, timestamp):

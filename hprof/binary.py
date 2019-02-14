@@ -43,6 +43,19 @@ class HprofFile(object):
 		self.starttime = datetime.fromtimestamp(timestamp_ms / 1000)
 		self._first_record_addr = s.addr
 
+		self._idmap = {}
+		for r in self.records():
+			try:
+				objid = r.id
+			except AttributeError:
+				pass # fine, not all records have ids
+			else:
+				if objid in self._idmap:
+					old = self._idmap[objid]
+					fmt = 'duplicate id 0x%x, at addresses 0x%x and 0x%x'
+					raise FileFormatError(fmt % (objid, old.addr, r.addr))
+				self._idmap[objid] = r
+
 	def __enter__(self):
 		return self
 
@@ -83,6 +96,9 @@ class HprofFile(object):
 			s.skip(args[0])
 			return f(*args[1:], **kwargs)
 		return stream_wrapper
+
+	def __getitem__(self, objid):
+		return self._idmap[objid]
 
 def _bytes_to_int(bytes):
 	i = 0

@@ -156,3 +156,17 @@ class TestArtificialHprof(TestCase):
 		self.assertTrue(s.startswith('Unhandled('))
 		self.assertTrue(s.endswith(')'))
 		self.assertIn('03020101 50e5ada6', s)
+
+@varying_idsize
+class TestErrors(TestCase):
+	def test_duplicate_id_error(self):
+		hb = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 0x12345)
+		with hb.record(1, 3) as r:
+			r.id(0x0102030405060708090a0b0c0d0e0f)
+			r.bytes(b'string1')
+		with hb.record(1, 5) as r:
+			r.id(0x0102030405060708090a0b0c0d0e0f)
+			r.bytes(b'string2')
+		addrs, data = hb.build()
+		with self.assertRaisesRegex(hprof.FileFormatError, 'duplicate id'):
+			hprof.open(bytes(data))

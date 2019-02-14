@@ -57,6 +57,9 @@ class Record(BaseRecord):
 	def _read_utf8(self, offset, nbytes):
 		return self.hf.read_utf8(self.addr + offset, nbytes)
 
+	def _read_uint(self, offset):
+		return self.hf.read_uint(self.addr + offset)
+
 	def _read_id(self, offset):
 		return self.hf.read_id(self.addr + offset)
 
