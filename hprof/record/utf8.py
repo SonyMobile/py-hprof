@@ -10,6 +10,8 @@ offsets = AutoOffsets(base.offsets.BODY,
 )
 
 class Utf8(base.Record):
+	TAG = 1
+
 	@property
 	def str(self):
 		return self._read_utf8(offsets.STR, len(self) - offsets.STR)

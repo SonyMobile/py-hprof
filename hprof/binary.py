@@ -9,7 +9,7 @@ import struct
 
 from .errors import *
 from .offset import offset
-from . import record
+from .record import Record
 
 def open(path):
 	return HprofFile(path)
@@ -57,10 +57,7 @@ class HprofFile(object):
 				tag = s.read_byte()
 			except EofError:
 				break # alright, everything lined up nicely!
-			if tag == 1:
-				r = record.Utf8(self, start)
-			else:
-				r = record.Unhandled(self, start)
+			r = Record.create(self, start)
 			s.skip(len(r) - 1) # skip the rest of the record; -1 because we already read the tag.
 			yield r
 

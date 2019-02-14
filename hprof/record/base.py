@@ -24,6 +24,16 @@ def _hex_groups(b):
 		yield ''.join('%02x' % b for b in g)
 
 class Record(BaseRecord):
+	@staticmethod
+	def create(hf, addr):
+		tag = hf.read_byte(addr)
+		# TODO: some form of caching here might not be a bad idea.
+		rtype = Unhandled
+		for candidate in Record.__subclasses__():
+			if getattr(candidate, 'TAG', None) == tag:
+				rtype = candidate
+		return rtype(hf, addr)
+
 	@property
 	def tag(self):
 		return self.hf.read_byte(self.addr)
