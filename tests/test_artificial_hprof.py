@@ -8,7 +8,7 @@ import hprof
 
 from .util import HprofBuilder, varying_idsize
 
-@varying_idsize(globals())
+@varying_idsize
 class TestArtificialHprof(TestCase):
 	def setUp(self):
 		builder = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 0x168e143f263)

@@ -4,16 +4,17 @@
 from struct import pack
 from unittest import TestCase
 
-def varying_idsize(targetscope):
-    def idsize_decorator(cls):
-        for sz in (2, 3, 4, 8):
-            name = cls.__name__ + '_idsize%d' % sz
-            sub = type(name, (cls,), {'idsize':sz})
-            if sub in targetscope:
-                raise Exception('%s already exists' % name)
-            targetscope[name] = sub
-        return None
-    return idsize_decorator
+import sys
+
+def varying_idsize(cls):
+	targetscope = sys.modules[cls.__module__]
+	for sz in (2, 3, 4, 8):
+		name = cls.__name__ + '_idsize%d' % sz
+		if hasattr(targetscope, name):
+			raise Exception('%s already exists' % name)
+		sub = type(name, (cls,), {'idsize':sz})
+		setattr(targetscope, name, sub)
+	return None # don't even give them the original.
 
 class HprofBuilder(object):
 	def __init__(self, vstring, idsize, timestamp):
