@@ -12,7 +12,6 @@ from .util import HprofBuilder, varying_idsize
 @varying_idsize
 class TestLoadClass(TestCase):
 	def setUp(self):
-		self.idsize = getattr(self, 'idsize', 4)
 		builder = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 0x0168e143f263)
 		with builder.record(1, 123) as r:
 			r.id(0x04010203) # string id

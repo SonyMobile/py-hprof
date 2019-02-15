@@ -21,7 +21,7 @@ class HprofBuilder(object):
 		self._idsize = idsize
 		self._buf = bytearray()
 		self._record_addrs = []
-		self._writer = None
+		self._writers = []
 		with _Appender(self) as header:
 			header.bytes(vstring)
 			header.uint(idsize)
@@ -37,6 +37,23 @@ class HprofBuilder(object):
 		self._record_addrs.append(len(self))
 		return _Record(self, tag, timestamp)
 
+	def _myturn(self, who):
+		assert who not in self._writers
+		self._writers.append(who)
+		return len(self._buf)
+
+	def _done(self, who):
+		old = self._writers.pop()
+		assert old is who
+		return len(self._buf)
+
+	def _append(self, who, b):
+		assert who is self._writers[-1]
+		if type(b) is int:
+			self._buf.append(b)
+		else:
+			self._buf.extend(b)
+
 	def __len__(self):
 		return len(self._buf)
 
@@ -46,26 +63,25 @@ class _Appender(object):
 		self._hb = hb
 
 	def __enter__(self):
-		if self._hb._writer is not None:
-			raise Exception('write already in progress')
-		self._hb._writer = self
+		self._start = self._hb._myturn(self)
 		return self
 
 	def __exit__(self, exctype, excval, tb):
-		if self._hb._writer is not self:
-			raise Exception('we lost control of the builder; data is probably corrupted')
-		self._hb._writer = None
+		if exctype is not None:
+			del self._hb._buf[self._start:] # rollback
+		else:
+			self._end = self._hb._done(self)
 
 	def byte(self, b):
-		self._hb._buf.append(b)
+		self._hb._append(self, b)
 
 	def bytes(self, b):
 		if type(b) is str:
 			b = b.encode('utf8')
-		self._hb._buf.extend(b)
+		self._hb._append(self, b)
 
 	def uint(self, u):
-		self._hb._buf.extend(pack('>I', u))
+		self._hb._append(self, pack('>I', u))
 
 	def id(self, ident):
 		assert type(ident) is int
@@ -76,7 +92,7 @@ class _Appender(object):
 		while ident > 0:
 			b ^= ident & mask
 			ident >>= (8 * self._hb._idsize)
-		self._hb._buf.extend(b.to_bytes(self._hb._idsize, 'big'))
+		self._hb._append(self, b.to_bytes(self._hb._idsize, 'big'))
 		return b
 
 class _Record(_Appender):
@@ -87,17 +103,28 @@ class _Record(_Appender):
 
 	def __enter__(self):
 		out = super().__enter__()
-		self._start = len(self._hb._buf)
 		self.byte(self._tag)
 		self.uint(self._timestamp)
 		self.uint(0xfbadf00d) # will be replaced with a proper length in __exit__
 		return out
 
 	def __exit__(self, exctype, excval, tb):
+		out = super().__exit__(exctype, excval, tb)
 		if exctype is None:
-			bodylen = len(self._hb._buf) - self._start - 9
+			bodylen = self._end - self._start - 9
 			self._hb._buf[self._start+5:self._start+9] = pack('>I', bodylen)
-		else:
-			del self._hb._buf[self._start:]
-		return super().__exit__(exctype, excval, tb)
+		return out
+
+	def subrecord(self, tag):
+		return _SubRecord(self._hb, tag)
+
+class _SubRecord(_Appender):
+	def __init__(self, hb, tag):
+		super().__init__(hb)
+		self._tag = tag
+
+	def __enter__(self):
+		out = super().__enter__()
+		self.byte(self._tag)
+		return out
 

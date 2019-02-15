@@ -44,17 +44,26 @@ class HprofFile(object):
 		self._first_record_addr = s.addr
 
 		self._idmap = {}
-		for r in self.records():
+		def add(rec):
 			try:
 				objid = r.id
 			except AttributeError:
-				pass # fine, not all records have ids
+				return # fine, not all records have ids
 			else:
 				if objid in self._idmap:
 					old = self._idmap[objid]
 					fmt = 'duplicate id 0x%x, at addresses 0x%x and 0x%x'
 					raise FileFormatError(fmt % (objid, old.addr, r.addr))
 				self._idmap[objid] = r
+
+		for r in self.records():
+			add(r)
+			try:
+				subrecs = r.records()
+			except AttributeError:
+				continue # fine, not all records have subrecords
+			for sr in subrecs:
+				add(sr)
 
 	def __enter__(self):
 		return self
