@@ -43,12 +43,21 @@ class TestRoots(TestCase):
 			with dump.subrecord(4) as root:
 				root.id(id1)
 				root.uint(33)
+			with dump.subrecord(3) as root:
+				root.id(id2)
+				root.uint(500)
+				root.uint(0xffffffff)
+			with dump.subrecord(3) as root:
+				root.id(id2)
+				root.uint(500)
+				root.uint(1)
 		self.addrs, self.data = hb.build()
 		hf = hprof.open(bytes(self.data))
 		dump = next(hf.records())
 		(
 			self.unknownroot, self.obj1, self.obj2, self.threadroot,
 			self.localjniroot1, self.localjniroot2, self.nativeroot,
+			self.javaroot1, self.javaroot2,
 		) = dump.records()
 
 	### type-specific fields ###
@@ -63,6 +72,8 @@ class TestRoots(TestCase):
 		self.assertEqual(self.localjniroot1     .obj, self.obj1)
 		self.assertEqual(self.localjniroot2     .obj, self.obj2)
 		self.assertEqual(self.nativeroot        .obj, self.obj1)
+		self.assertEqual(self.javaroot1         .obj, self.obj2)
+		self.assertEqual(self.javaroot2         .obj, self.obj2)
 
 	def test_threadroot_thread(self):
 		pass # TODO: we don't know about threads yet
@@ -75,6 +86,9 @@ class TestRoots(TestCase):
 
 	def test_nativeroot_thread(self):
 		pass # TODO: we don't know about threads yet
+
+	def test_javaroot_stacktrace(self):
+		pass # TODO: threads & stacktraces. javaroot1 should return an empty stacktrace.
 
 	### generic record fields ###
 
@@ -89,6 +103,10 @@ class TestRoots(TestCase):
 			self.localjniroot2.id
 		with self.assertRaisesRegex(AttributeError, r'\bid\b'):
 			self.nativeroot.id
+		with self.assertRaisesRegex(AttributeError, r'\bid\b'):
+			self.javaroot1.id
+		with self.assertRaisesRegex(AttributeError, r'\bid\b'):
+			self.javaroot2.id
 
 	def test_root_type(self):
 		self.assertIs(type(self.unknownroot),      hprof.heaprecord.UnknownRoot)
@@ -96,6 +114,8 @@ class TestRoots(TestCase):
 		self.assertIs(type(self.localjniroot1),    hprof.heaprecord.LocalJniRoot)
 		self.assertIs(type(self.localjniroot2),    hprof.heaprecord.LocalJniRoot)
 		self.assertIs(type(self.nativeroot),       hprof.heaprecord.NativeStackRoot)
+		self.assertIs(type(self.javaroot1),        hprof.heaprecord.JavaStackRoot)
+		self.assertIs(type(self.javaroot2),        hprof.heaprecord.JavaStackRoot)
 
 	def test_root_tag(self):
 		self.assertEqual(self.unknownroot       .tag, 0xff)
@@ -103,6 +123,8 @@ class TestRoots(TestCase):
 		self.assertEqual(self.localjniroot1     .tag, 0x02)
 		self.assertEqual(self.localjniroot2     .tag, 0x02)
 		self.assertEqual(self.nativeroot        .tag, 0x04)
+		self.assertEqual(self.javaroot1         .tag, 0x03)
+		self.assertEqual(self.javaroot2         .tag, 0x03)
 
 	def test_root_len(self):
 		self.assertEqual(len(self.unknownroot),        1 + self.idsize)
@@ -110,6 +132,8 @@ class TestRoots(TestCase):
 		self.assertEqual(len(self.localjniroot1),      9 + self.idsize)
 		self.assertEqual(len(self.localjniroot2),      9 + self.idsize)
 		self.assertEqual(len(self.nativeroot),         5 + self.idsize)
+		self.assertEqual(len(self.javaroot1),          9 + self.idsize)
+		self.assertEqual(len(self.javaroot2),          9 + self.idsize)
 
 	def test_root_str(self):
 		# TODO: when we know about threads and classes, improve expected str() result.
@@ -118,3 +142,5 @@ class TestRoots(TestCase):
 		self.assertEqual(str(self.localjniroot1),      'LocalJniRoot(Object(class=TODO) in <func>)')
 		self.assertEqual(str(self.localjniroot2),      'LocalJniRoot(Object(class=TODO) in <func>)')
 		self.assertEqual(str(self.nativeroot),         'NativeStackRoot(Object(class=TODO) from thread ???)')
+		self.assertEqual(str(self.javaroot1),          'JavaStackRoot(Object(class=TODO) in <func>)')
+		self.assertEqual(str(self.javaroot2),          'JavaStackRoot(Object(class=TODO) in <func>)')
