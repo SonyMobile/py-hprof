@@ -11,11 +11,11 @@ class HeapRecord(CommonRecord):
 	def create(hf, addr):
 		from .roots import UnknownRoot
 		tag = hf.read_byte(addr)
-		if tag == 0xff:
-			return UnknownRoot(hf, addr)
-		else:
+		# TODO: some form of caching here might not be a bad idea.
+		rtype = None
+		for candidate in HeapRecord.__subclasses__():
+			if getattr(candidate, 'TAG', None) == tag:
+				rtype = candidate
+		if rtype is None:
 			raise FileFormatError('unknown HeapDump subrecord tag 0x%02x' % tag)
-
-	@property
-	def rawbody(self):
-		return self.hf.read_bytes(self.addr+1, len(self)-1)
+		return rtype(hf, addr)

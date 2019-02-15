@@ -3,3 +3,4 @@
 
 from .heaprecord import HeapRecord
 from .roots import UnknownRoot
+from .object import Object

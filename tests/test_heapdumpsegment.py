@@ -35,8 +35,6 @@ class TestHeapDumpSegment(TestCase):
 		b = next(subs)
 		self.assertEqual(a.id, self.squash1)
 		self.assertEqual(b.id, self.squash2)
-		self.assertEqual(a.rawbody, self.data[41               : 41 + self.idsize])
-		self.assertEqual(b.rawbody, self.data[42 + self.idsize : 42 + self.idsize * 2])
 		with self.assertRaises(StopIteration):
 			next(subs)
 

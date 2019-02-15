@@ -3,6 +3,7 @@
 
 from unittest import TestCase
 from hprof.commonrecord import CommonRecord
+from hprof.record import Record
 from hprof.heaprecord import HeapRecord
 
 class TestCommonRecord(TestCase):
@@ -56,7 +57,7 @@ class TestCommonRecord(TestCase):
 			r.addr = 70
 
 	def test_commonrecord_str(self):
-		class Corporeal(CommonRecord):
+		class Corporeal(Record):
 			__slots__ = ()
 			@property
 			def rawbody(self):
@@ -112,9 +113,13 @@ class TestRecordSubclasses(TestCase):
 		''' make sure that all CommonRecord subclasses have a rawbody property. '''
 		for t in self.recs:
 			for r in t:
-				if type(r) in (CommonRecord, HeapRecord):
-					continue # parents are like "do as I say, not as I do"
-				try:
-					r.rawbody
-				except Exception as e:
-					raise AssertionError(type(r), e)
+				if type(r) is CommonRecord or isinstance(r, HeapRecord):
+					# parents are like "do as I say, not as I do"
+					# ...and HeapRecords don't have rawbody either.
+					with self.assertRaises(AttributeError):
+						r.rawbody
+				else:
+					try:
+						r.rawbody
+					except Exception as e:
+						raise AssertionError(type(r), e)

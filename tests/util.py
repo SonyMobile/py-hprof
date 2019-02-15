@@ -83,6 +83,9 @@ class _Appender(object):
 	def uint(self, u):
 		self._hb._append(self, pack('>I', u))
 
+	def ushort(self, u):
+		self._hb._append(self, pack('>H', u))
+
 	def id(self, ident):
 		assert type(ident) is int
 		assert ident >= 0

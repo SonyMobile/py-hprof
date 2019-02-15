@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-def _word_groups(b):
-	for i in range(0, len(b), 4):
-		yield b[i:i+4]
-
-def _hex_groups(b):
-	for g in _word_groups(b):
-		yield ''.join('%02x' % b for b in g)
-
 class CommonRecord(object):
 	__slots__ = 'hf', 'addr'
 
@@ -40,14 +32,6 @@ class CommonRecord(object):
 
 	def _read_id(self, offset):
 		return self.hf.read_id(self.addr + offset)
-
-	def __str__(self):
-		data = self.rawbody
-		if len(data) > 40:
-			hexdata = ' '.join(_hex_groups(self.rawbody[:32])) + ' ...'
-		else:
-			hexdata = ' '.join(_hex_groups(self.rawbody))
-		return '%s( %s )' % (type(self).__name__, hexdata)
 
 	def __len__(self):
 		raise TypeError()
