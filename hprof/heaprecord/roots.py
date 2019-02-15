@@ -28,6 +28,18 @@ class UnknownRoot(GcRoot):
 	offsets = AutoOffsets(1, 'ID', idoffset(1), 'END')
 
 
+class LocalJniRoot(GcRoot):
+	__slots__ = ()
+	TAG = 0x02
+	offsets = AutoOffsets(1,
+			'ID',     idoffset(1),
+			'STRACE', 4,
+			'FRAME',  4,
+			'END')
+
+	def _info(self):
+		return super()._info() + ' in <func>' # TODO: actually show the function here.
+
 class ThreadRoot(GcRoot):
 	__slots__ = ()
 	TAG = 0x08
@@ -38,4 +50,4 @@ class ThreadRoot(GcRoot):
 			'END')
 
 	def _info(self):
-		return super()._info() + ' from thread ???'
+		return super()._info() + ' from thread ???' # TODO: actually show the thread here.
