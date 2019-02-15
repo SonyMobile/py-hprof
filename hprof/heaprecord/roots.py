@@ -85,6 +85,11 @@ class NativeStackRoot(GcRoot):
 	def _info(self):
 		return super()._info() + ' from thread ???' # TODO: not "???"
 
+class StickyClassRoot(GcRoot):
+	__slots__ = ()
+	TAG = 0x05
+	offsets = AutoOffsets(1, 'ID', idoffset(1), 'END')
+
 class ThreadRoot(GcRoot):
 	__slots__ = ()
 	TAG = 0x08
