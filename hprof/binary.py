@@ -135,7 +135,7 @@ class HprofStream(object):
 		if isinstance(addr, offset):
 			addr = addr.flatten(self._hf.idsize)
 		if addr < 0 or addr > len(self._hf._data):
-			raise EofError(addr, len(self._hf._data))
+			raise EofError('tried to jump to %d, but file size is %d' % (addr, len(self._hf._data)))
 		self._addr = addr
 
 	def _consume_bytes(self, nbytes, conversion):
@@ -148,7 +148,7 @@ class HprofStream(object):
 				raise ValueError('invalid nbytes', nbytes)
 			end = start + nbytes
 			if end > length:
-				raise EofError(length, length)
+				raise EofError('tried to read bytes %d:%d, but file size is %d' % (start, end, length))
 			next = end
 		else:
 			end = start
@@ -157,7 +157,7 @@ class HprofStream(object):
 					break
 				end += 1
 			else:
-				raise EofError(end, length)
+				raise EofError('tried to read from %d to null termination, but exceeded file size %d' % (start, length))
 			next = end + 1 # consume the zero byte as well
 		out = conversion(self._hf._data[start:end])
 		self._addr = next # conversion succeeded; consume the bytes.
