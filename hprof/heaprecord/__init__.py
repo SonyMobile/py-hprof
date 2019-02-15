@@ -2,5 +2,5 @@
 #coding=utf8
 
 from .heaprecord import HeapRecord
-from .roots import UnknownRoot
+from .roots import GcRoot, UnknownRoot, ThreadRoot
 from .object import Object

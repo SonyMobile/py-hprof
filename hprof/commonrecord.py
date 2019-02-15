@@ -32,6 +32,3 @@ class CommonRecord(object):
 
 	def _read_id(self, offset):
 		return self.hf.read_id(self.addr + offset)
-
-	def __len__(self):
-		raise TypeError()
