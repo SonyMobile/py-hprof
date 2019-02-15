@@ -53,7 +53,7 @@ class HprofFile(object):
 				if objid in self._idmap:
 					old = self._idmap[objid]
 					fmt = 'duplicate id 0x%x, at addresses 0x%x and 0x%x'
-					raise FileFormatError(fmt % (objid, old.addr, rec.addr))
+					raise FileFormatError(fmt % (objid, old.addr, rec.addr), old, rec)
 				self._idmap[objid] = rec
 
 		for r in self.records():

@@ -36,11 +36,11 @@ class GlobalJniRoot(GcRoot):
 			'END')
 
 	@property
-	def id(self):
+	def grefid(self):
 		return self._read_id(self.offsets.REFID)
 
 	def _info(self):
-		return super()._info() + ', grefid=0x%x' % self.id
+		return super()._info() + ', grefid=0x%x' % self.grefid
 
 class LocalJniRoot(GcRoot):
 	__slots__ = ()

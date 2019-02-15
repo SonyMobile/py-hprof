@@ -6,8 +6,8 @@ class Error(Exception):
 	pass
 
 class FileFormatError(Error):
-	def __init__(self, msg):
-		self.msg = msg
+	def __init__(self, *args):
+		super().__init__(*args)
 
 class EofError(Error):
 	def __init__(self, addr, length):

@@ -53,14 +53,18 @@ class TestRoots(TestCase):
 				root.uint(1)
 			with dump.subrecord(1) as root:
 				root.id(id2)
-				self.grefid = root.id(0x123456789)
+				root.id(123)
+			with dump.subrecord(1) as root:
+				root.id(id2)
+				root.id(123)
 		self.addrs, self.data = hb.build()
 		hf = hprof.open(bytes(self.data))
 		dump = next(hf.records())
 		(
 			self.unknownroot, self.obj1, self.obj2, self.threadroot,
 			self.localjniroot1, self.localjniroot2, self.nativeroot,
-			self.javaroot1, self.javaroot2, self.globaljniroot,
+			self.javaroot1, self.javaroot2,
+			self.globaljniroot1, self.globaljniroot2,
 		) = dump.records()
 
 	### type-specific fields ###
@@ -77,7 +81,8 @@ class TestRoots(TestCase):
 		self.assertEqual(self.nativeroot        .obj, self.obj1)
 		self.assertEqual(self.javaroot1         .obj, self.obj2)
 		self.assertEqual(self.javaroot2         .obj, self.obj2)
-		self.assertEqual(self.globaljniroot     .obj, self.obj2)
+		self.assertEqual(self.globaljniroot1    .obj, self.obj2)
+		self.assertEqual(self.globaljniroot2    .obj, self.obj2)
 
 	def test_threadroot_thread(self):
 		pass # TODO: we don't know about threads yet
@@ -93,6 +98,10 @@ class TestRoots(TestCase):
 
 	def test_javaroot_stacktrace(self):
 		pass # TODO: threads & stacktraces. javaroot1 should return an empty stacktrace.
+
+	def test_globaljniroot_refid(self):
+		self.assertEqual(self.globaljniroot1.grefid, 123)
+		self.assertEqual(self.globaljniroot2.grefid, 123)
 
 	### generic record fields ###
 
@@ -111,7 +120,10 @@ class TestRoots(TestCase):
 			self.javaroot1.id
 		with self.assertRaisesRegex(AttributeError, r'\bid\b'):
 			self.javaroot2.id
-		self.assertEqual(self.globaljniroot.id, self.grefid)
+		with self.assertRaisesRegex(AttributeError, r'\bid\b'):
+			self.globaljniroot1.id
+		with self.assertRaisesRegex(AttributeError, r'\bid\b'):
+			self.globaljniroot2.id
 
 	def test_root_type(self):
 		self.assertIs(type(self.unknownroot),      hprof.heaprecord.UnknownRoot)
@@ -121,7 +133,8 @@ class TestRoots(TestCase):
 		self.assertIs(type(self.nativeroot),       hprof.heaprecord.NativeStackRoot)
 		self.assertIs(type(self.javaroot1),        hprof.heaprecord.JavaStackRoot)
 		self.assertIs(type(self.javaroot2),        hprof.heaprecord.JavaStackRoot)
-		self.assertIs(type(self.globaljniroot),    hprof.heaprecord.GlobalJniRoot)
+		self.assertIs(type(self.globaljniroot1),   hprof.heaprecord.GlobalJniRoot)
+		self.assertIs(type(self.globaljniroot2),   hprof.heaprecord.GlobalJniRoot)
 
 	def test_root_tag(self):
 		self.assertEqual(self.unknownroot       .tag, 0xff)
@@ -131,7 +144,8 @@ class TestRoots(TestCase):
 		self.assertEqual(self.nativeroot        .tag, 0x04)
 		self.assertEqual(self.javaroot1         .tag, 0x03)
 		self.assertEqual(self.javaroot2         .tag, 0x03)
-		self.assertEqual(self.globaljniroot     .tag, 0x01)
+		self.assertEqual(self.globaljniroot1    .tag, 0x01)
+		self.assertEqual(self.globaljniroot2    .tag, 0x01)
 
 	def test_root_len(self):
 		self.assertEqual(len(self.unknownroot),        1 + self.idsize)
@@ -141,7 +155,8 @@ class TestRoots(TestCase):
 		self.assertEqual(len(self.nativeroot),         5 + self.idsize)
 		self.assertEqual(len(self.javaroot1),          9 + self.idsize)
 		self.assertEqual(len(self.javaroot2),          9 + self.idsize)
-		self.assertEqual(len(self.globaljniroot),      1 + 2 * self.idsize)
+		self.assertEqual(len(self.globaljniroot1),     1 + 2 * self.idsize)
+		self.assertEqual(len(self.globaljniroot2),     1 + 2 * self.idsize)
 
 	def test_root_str(self):
 		# TODO: when we know about threads and classes, improve expected str() result.
@@ -152,4 +167,5 @@ class TestRoots(TestCase):
 		self.assertEqual(str(self.nativeroot),         'NativeStackRoot(Object(class=TODO) from thread ???)')
 		self.assertEqual(str(self.javaroot1),          'JavaStackRoot(Object(class=TODO) in <func>)')
 		self.assertEqual(str(self.javaroot2),          'JavaStackRoot(Object(class=TODO) in <func>)')
-		self.assertEqual(str(self.globaljniroot),      'GlobalJniRoot(%s, grefid=0x%x)' % (str(self.globaljniroot.obj), self.grefid))
+		self.assertEqual(str(self.globaljniroot1),     'GlobalJniRoot(%s, grefid=0x%x)' % (str(self.globaljniroot1.obj), 123))
+		self.assertEqual(str(self.globaljniroot2),     'GlobalJniRoot(%s, grefid=0x%x)' % (str(self.globaljniroot2.obj), 123))
