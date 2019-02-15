@@ -40,6 +40,17 @@ class LocalJniRoot(GcRoot):
 	def _info(self):
 		return super()._info() + ' in <func>' # TODO: actually show the function here.
 
+class NativeStackRoot(GcRoot):
+	__slots__ = ()
+	TAG = 0x04
+	offsets = AutoOffsets(1,
+			'ID',     idoffset(1),
+			'THREAD', 4,
+			'END')
+
+	def _info(self):
+		return super()._info() + ' from thread ???' # TODO: not "???"
+
 class ThreadRoot(GcRoot):
 	__slots__ = ()
 	TAG = 0x08
