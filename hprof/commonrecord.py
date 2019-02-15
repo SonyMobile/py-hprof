@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from collections import namedtuple
-
-_BaseRecord = namedtuple('_BaseRecord', 'hf addr')
-
 def _word_groups(b):
 	for i in range(0, len(b), 4):
 		yield b[i:i+4]
@@ -13,7 +9,21 @@ def _hex_groups(b):
 	for g in _word_groups(b):
 		yield ''.join('%02x' % b for b in g)
 
-class CommonRecord(_BaseRecord):
+class CommonRecord(object):
+	__slots__ = 'hf', 'addr'
+
+	def __init__(self, hf, addr):
+		self.hf = hf
+		self.addr = addr
+
+	def __eq__(self, other):
+		return self.addr == other.addr and self.hf == other.hf and type(self) is type(other)
+
+	def __setattr__(self, name, value):
+		if hasattr(self, name):
+			raise AttributeError('records are immutable')
+		super().__setattr__(name, value)
+
 	@property
 	def tag(self):
 		return self.hf.read_byte(self.addr)

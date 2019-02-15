@@ -1,15 +1,27 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from collections import namedtuple
+class offset(object):
+	__slots__ = 'bytes', 'ids'
 
-_BaseOffset = namedtuple('_BaseOffset', 'bytes ids')
+	def __init__(self, bytes, ids):
+		self.bytes = bytes
+		self.ids = ids
 
-class offset(_BaseOffset):
+	def __setattr__(self, name, value):
+		if hasattr(self, name):
+			raise AttributeError('offsets are immutable')
+		super().__setattr__(name, value)
+
+	def __eq__(self, other):
+		if type(other) is offset:
+			return self.bytes == other.bytes and self.ids == other.ids
+		return self.bytes == other and self.ids == 0
+
 	def __add__(self, other):
 		if type(other) is int:
 			return type(self)(self.bytes + other, self.ids)
-		elif isinstance(other, _BaseOffset):
+		elif type(other) is offset:
 			return type(self)(self.bytes + other.bytes, self.ids + other.ids)
 		return NotImplemented
 
@@ -24,18 +36,6 @@ class offset(_BaseOffset):
 
 	def __neg__(self):
 		return offset(-self.bytes, -self.ids)
-
-	def __lt__(self, other):
-		return NotImplemented
-
-	def __le__(self, other):
-		return NotImplemented
-
-	def __gt__(self, other):
-		return NotImplemented
-
-	def __ge__(self, other):
-		return NotImplemented
 
 	def flatten(self, idsize):
 		return self.bytes + self.ids * idsize

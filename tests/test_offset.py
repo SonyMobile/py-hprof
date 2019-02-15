@@ -96,6 +96,8 @@ class TestOffset(TestCase):
 			offset(3,7) + 'hello'
 
 	def test_offset_not_comparable(self):
+		# it might seem like offsets should be comparable,
+		# but it is impossible to do correctly without knowing the idsize.
 		a = offset(2,3)
 		b = offset(5,7)
 		with self.assertRaises(TypeError):
@@ -114,3 +116,12 @@ class TestOffset(TestCase):
 			b <= a
 		with self.assertRaises(TypeError):
 			b >= a
+
+	def test_offset_immutable(self):
+		a = offset(2,3)
+		with self.assertRaises(AttributeError):
+			a.bytes = 10
+		with self.assertRaises(AttributeError):
+			a.ids = 10
+		with self.assertRaises(AttributeError):
+			a.newattribute = 10

@@ -12,6 +12,7 @@ offsets = AutoOffsets(base.offsets.BODY,
 )
 
 class ClassLoad(base.Record):
+	__slots__ = ()
 	TAG = 2
 
 	@property

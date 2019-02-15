@@ -7,6 +7,7 @@ from .. import heaprecord
 from ..errors import *
 
 class HeapDumpSegment(base.Record):
+	__slots__ = ()
 	TAG = 28
 
 	def __str__(self):

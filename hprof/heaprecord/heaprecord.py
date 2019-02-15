@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from collections import namedtuple
-
 from ..commonrecord import CommonRecord
 from ..errors import *
 
 class HeapRecord(CommonRecord):
+	__slots__ = ()
+
 	@staticmethod
 	def create(hf, addr):
 		from .roots import UnknownRoot

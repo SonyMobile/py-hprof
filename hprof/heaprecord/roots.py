@@ -6,6 +6,7 @@ from .heaprecord import HeapRecord
 from ..offset import offset
 
 class UnknownRoot(HeapRecord):
+	__slots__ = ()
 	TAG = 0xff
 
 	@property

@@ -10,6 +10,7 @@ offsets = AutoOffsets(base.offsets.BODY,
 )
 
 class Utf8(base.Record):
+	__slots__ = ()
 	TAG = 1
 
 	@property

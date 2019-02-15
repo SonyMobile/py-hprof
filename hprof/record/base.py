@@ -14,6 +14,8 @@ offsets = AutoOffsets(0,
 )
 
 class Record(CommonRecord):
+	__slots__ = ()
+
 	@staticmethod
 	def create(hf, addr):
 		tag = hf.read_byte(addr)
@@ -40,4 +42,5 @@ class Record(CommonRecord):
 		return 9 + self.hf.read_uint(self.addr + 5)
 
 class Unhandled(Record):
+	__slots__ = ()
 	pass
