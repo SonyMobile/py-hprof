@@ -88,3 +88,10 @@ class ThreadRoot(GcRoot):
 
 	def _info(self):
 		return super()._info() + ' from thread ???' # TODO: actually show the thread here.
+
+class VmInternalRoot(GcRoot):
+	__slots__ = ()
+	TAG = 0x8d
+	offsets = AutoOffsets(1,
+			'ID',    idoffset(1),
+			'END')
