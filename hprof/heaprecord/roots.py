@@ -27,6 +27,20 @@ class UnknownRoot(GcRoot):
 	TAG = 0xff
 	offsets = AutoOffsets(1, 'ID', idoffset(1), 'END')
 
+class GlobalJniRoot(GcRoot):
+	__slots__ = ()
+	TAG = 0x01
+	offsets = AutoOffsets(1,
+			'ID',     idoffset(1),
+			'REFID',  idoffset(1),
+			'END')
+
+	@property
+	def id(self):
+		return self._read_id(self.offsets.REFID)
+
+	def _info(self):
+		return super()._info() + ', grefid=0x%x' % self.id
 
 class LocalJniRoot(GcRoot):
 	__slots__ = ()

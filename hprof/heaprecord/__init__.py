@@ -2,5 +2,5 @@
 #coding=utf8
 
 from .heaprecord import HeapRecord
-from .roots import GcRoot, UnknownRoot, ThreadRoot, LocalJniRoot, NativeStackRoot, JavaStackRoot
+from .roots import GcRoot, UnknownRoot, ThreadRoot, GlobalJniRoot, LocalJniRoot, JavaStackRoot, NativeStackRoot
 from .object import Object
