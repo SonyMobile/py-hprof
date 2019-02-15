@@ -4,6 +4,11 @@
 from ..commonrecord import CommonRecord
 from ..errors import *
 
+def _descendants(cls):
+	yield cls
+	for child in cls.__subclasses__():
+		yield from _descendants(child)
+
 class HeapRecord(CommonRecord):
 	__slots__ = ()
 
@@ -13,7 +18,7 @@ class HeapRecord(CommonRecord):
 		tag = hf.read_byte(addr)
 		# TODO: some form of caching here might not be a bad idea.
 		rtype = None
-		for candidate in HeapRecord.__subclasses__():
+		for candidate in _descendants(HeapRecord):
 			if getattr(candidate, 'TAG', None) == tag:
 				rtype = candidate
 		if rtype is None:

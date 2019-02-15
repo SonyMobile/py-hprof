@@ -5,13 +5,12 @@ from .heaprecord import HeapRecord
 
 from ..offset import offset
 
-class UnknownRoot(HeapRecord):
+class GcRoot(HeapRecord):
+	__slots__ = ()
+
+class UnknownRoot(GcRoot):
 	__slots__ = ()
 	TAG = 0xff
-
-	@property
-	def id(self):
-		return self._read_id(1)
 
 	def __len__(self):
 		return offset(1, 1).flatten(self.hf.idsize)

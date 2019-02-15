@@ -15,9 +15,9 @@ class TestHeapDumpSegment(TestCase):
 		builder = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 0x0168e143f263)
 		with builder.record(28, 7019) as r:
 			with r.subrecord(0xff) as s:
-				self.squash1 = s.id(0x123456789)
+				s.id(0x123456789)
 			with r.subrecord(0xff) as s:
-				self.squash2 = s.id(0x987654321)
+				s.id(0x987654321)
 		self.addrs, self.data = builder.build()
 		self.f = hprof.open(bytes(self.data))
 		self.d = list(self.f.records())[0]
@@ -33,10 +33,12 @@ class TestHeapDumpSegment(TestCase):
 		subs = self.d.records()
 		a = next(subs)
 		b = next(subs)
-		self.assertEqual(a.id, self.squash1)
-		self.assertEqual(b.id, self.squash2)
 		with self.assertRaises(StopIteration):
 			next(subs)
+		self.assertEqual(a.addr, self.d.addr + 9)
+		self.assertEqual(b.addr, self.d.addr + 9 + len(a))
+		self.assertEqual(len(a), 1 + self.idsize)
+		self.assertEqual(len(b), 1 + self.idsize)
 
 	### generic record fields ###
 
