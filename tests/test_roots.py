@@ -61,6 +61,8 @@ class TestRoots(TestCase):
 				root.id(id1)
 			with dump.subrecord(0xff) as root:
 				root.id(77) # whoops, this id does not exist!
+			with dump.subrecord(0x89) as root:
+				root.id(id1)
 		self.addrs, self.data = hb.build()
 		hf = hprof.open(bytes(self.data))
 		dump = next(hf.records())
@@ -69,7 +71,7 @@ class TestRoots(TestCase):
 			self.localjniroot1, self.localjniroot2, self.nativeroot,
 			self.javaroot1, self.javaroot2,
 			self.globaljniroot1, self.globaljniroot2,
-			self.vmroot, self.invalidroot,
+			self.vmroot, self.invalidroot, self.internroot,
 		) = dump.records()
 
 	### type-specific fields ###
@@ -91,6 +93,7 @@ class TestRoots(TestCase):
 		self.assertEqual(self.vmroot            .obj, self.obj1)
 		with self.assertRaisesRegex(hprof.RefError, '77'):
 			self.invalidroot.obj
+		self.assertEqual(self.internroot        .obj, self.obj1)
 
 	def test_threadroot_thread(self):
 		pass # TODO: we don't know about threads yet
@@ -134,6 +137,8 @@ class TestRoots(TestCase):
 			self.globaljniroot2.id
 		with self.assertRaisesRegex(AttributeError, r'\bid\b'):
 			self.vmroot.id
+		with self.assertRaisesRegex(AttributeError, r'\bid\b'):
+			self.internroot.id
 
 	def test_root_type(self):
 		self.assertIs(type(self.unknownroot),      hprof.heaprecord.UnknownRoot)
@@ -147,6 +152,7 @@ class TestRoots(TestCase):
 		self.assertIs(type(self.globaljniroot2),   hprof.heaprecord.GlobalJniRoot)
 		self.assertIs(type(self.vmroot),           hprof.heaprecord.VmInternalRoot)
 		self.assertIs(type(self.invalidroot),      hprof.heaprecord.UnknownRoot)
+		self.assertIs(type(self.internroot),       hprof.heaprecord.InternedStringRoot)
 
 	def test_root_tag(self):
 		self.assertEqual(self.unknownroot       .tag, 0xff)
@@ -160,6 +166,7 @@ class TestRoots(TestCase):
 		self.assertEqual(self.globaljniroot2    .tag, 0x01)
 		self.assertEqual(self.vmroot            .tag, 0x8d)
 		self.assertEqual(self.invalidroot       .tag, 0xff)
+		self.assertEqual(self.internroot        .tag, 0x89)
 
 	def test_root_len(self):
 		self.assertEqual(len(self.unknownroot),        1 + self.idsize)
@@ -173,6 +180,7 @@ class TestRoots(TestCase):
 		self.assertEqual(len(self.globaljniroot2),     1 + 2 * self.idsize)
 		self.assertEqual(len(self.vmroot),             1 + self.idsize)
 		self.assertEqual(len(self.invalidroot),        1 + self.idsize)
+		self.assertEqual(len(self.internroot),         1 + self.idsize)
 
 	def test_root_str(self):
 		# TODO: when we know about threads and classes, improve expected str() result.
@@ -187,3 +195,4 @@ class TestRoots(TestCase):
 		self.assertEqual(str(self.globaljniroot2),     'GlobalJniRoot(%s, grefid=0x%x)' % (str(self.globaljniroot2.obj), 123))
 		self.assertEqual(str(self.vmroot),             'VmInternalRoot(%s)' % str(self.vmroot.obj))
 		self.assertEqual(str(self.invalidroot),        'UnknownRoot(<invalid ref 0x%x>)' % 77)
+		self.assertEqual(str(self.internroot),         'InternedStringRoot(%s)' % str(self.internroot.obj))
