@@ -2,4 +2,4 @@
 #coding=utf8
 
 from .binary import HprofFile, HprofStream, open
-from .errors import Error, FileFormatError, EofError
+from .errors import Error, FileFormatError, EofError, RefError

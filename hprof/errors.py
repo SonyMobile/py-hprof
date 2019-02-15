@@ -16,3 +16,6 @@ class EofError(Error):
 
 	def __str__(self):
 		return 'tried to read at address %d, but file size is %d' % (self.addr, self.length)
+
+class RefError(Error):
+	pass

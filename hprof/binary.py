@@ -107,7 +107,10 @@ class HprofFile(object):
 		return stream_wrapper
 
 	def __getitem__(self, objid):
-		return self._idmap[objid]
+		try:
+			return self._idmap[objid]
+		except KeyError:
+			raise RefError(objid)
 
 def _bytes_to_int(bytes):
 	i = 0
