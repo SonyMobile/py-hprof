@@ -14,7 +14,7 @@ offsets = AutoOffsets(1,
 )
 
 
-class Object(HeapRecord):
+class ObjectRecord(HeapRecord):
 	__slots__ = ()
 	TAG = 0x21
 
@@ -30,4 +30,4 @@ class Object(HeapRecord):
 		return offsets.DATA.flatten(self.hf.idsize) + self.datalen
 
 	def __str__(self):
-		return 'Object(class=TODO)' # TODO
+		return 'ObjectRecord(id=0x%x)' % self.id

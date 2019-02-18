@@ -54,8 +54,8 @@ class TestObject(TestCase):
 		self.assertEqual(self.p.id, self.id2)
 
 	def test_object_type(self):
-		self.assertIs(type(self.o), hprof.heaprecord.Object)
-		self.assertIs(type(self.p), hprof.heaprecord.Object)
+		self.assertIs(type(self.o), hprof.heaprecord.ObjectRecord)
+		self.assertIs(type(self.p), hprof.heaprecord.ObjectRecord)
 
 	def test_object_tag(self):
 		self.assertEqual(self.o.tag, 33)
@@ -67,5 +67,5 @@ class TestObject(TestCase):
 
 	def test_object_str(self):
 		# TODO: when we know about classes, it should be part of the str output
-		self.assertEqual(str(self.o), 'Object(class=TODO)')
-		self.assertEqual(str(self.p), 'Object(class=TODO)')
+		self.assertEqual(str(self.o), 'ObjectRecord(id=0x%x)' % self.id1)
+		self.assertEqual(str(self.p), 'ObjectRecord(id=0x%x)' % self.id2)

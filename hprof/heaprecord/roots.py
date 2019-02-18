@@ -10,22 +10,14 @@ class GcRoot(HeapRecord):
 	__slots__ = ()
 
 	@property
-	def _objid(self):
+	def objid(self):
 		return self._read_id(self.offsets.ID)
-
-	@property
-	def obj(self):
-		return self.hf[self._objid]
 
 	def __len__(self):
 		return self.offsets.END.flatten(self.hf.idsize)
 
 	def _info(self):
-		try:
-			obj = self.obj
-		except RefError:
-			return '<invalid ref 0x%x>' % self._objid
-		return str(obj)
+		return 'objid=0x%x' % self.objid
 
 	def __str__(self):
 		return '%s(%s)' % (type(self).__name__, self._info())

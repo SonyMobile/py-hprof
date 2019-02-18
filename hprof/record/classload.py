@@ -18,7 +18,7 @@ class ClassLoad(base.Record):
 	@property
 	def name(self):
 		nameid = self._read_id(offsets.NAMEID)
-		return self.hf[nameid].str
+		return self.hf.name(nameid).str
 
 	@property
 	def serial(self):

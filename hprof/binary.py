@@ -7,9 +7,10 @@ from mmap import mmap, MAP_PRIVATE, PROT_READ
 import builtins
 import struct
 
+from .heapdump import Dump
 from .errors import *
 from .offset import offset
-from .record import Record
+from .record import Record, HeapDumpSegment, HeapDumpEnd, Utf8
 
 def open(path):
 	return HprofFile(path)
@@ -42,28 +43,18 @@ class HprofFile(object):
 		timestamp_ms = (s.read_uint() << 32) + s.read_uint()
 		self.starttime = datetime.fromtimestamp(timestamp_ms / 1000)
 		self._first_record_addr = s.addr
+		self._dumps = None
 
-		self._idmap = {}
-		def add(rec):
-			try:
-				objid = rec.id
-			except AttributeError:
-				return # fine, not all records have ids
-			else:
-				if objid in self._idmap:
-					old = self._idmap[objid]
-					fmt = 'duplicate id 0x%x, at addresses 0x%x and 0x%x'
-					raise FileFormatError(fmt % (objid, old.addr, rec.addr), old, rec)
-				self._idmap[objid] = rec
-
+		self._names = {}
 		for r in self.records():
-			add(r)
-			try:
-				subrecs = r.records()
-			except AttributeError:
-				continue # fine, not all records have subrecords
-			for sr in subrecs:
-				add(sr)
+			if type(r) is Utf8:
+				nameid = r.id
+				if nameid in self._names:
+					old = self._names[nameid]
+					raise FileFormatError(
+							'duplicate name id 0x%x: "%s" at 0x%x and "%s" at 0x%x'
+							% (nameid, old.str, old.addr, r.str, r.addr))
+				self._names[nameid] = r
 
 	def __enter__(self):
 		return self
@@ -83,6 +74,23 @@ class HprofFile(object):
 			s.skip(len(r) - 1) # skip the rest of the record; -1 because we already read the tag.
 			yield r
 
+	def dumps(self):
+		if self._dumps is None:
+			curdump = None
+			dumps = []
+			for r in self.records():
+				if type(r) is HeapDumpSegment:
+					if curdump is None:
+						curdump = Dump(self)
+						dumps.append(curdump)
+					curdump._add_segment(r)
+				elif type(r) is HeapDumpEnd:
+					if curdump is None:
+						dumps.append(Dump(self))
+					curdump = None
+			self._dumps = tuple(dumps)
+		yield from self._dumps
+
 	def close(self):
 		if self._data is not None:
 			if type(self._data) is mmap:
@@ -97,6 +105,8 @@ class HprofFile(object):
 
 	def __getattr__(self, name):
 		''' return a wrapper for a single read through a Stream, if such a function exists. '''
+		if not hasattr(HprofStream, name):
+			raise AttributeError(name)
 		def stream_wrapper(*args, **kwargs):
 			s = self.stream(0)
 			f = getattr(s, name)
@@ -106,11 +116,11 @@ class HprofFile(object):
 			return f(*args[1:], **kwargs)
 		return stream_wrapper
 
-	def __getitem__(self, objid):
+	def name(self, nameid):
 		try:
-			return self._idmap[objid]
+			return self._names[nameid]
 		except KeyError:
-			raise RefError(objid)
+			raise RefError('name', nameid)
 
 def _bytes_to_int(bytes):
 	i = 0

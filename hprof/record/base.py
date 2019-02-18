@@ -56,7 +56,9 @@ class Record(CommonRecord):
 			hexdata = ' '.join(_hex_groups(self.rawbody[:32])) + ' ...'
 		else:
 			hexdata = ' '.join(_hex_groups(self.rawbody))
-		return '%s( %s )' % (type(self).__name__, hexdata)
+		if hexdata:
+			hexdata = ' ' + hexdata + ' '
+		return '%s(%s)' % (type(self).__name__, hexdata)
 
 
 class Unhandled(Record):

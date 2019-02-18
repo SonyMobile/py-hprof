@@ -168,5 +168,5 @@ class TestErrors(TestCase):
 			r.id(0x0102030405060708090a0b0c0d0e0f)
 			r.bytes(b'string2')
 		addrs, data = hb.build()
-		with self.assertRaisesRegex(hprof.FileFormatError, 'duplicate id'):
+		with self.assertRaisesRegex(hprof.FileFormatError, 'duplicate name id'):
 			hprof.open(bytes(data))

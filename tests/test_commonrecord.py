@@ -78,9 +78,11 @@ class TestRecordSubclasses(TestCase):
 		fileA = MockHprof()
 		fileB = MockHprof()
 		def recurse_subclasses(cls):
-			yield cls
-			for sub in cls.__subclasses__():
-				yield from recurse_subclasses(sub)
+			print(cls.__name__)
+			if 'HeapDumpEnd' not in cls.__name__: # TODO: refactor Record class hierarchy using Immutable, remove this special case.
+				yield cls
+				for sub in cls.__subclasses__():
+					yield from recurse_subclasses(sub)
 		self.recs = [(
 					subcls(fileA, 10),
 					subcls(fileA, 20),

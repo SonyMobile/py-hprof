@@ -3,3 +3,7 @@
 
 from .binary import HprofFile, HprofStream, open
 from .errors import Error, FileFormatError, EofError, RefError
+
+from . import heapdump
+from . import heaprecord
+from . import record

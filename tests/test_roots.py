@@ -67,7 +67,7 @@ class TestRoots(TestCase):
 				root.id(id2)
 		self.addrs, self.data = hb.build()
 		hf = hprof.open(bytes(self.data))
-		dump = next(hf.records())
+		dump, = hf.records()
 		(
 			self.unknownroot, self.obj1, self.obj2, self.threadroot,
 			self.localjniroot1, self.localjniroot2, self.nativeroot,
@@ -80,24 +80,23 @@ class TestRoots(TestCase):
 	### type-specific fields ###
 
 	def test_root_obj_types(self):
-		self.assertIs(type(self.obj1), hprof.heaprecord.Object)
-		self.assertIs(type(self.obj2), hprof.heaprecord.Object)
+		self.assertIs(type(self.obj1), hprof.heaprecord.ObjectRecord)
+		self.assertIs(type(self.obj2), hprof.heaprecord.ObjectRecord)
 
-	def test_root_obj(self):
-		self.assertEqual(self.unknownroot       .obj, self.obj2)
-		self.assertEqual(self.threadroot        .obj, self.obj1)
-		self.assertEqual(self.localjniroot1     .obj, self.obj1)
-		self.assertEqual(self.localjniroot2     .obj, self.obj2)
-		self.assertEqual(self.nativeroot        .obj, self.obj1)
-		self.assertEqual(self.javaroot1         .obj, self.obj2)
-		self.assertEqual(self.javaroot2         .obj, self.obj2)
-		self.assertEqual(self.globaljniroot1    .obj, self.obj2)
-		self.assertEqual(self.globaljniroot2    .obj, self.obj2)
-		self.assertEqual(self.vmroot            .obj, self.obj1)
-		with self.assertRaisesRegex(hprof.RefError, '77'):
-			self.invalidroot.obj
-		self.assertEqual(self.internroot        .obj, self.obj1)
-		self.assertEqual(self.stickyroot        .obj, self.obj2)
+	def test_root_objid(self):
+		self.assertEqual(self.unknownroot       .objid, self.obj2.id)
+		self.assertEqual(self.threadroot        .objid, self.obj1.id)
+		self.assertEqual(self.localjniroot1     .objid, self.obj1.id)
+		self.assertEqual(self.localjniroot2     .objid, self.obj2.id)
+		self.assertEqual(self.nativeroot        .objid, self.obj1.id)
+		self.assertEqual(self.javaroot1         .objid, self.obj2.id)
+		self.assertEqual(self.javaroot2         .objid, self.obj2.id)
+		self.assertEqual(self.globaljniroot1    .objid, self.obj2.id)
+		self.assertEqual(self.globaljniroot2    .objid, self.obj2.id)
+		self.assertEqual(self.vmroot            .objid, self.obj1.id)
+		self.assertEqual(self.invalidroot       .objid, 77)
+		self.assertEqual(self.internroot        .objid, self.obj1.id)
+		self.assertEqual(self.stickyroot        .objid, self.obj2.id)
 
 	def test_threadroot_thread(self):
 		pass # TODO: we don't know about threads yet
@@ -193,16 +192,16 @@ class TestRoots(TestCase):
 
 	def test_root_str(self):
 		# TODO: when we know about threads and classes, improve expected str() result.
-		self.assertEqual(str(self.unknownroot),        'UnknownRoot(Object(class=TODO))')
-		self.assertEqual(str(self.threadroot),         'ThreadRoot(Object(class=TODO) from thread ???)')
-		self.assertEqual(str(self.localjniroot1),      'LocalJniRoot(Object(class=TODO) in <func>)')
-		self.assertEqual(str(self.localjniroot2),      'LocalJniRoot(Object(class=TODO) in <func>)')
-		self.assertEqual(str(self.nativeroot),         'NativeStackRoot(Object(class=TODO) from thread ???)')
-		self.assertEqual(str(self.javaroot1),          'JavaStackRoot(Object(class=TODO) in <func>)')
-		self.assertEqual(str(self.javaroot2),          'JavaStackRoot(Object(class=TODO) in <func>)')
-		self.assertEqual(str(self.globaljniroot1),     'GlobalJniRoot(%s, grefid=0x%x)' % (str(self.globaljniroot1.obj), 123))
-		self.assertEqual(str(self.globaljniroot2),     'GlobalJniRoot(%s, grefid=0x%x)' % (str(self.globaljniroot2.obj), 123))
-		self.assertEqual(str(self.vmroot),             'VmInternalRoot(%s)' % str(self.vmroot.obj))
-		self.assertEqual(str(self.invalidroot),        'UnknownRoot(<invalid ref 0x%x>)' % 77)
-		self.assertEqual(str(self.internroot),         'InternedStringRoot(%s)' % str(self.internroot.obj))
-		self.assertEqual(str(self.stickyroot),         'StickyClassRoot(%s)' % str(self.stickyroot.obj))
+		self.assertEqual(str(self.unknownroot),        'UnknownRoot(objid=0x%x)'                       % (self.obj2.id))
+		self.assertEqual(str(self.threadroot),         'ThreadRoot(objid=0x%x from thread ???)'        % (self.obj1.id))
+		self.assertEqual(str(self.localjniroot1),      'LocalJniRoot(objid=0x%x in <func>)'            % (self.obj1.id))
+		self.assertEqual(str(self.localjniroot2),      'LocalJniRoot(objid=0x%x in <func>)'            % (self.obj2.id))
+		self.assertEqual(str(self.nativeroot),         'NativeStackRoot(objid=0x%x from thread ???)'   % (self.obj1.id))
+		self.assertEqual(str(self.javaroot1),          'JavaStackRoot(objid=0x%x in <func>)'           % (self.obj2.id))
+		self.assertEqual(str(self.javaroot2),          'JavaStackRoot(objid=0x%x in <func>)'           % (self.obj2.id))
+		self.assertEqual(str(self.globaljniroot1),     'GlobalJniRoot(objid=0x%x, grefid=0x%x)'        % (self.obj2.id, 123))
+		self.assertEqual(str(self.globaljniroot2),     'GlobalJniRoot(objid=0x%x, grefid=0x%x)'        % (self.obj2.id, 123))
+		self.assertEqual(str(self.vmroot),             'VmInternalRoot(objid=0x%x)'                    % (self.obj1.id))
+		self.assertEqual(str(self.invalidroot),        'UnknownRoot(objid=0x%x)'                       % (77))
+		self.assertEqual(str(self.internroot),         'InternedStringRoot(objid=0x%x)'                % (self.obj1.id))
+		self.assertEqual(str(self.stickyroot),         'StickyClassRoot(objid=0x%x)'                   % (self.obj2.id))

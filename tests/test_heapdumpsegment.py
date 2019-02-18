@@ -75,8 +75,9 @@ class TestHeapDumpSegmentErrors(TestCase):
 				s.bytes('this should not work')
 		addrs, data = self.hb.build()
 		data = bytes(data)
+		hf = hprof.open(data)
 		with self.assertRaisesRegex(hprof.FileFormatError, '0xf0'):
-			hprof.open(data)
+			dump, = hf.dumps()
 
 	def test_heapdumpsegment_too_short(self):
 		with self.hb.record(28, 123) as r:
@@ -89,5 +90,6 @@ class TestHeapDumpSegmentErrors(TestCase):
 		data[addrs[0] + 8] -= 1
 		del data[addrs[1] - 1]
 		data = bytes(data)
+		hf = hprof.open(data)
 		with self.assertRaisesRegex(hprof.FileFormatError, '0x%x.*0x%x' % (10 + self.idsize, 9 + self.idsize)):
-			hprof.open(data)
+			dump, = hf.dumps()
