@@ -11,7 +11,6 @@ offsets = AutoOffsets(1,
 	'END')
 
 class HeapDumpInfo(HeapRecord):
-	__slots__ = ()
 	TAG = 0xfe
 
 	@property

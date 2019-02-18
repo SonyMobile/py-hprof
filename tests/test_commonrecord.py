@@ -78,11 +78,9 @@ class TestRecordSubclasses(TestCase):
 		fileA = MockHprof()
 		fileB = MockHprof()
 		def recurse_subclasses(cls):
-			print(cls.__name__)
-			if 'HeapDumpEnd' not in cls.__name__: # TODO: refactor Record class hierarchy using Immutable, remove this special case.
-				yield cls
-				for sub in cls.__subclasses__():
-					yield from recurse_subclasses(sub)
+			yield cls
+			for sub in cls.__subclasses__():
+				yield from recurse_subclasses(sub)
 		self.recs = [(
 					subcls(fileA, 10),
 					subcls(fileA, 20),
@@ -112,15 +110,10 @@ class TestRecordSubclasses(TestCase):
 					self.assertNotEqual(r, s, msg=msg(r,s))
 
 	def test_recordsubclasses_rawbody(self):
-		''' make sure that all CommonRecord subclasses have a rawbody property. '''
+		''' make sure that all Record subclasses have a rawbody property. '''
 		for t in self.recs:
 			for r in t:
-				if type(r) is CommonRecord or isinstance(r, HeapRecord):
-					# parents are like "do as I say, not as I do"
-					# ...and HeapRecords don't have rawbody either.
-					with self.assertRaises(AttributeError):
-						r.rawbody
-				else:
+				if isinstance(r, Record):
 					try:
 						r.rawbody
 					except Exception as e:

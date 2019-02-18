@@ -7,8 +7,6 @@ from ..offset import offset, AutoOffsets, idoffset
 from ..errors import RefError
 
 class GcRoot(HeapRecord):
-	__slots__ = ()
-
 	@property
 	def objid(self):
 		return self._read_id(self.offsets.ID)
@@ -23,12 +21,10 @@ class GcRoot(HeapRecord):
 		return '%s(%s)' % (type(self).__name__, self._info())
 
 class UnknownRoot(GcRoot):
-	__slots__ = ()
 	TAG = 0xff
 	offsets = AutoOffsets(1, 'ID', idoffset(1), 'END')
 
 class GlobalJniRoot(GcRoot):
-	__slots__ = ()
 	TAG = 0x01
 	offsets = AutoOffsets(1,
 			'ID',     idoffset(1),
@@ -43,7 +39,6 @@ class GlobalJniRoot(GcRoot):
 		return super()._info() + ', grefid=0x%x' % self.grefid
 
 class LocalJniRoot(GcRoot):
-	__slots__ = ()
 	TAG = 0x02
 	offsets = AutoOffsets(1,
 			'ID',     idoffset(1),
@@ -55,7 +50,6 @@ class LocalJniRoot(GcRoot):
 		return super()._info() + ' in <func>' # TODO: actually show the function here.
 
 class JavaStackRoot(GcRoot):
-	__slots__ = ()
 	TAG = 0x03
 	offsets = AutoOffsets(1,
 			'ID',     idoffset(1),
@@ -67,7 +61,6 @@ class JavaStackRoot(GcRoot):
 		return super()._info() + ' in <func>' # TODO: not <func>
 
 class NativeStackRoot(GcRoot):
-	__slots__ = ()
 	TAG = 0x04
 	offsets = AutoOffsets(1,
 			'ID',     idoffset(1),
@@ -78,12 +71,10 @@ class NativeStackRoot(GcRoot):
 		return super()._info() + ' from thread ???' # TODO: not "???"
 
 class StickyClassRoot(GcRoot):
-	__slots__ = ()
 	TAG = 0x05
 	offsets = AutoOffsets(1, 'ID', idoffset(1), 'END')
 
 class ThreadRoot(GcRoot):
-	__slots__ = ()
 	TAG = 0x08
 	offsets = AutoOffsets(1,
 			'ID',     idoffset(1),
@@ -95,12 +86,10 @@ class ThreadRoot(GcRoot):
 		return super()._info() + ' from thread ???' # TODO: actually show the thread here.
 
 class InternedStringRoot(GcRoot):
-	__slots__ = ()
 	TAG = 0x89
 	offsets = AutoOffsets(1, 'ID', idoffset(1), 'END')
 
 class VmInternalRoot(GcRoot):
-	__slots__ = ()
 	TAG = 0x8d
 	offsets = AutoOffsets(1,
 			'ID',    idoffset(1),

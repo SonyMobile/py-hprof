@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-class CommonRecord(object):
+from .immutable import Immutable
+
+class CommonRecord(Immutable):
 	__slots__ = 'hf', 'addr'
 
 	def __init__(self, hf, addr):
@@ -10,11 +12,6 @@ class CommonRecord(object):
 
 	def __eq__(self, other):
 		return self.addr == other.addr and self.hf == other.hf and type(self) is type(other)
-
-	def __setattr__(self, name, value):
-		if hasattr(self, name):
-			raise AttributeError('records are immutable')
-		super().__setattr__(name, value)
 
 	@property
 	def tag(self):

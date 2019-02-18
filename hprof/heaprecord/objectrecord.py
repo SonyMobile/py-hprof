@@ -15,7 +15,6 @@ offsets = AutoOffsets(1,
 
 
 class ObjectRecord(HeapRecord):
-	__slots__ = ()
 	TAG = 0x21
 
 	@property

@@ -7,7 +7,6 @@ from .. import heaprecord
 from ..errors import *
 
 class HeapDumpSegment(base.Record):
-	__slots__ = ()
 	TAG = 28
 
 	def __str__(self):
@@ -24,10 +23,4 @@ class HeapDumpSegment(base.Record):
 			yield r
 
 class HeapDumpEnd(base.Record):
-	__slots__ = ()
 	TAG = 44
-
-	def __init__(self, hf, addr):
-		super().__init__(hf, addr)
-		if len(self) != 9:
-			raise FileFormatError('HeapDumpEnd payload at 0x%x is not empty: %s' % (self.addr, self))

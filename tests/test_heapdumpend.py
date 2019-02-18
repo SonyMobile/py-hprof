@@ -55,6 +55,7 @@ class TestHeapDumpErrors(TestCase):
 		with hb.record(44, 123) as r:
 			r.uint(7878)
 		addrs, data = hb.build()
-		with self.assertRaisesRegex(hprof.FileFormatError, 'HeapDumpEnd.*not empty'):
-			hprof.open(bytes(data))
+		hf = hprof.open(bytes(data))
+		end, = hf.records()
+		self.assertEqual(len(end), 13)
 

@@ -10,8 +10,6 @@ def _descendants(cls):
 		yield from _descendants(child)
 
 class HeapRecord(CommonRecord):
-	__slots__ = ()
-
 	@staticmethod
 	def create(hf, addr):
 		from .roots import UnknownRoot
