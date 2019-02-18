@@ -232,3 +232,64 @@ class TestDumpNames(TestCase):
 		self.open()
 		with self.assertRaisesRegex(hprof.RefError, 'name.*10'):
 			dump, = self.hf.dumps()
+
+@varying_idsize
+class TestDumpDuplicateIds(TestCase):
+	def setUp(self):
+		self.addrs = self.data = self.hf = None
+		self.hb = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 12345)
+		with self.hb.record(1, 0) as r:
+			r.id(1)
+			r.bytes('otherheap')
+		with self.hb.record(28, 0) as r:
+			with r.subrecord(0x21) as obj:
+				obj.id(4)
+				obj.uint(94)
+				obj.id(83)
+				obj.uint(0)
+
+	def open(self):
+		self.addrs, self.data = self.hb.build()
+		self.hf = hprof.open(bytes(self.data))
+
+	def test_duplicate_id_same_heap(self):
+		with self.hb.record(28, 0) as r:
+			with r.subrecord(0x21) as obj:
+				obj.id(4)
+				obj.uint(94)
+				obj.id(83)
+				obj.uint(0)
+		self.open()
+		with self.assertRaisesRegex(hprof.FileFormatError, 'duplicate.*4'):
+			dump, = self.hf.dumps()
+
+	def test_duplicate_id_other_heap(self):
+		with self.hb.record(28, 0) as r:
+			with r.subrecord(0xfe) as info:
+				info.uint(300)
+				info.id(1)
+			with r.subrecord(0x21) as obj:
+				obj.id(4)
+				obj.uint(94)
+				obj.id(83)
+				obj.uint(0)
+		self.open()
+		with self.assertRaisesRegex(hprof.FileFormatError, 'duplicate.*4'):
+			dump, = self.hf.dumps()
+
+	def test_duplicate_id_other_dump(self):
+		with self.hb.record(44, 0) as r:
+			pass
+		with self.hb.record(28, 0) as r:
+			with r.subrecord(0x21) as obj:
+				obj.id(4)
+				obj.uint(94)
+				obj.id(83)
+				obj.uint(0)
+		self.open()
+		a, b = self.hf.dumps()
+		a, = a.heaps()
+		b, = b.heaps()
+		a, = a.objects()
+		b, = b.objects()
+		self.assertNotEqual(a, b)

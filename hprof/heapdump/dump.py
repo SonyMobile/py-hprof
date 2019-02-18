@@ -21,6 +21,9 @@ class Dump(Immutable):
 			if type(r) is HeapDumpInfo:
 				self._set_curheap(r.type, r.name.str)
 			elif type(r) is ObjectRecord:
+				objid = r.id
+				if any(objid in h._objects for h in self._heaps.values()):
+					raise FileFormatError('duplicate object id 0x%x' % objid)
 				self._curheap._add_object(r)
 
 	def _set_curheap(self, htype, hname):
