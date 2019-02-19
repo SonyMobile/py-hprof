@@ -41,3 +41,33 @@ class PrimitiveArrayRecord(HeapRecord):
 			return self._read_jvalue(offset, t)
 		else:
 			raise IndexError('tried to read element %d in a size %d array' % (ix, self.count))
+
+class ObjectArrayRecord(HeapRecord):
+	TAG = 0x22
+
+	_offsets = AutoOffsets(1,
+			'ID',	  idoffset(1),
+			'STRACE', 4,
+			'COUNT',  4,
+			'CLSID',  idoffset(1),
+			'DATA')
+
+	@property
+	def id(self):
+		return self._read_id(self._offsets.ID)
+
+	@property
+	def count(self):
+		return self._read_uint(self._offsets.COUNT)
+
+	def __len__(self):
+		return self._offsets.DATA.flatten(self.hf.idsize) + self.count * self.hf.idsize
+
+	def __str__(self):
+		return 'ObjectArrayRecord(count=%d)' % self.count
+
+	def __getitem__(self, ix):
+		if 0 <= ix < self.count:
+			return self._read_id(self._offsets.DATA + idoffset(ix))
+		else:
+			raise IndexError('tried to read element %d in a size %d array' % (ix, self.count))
