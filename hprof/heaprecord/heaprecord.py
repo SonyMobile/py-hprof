@@ -20,5 +20,5 @@ class HeapRecord(CommonRecord):
 			if getattr(candidate, 'TAG', None) == tag:
 				rtype = candidate
 		if rtype is None:
-			raise FileFormatError('unknown HeapDump subrecord tag 0x%02x' % tag)
+			raise FileFormatError('unknown HeapDump subrecord tag 0x%02x at address 0x%x' % (tag, addr))
 		return rtype(hf, addr)

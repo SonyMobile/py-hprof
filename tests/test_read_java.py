@@ -5,11 +5,12 @@ import hprof
 
 from unittest import TestCase
 
-from .util import HprofBuilder
+from .util import HprofBuilder, varying_idsize
 
+@varying_idsize
 class TestReadJavaValues(TestCase):
 	def setUp(self):
-		hb = HprofBuilder(b'JAVA PROFILE 1.0.3\0', 4, 123)
+		hb = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 123)
 		with hb.record(255, 0) as r:
 			r.uint(0xff000102)
 			r.uint(0x03040506)
@@ -28,8 +29,7 @@ class TestReadJavaValues(TestCase):
 			self.hf.read_jtype(self.start + 1)
 		with self.assertRaisesRegex(hprof.FileFormatError, 'JavaType'):
 			self.hf.read_jtype(self.start + 2)
-		with self.assertRaisesRegex(hprof.FileFormatError, 'JavaType'):
-			self.hf.read_jtype(self.start + 3)
+		self.assertEqual(self.hf.read_jtype(self.start + 3), hprof.JavaType.object)
 		with self.assertRaisesRegex(hprof.FileFormatError, 'JavaType'):
 			self.hf.read_jtype(self.start + 4)
 		self.assertEqual(self.hf.read_jtype(self.start + 5), hprof.JavaType.boolean)
@@ -215,6 +215,18 @@ class TestReadJavaValues(TestCase):
 		self.assertEqual(self.hf.read_jvalue(self.start +  6, hprof.JavaType.long), 0x05061f0708090a0b)
 		self.assertEqual(self.hf.read_jvalue(self.start +  7, hprof.JavaType.long), 0x061f0708090a0b0c)
 		self.assertEqual(self.hf.read_jvalue(self.start +  8, hprof.JavaType.long), 0x1f0708090a0b0c0d)
+
+	def test_read_object(self):
+		with self.assertRaises(hprof.EofError):
+			self.hf.read_jvalue(-1, hprof.JavaType.object)
+		with self.assertRaises(hprof.EofError):
+			self.hf.read_jvalue(self.start + 17 - self.idsize, hprof.JavaType.object)
+		mask = 2 ** (8 * self.idsize) - 1
+		bigval = 0xff000102030405061f0708090a0b0c0d
+		for i in range(17-self.idsize):
+			shifted = bigval >> (128 - 8 * self.idsize - 8 * i)
+			expected = mask & shifted
+			self.assertEqual(self.hf.read_jvalue(self.start + i, hprof.JavaType.object), expected)
 
 	def test_read_invalid_type(self):
 		with self.assertRaisesRegex(hprof.Error, 'JavaType.*1337'):

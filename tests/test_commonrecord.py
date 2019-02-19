@@ -75,6 +75,8 @@ class TestRecordSubclasses(TestCase):
 				return bytes(b)
 			def read_uint(self, addr):
 				return 10
+			def read_ushort(self, addr):
+				return 0
 		fileA = MockHprof()
 		fileB = MockHprof()
 		def recurse_subclasses(cls):

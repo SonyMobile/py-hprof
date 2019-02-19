@@ -2,10 +2,11 @@
 #coding=utf8
 
 from enum import Enum, unique
+from .offset import idoffset
 
 @unique
 class JavaType(Enum):
-# TODO: object  =  2
+	object  =  2
 	boolean =  4
 	char    =  5
 	float   =  6
@@ -30,4 +31,5 @@ _sizes = {
 	JavaType.short:   2,
 	JavaType.int:     4,
 	JavaType.long:    8,
+	JavaType.object:  idoffset(1)
 }

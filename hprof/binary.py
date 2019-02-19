@@ -210,6 +210,7 @@ class HprofStream(object):
 
 	def read_jvalue(self, jtype):
 		readers = {
+			JavaType.object:  self.read_id,
 			JavaType.boolean: self.read_boolean,
 			JavaType.byte:    self.read_byte,
 			JavaType.char:    self.read_char,
@@ -241,6 +242,9 @@ class HprofStream(object):
 
 	def read_int(self):
 		return self._read_value('i')
+
+	def read_ushort(self):
+		return self._read_value('H')
 
 	def read_short(self):
 		return self._read_value('h')

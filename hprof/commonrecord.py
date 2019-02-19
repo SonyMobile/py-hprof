@@ -35,3 +35,6 @@ class CommonRecord(Immutable):
 
 	def _read_jvalue(self, offset, jtype):
 		return self.hf.read_jvalue(self.addr + offset, jtype)
+
+	def _read_ushort(self, offset):
+		return self.hf.read_ushort(self.addr + offset)
