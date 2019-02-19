@@ -10,13 +10,11 @@ def _shorten(s, maxlength):
 	return s
 
 def dump(hfile):
-	for di, d in enumerate(hfile.dumps()):
-		for hi, h in enumerate(d.heaps()):
-			print('DUMP %d, HEAP %d: %s' % (di, hi, h))
+	for di, dump in enumerate(hfile.dumps()):
+		for hi, heap in enumerate(dump.heaps()):
+			info = 'DUMP %d, HEAP %d (type=%d name=%s)' % (di, hi, heap.type, heap.name)
 			for obj in heap.objects():
-				print(obj)
-		data = _shorten(str(r), 100)
-		print('%10x: %s %3d/%-10s %s' % (r.addr, r.timestamp.strftime('%H:%M:%S.%f'), r.tag, type(r).__name__, data))
+				print(info, obj)
 
 if __name__ == '__main__':
 	import sys
