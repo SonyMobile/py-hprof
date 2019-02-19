@@ -215,3 +215,7 @@ class TestReadJavaValues(TestCase):
 		self.assertEqual(self.hf.read_jvalue(self.start +  6, hprof.JavaType.long), 0x05061f0708090a0b)
 		self.assertEqual(self.hf.read_jvalue(self.start +  7, hprof.JavaType.long), 0x061f0708090a0b0c)
 		self.assertEqual(self.hf.read_jvalue(self.start +  8, hprof.JavaType.long), 0x1f0708090a0b0c0d)
+
+	def test_read_invalid_type(self):
+		with self.assertRaisesRegex(hprof.Error, 'JavaType.*1337'):
+			self.hf.read_jvalue(0, 1337)
