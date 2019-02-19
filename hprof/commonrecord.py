@@ -29,3 +29,9 @@ class CommonRecord(Immutable):
 
 	def _read_id(self, offset):
 		return self.hf.read_id(self.addr + offset)
+
+	def _read_jtype(self, offset):
+		return self.hf.read_jtype(self.addr + offset)
+
+	def _read_jvalue(self, offset, jtype):
+		return self.hf.read_jvalue(self.addr + offset, jtype)

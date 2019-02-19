@@ -11,6 +11,7 @@ from .heapdump import Dump
 from .errors import *
 from .offset import offset
 from .record import Record, HeapDumpSegment, HeapDumpEnd, Utf8
+from .types import JavaType
 
 def open(path):
 	return HprofFile(path)
@@ -128,6 +129,25 @@ def _bytes_to_int(bytes):
 		i = (i << 8) + b
 	return i
 
+def _bytes_to_bool(bytes):
+	b, = bytes
+	if b == 0:
+		return False
+	elif b == 1:
+		return True
+	else:
+		raise FileFormatError('invalid boolean value 0x%x' % b)
+
+def _bytes_to_jtype(bytes):
+	b, = bytes
+	try:
+		return JavaType(b)
+	except ValueError:
+		raise FileFormatError('invalid JavaType: 0x%x' % b)
+
+def _bytes_to_char(bytes):
+	return bytes.decode('utf-16-be')
+
 class HprofStream(object):
 	def __init__(self, hf, startaddr):
 		self._addr = 0
@@ -185,10 +205,33 @@ class HprofStream(object):
 		''' Read an utf8 string of nbytes. Note: byte count, not character count! '''
 		return self._consume_bytes(nbytes, lambda b: b.decode('utf8'))
 
+	def read_jtype(self):
+		return self._consume_bytes(1, _bytes_to_jtype)
+
+	def read_jvalue(self, jtype):
+		readers = {
+			JavaType.boolean: self.read_boolean,
+			JavaType.byte:    self.read_byte,
+			JavaType.char:    self.read_char,
+			JavaType.short:   self.read_short,
+			JavaType.int:     self.read_int,
+			JavaType.long:    self.read_long,
+			JavaType.float:   self.read_float,
+			JavaType.double:  self.read_double,
+		}
+		try:
+			rfun = readers[jtype]
+		except KeyError:
+			raise Error('unhandled (or invalid) JavaType: %s' % jtype)
+		return rfun()
+
 	def _read_value(self, fmt):
 		fmt = '>' + fmt
 		n = struct.calcsize(fmt)
 		return self._consume_bytes(n, lambda b: untuple(struct.unpack(fmt, b)))
+
+	def read_char(self):
+		return self._consume_bytes(2, _bytes_to_char)
 
 	def read_byte(self):
 		return self._read_value('B')
@@ -199,5 +242,20 @@ class HprofStream(object):
 	def read_int(self):
 		return self._read_value('i')
 
+	def read_short(self):
+		return self._read_value('h')
+
+	def read_boolean(self):
+		return self._consume_bytes(1, _bytes_to_bool)
+
 	def read_id(self):
 		return self._consume_bytes(self._hf.idsize, _bytes_to_int)
+
+	def read_float(self):
+		return self._read_value('f')
+
+	def read_double(self):
+		return self._read_value('d')
+
+	def read_long(self):
+		return self._read_value('q')

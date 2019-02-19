@@ -80,11 +80,26 @@ class _Appender(object):
 			b = b.encode('utf8')
 		self._hb._append(self, b)
 
+	def long(self, i):
+		self._hb._append(self, pack('>q', i))
+
 	def uint(self, u):
 		self._hb._append(self, pack('>I', u))
 
+	def int(self, i):
+		self._hb._append(self, pack('>i', i))
+
 	def ushort(self, u):
 		self._hb._append(self, pack('>H', u))
+
+	def short(self, i):
+		self._hb._append(self, pack('>h', i))
+
+	def double(self, f):
+		self._hb._append(self, pack('>d', f))
+
+	def float(self, f):
+		self._hb._append(self, pack('>f', f))
 
 	def id(self, ident):
 		assert type(ident) is int
