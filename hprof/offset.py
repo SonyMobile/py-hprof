@@ -46,6 +46,13 @@ def idoffset(ids):
 def byteoffset(bytes):
 	return offset(bytes, 0)
 
+class FlatOffsets(object):
+	def __init__(self, src, idsize):
+		for name, value in src._offsets.items():
+			if type(value) is not int:
+				value = value.flatten(idsize)
+			setattr(self, name, value)
+
 class AutoOffsets(object):
 	def __init__(self, *args):
 		self._offsets = {}
@@ -59,20 +66,11 @@ class AutoOffsets(object):
 			if i + 1 < len(args):
 				pos += args[i+1]
 
-	def _flatargs(self, idsize):
-		prev = 0
-		for name, value in self._offsets.items():
-			if type(value) is not int:
-				value = value.flatten(idsize)
-			yield value - prev
-			yield name
-			prev = value
-
 	def __getitem__(self, idsize):
 		try:
 			return self._flattened[idsize]
 		except KeyError:
 			pass
-		flat = AutoOffsets(*self._flatargs(idsize))
+		flat = FlatOffsets(self, idsize)
 		self._flattened[idsize] = flat
 		return flat

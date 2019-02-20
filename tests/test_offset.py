@@ -146,6 +146,8 @@ class TestAutoOffset(TestCase):
 		five = offsets[5]
 		self.assertIs(offsets[2], two) # check that value is cached
 		self.assertIs(offsets[5], five)
+		self.assertIs(type(two), FlatOffsets)
+		self.assertIs(type(five), FlatOffsets)
 		self.assertEqual(two.ONE, 3)
 		self.assertEqual(two.TWO, 5)
 		self.assertEqual(two.THREE, 9)
@@ -154,3 +156,24 @@ class TestAutoOffset(TestCase):
 		self.assertEqual(five.TWO, 8)
 		self.assertEqual(five.THREE, 18)
 		self.assertEqual(five.FOUR, 21)
+
+	def test_autooffset_reflatten(self):
+		offsets = AutoOffsets(3, 'ONE', idoffset(1), 'TWO', idoffset(2), 'THREE', 3, 'FOUR')
+		self.assertIsNot(offsets[2], offsets)
+		self.assertIsNot(offsets[5], offsets)
+		self.assertIsNot(offsets[5], offsets[2])
+		with self.assertRaisesRegex(TypeError, 'indexing'):
+			offsets[2][2]
+		with self.assertRaisesRegex(TypeError, 'indexing'):
+			offsets[2][5]
+
+	def test_autooffset_flatten_flat(self):
+		offsets = AutoOffsets(3, 'ONE', 7, 'TWO', 11, 'THREE', 8)
+		self.assertIsNot(offsets[2], offsets)
+		self.assertEqual(offsets[2].ONE, 3)
+		self.assertEqual(offsets[2].TWO, 10)
+		self.assertEqual(offsets[2].THREE, 21)
+		with self.assertRaisesRegex(TypeError, 'indexing'):
+			offsets[2][2]
+		with self.assertRaisesRegex(TypeError, 'indexing'):
+			offsets[3][2]
