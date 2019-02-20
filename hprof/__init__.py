@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from .binary import HprofFile, HprofStream, open
+from .binary import HprofFile, open
 from .errors import Error, FileFormatError, EofError, RefError
 from .types import JavaType
 

@@ -29,13 +29,11 @@ class TestCorners(TestCase):
 				+ b'\xff\0\0\0\0\0\0\0\10'
 				+ b'ABCD\0EFG'
 		)
-		s = f.stream(40)
 		self.assertEqual(f.read_ascii(45,3), 'EFG')
-		self.assertEqual(s.read_ascii(), 'ABCD')
-		s.skip(-1)
-		self.assertEqual(s.read_uint(), 0x00454647)
+		self.assertEqual(f.read_ascii(40), 'ABCD')
+		self.assertEqual(f.read_uint(44), 0x00454647)
 		with self.assertRaisesRegex(hprof.EofError, 'read.*48:49.*48'):
-			s.read_byte()
+			f.read_byte(48)
 		self.assertEqual(f.read_utf8(43,4), 'D\0EF')
 
 	def test_invalid_ctor_arg(self):
@@ -98,7 +96,7 @@ class TestByteReads(TestCase):
 			self.f.read_byte(57)
 
 	def test_read_byte_negative(self):
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*-1'):
+		with self.assertRaisesRegex(hprof.EofError, '-1'):
 			self.f.read_byte(-1)
 
 class TestByteArrayReads(TestCase):
@@ -109,11 +107,10 @@ class TestByteArrayReads(TestCase):
 		self.f.close()
 
 	def test_read_bytes(self):
-		s = self.f.stream(40)
-		self.assertEqual(s.read_bytes(4), b'ABCD')
-		self.assertEqual(s.read_bytes(7), b'\0\0\0\0\xc3\xb6F')
-		self.assertEqual(self.f.read_bytes(46,4), b'\0\0\xc3\xb6')
-		self.assertEqual(s.read_bytes(3), b'\0\xaaF')
+		self.assertEqual(self.f.read_bytes(40, 4), b'ABCD')
+		self.assertEqual(self.f.read_bytes(44, 7), b'\0\0\0\0\xc3\xb6F')
+		self.assertEqual(self.f.read_bytes(46, 4), b'\0\0\xc3\xb6')
+		self.assertEqual(self.f.read_bytes(51, 3), b'\0\xaaF')
 
 	def test_read_zero_bytes(self):
 		self.assertEqual(self.f.read_bytes(42, 0), b'')
@@ -122,9 +119,8 @@ class TestByteArrayReads(TestCase):
 		self.assertEqual(self.f.read_bytes(56, 0), b'')
 
 	def test_read_bytes_negative_count(self):
-		s = self.f.stream()
 		with self.assertRaisesRegex(ValueError, '-1'):
-			s.read_bytes(-1)
+			self.f.read_bytes(0, -1)
 		with self.assertRaisesRegex(ValueError, '-3'):
 			self.f.read_bytes(46, -3)
 
@@ -133,7 +129,7 @@ class TestByteArrayReads(TestCase):
 			self.f.read_bytes(57,1)
 
 	def test_read_bytes_negative(self):
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*-1'):
+		with self.assertRaisesRegex(hprof.EofError, '-1'):
 			self.f.read_bytes(-1,1)
 
 	def test_read_bytes_spill(self):
@@ -144,7 +140,7 @@ class TestByteArrayReads(TestCase):
 		self.assertEqual(self.f.read_bytes(55,2), b'HI')
 		self.assertEqual(self.f.read_bytes(56,1), b'I')
 		self.assertEqual(self.f.read_bytes(57,0), b'')
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*58.*57'):
+		with self.assertRaisesRegex(hprof.EofError, '58.*57'):
 			self.f.read_bytes(58,0)
 
 class TestUintReads(TestCase):
@@ -175,11 +171,11 @@ class TestUintReads(TestCase):
 			self.f.read_uint(55)
 
 	def test_read_uint_outside(self):
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*2000.*57'):
+		with self.assertRaisesRegex(hprof.EofError, '2000.*57'):
 			self.f.read_uint(2000)
 
 	def test_read_uint_negative(self):
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*-2'):
+		with self.assertRaisesRegex(hprof.EofError, '-2'):
 			self.f.read_uint(-2)
 
 class TestIntReads(TestCase):
@@ -210,11 +206,11 @@ class TestIntReads(TestCase):
 			self.f.read_uint(55)
 
 	def test_read_int_outside(self):
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*2000.*57'):
+		with self.assertRaisesRegex(hprof.EofError, '2000.*57'):
 			self.f.read_uint(2000)
 
 	def test_read_int_negative(self):
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*-2'):
+		with self.assertRaisesRegex(hprof.EofError, '-2'):
 			self.f.read_uint(-2)
 
 
@@ -269,11 +265,11 @@ class TestAsciiReads(TestCase):
 			self.f.read_ascii(55,10)
 
 	def test_read_ascii_fixed_outside(self):
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*60.*57'):
+		with self.assertRaisesRegex(hprof.EofError, '60.*57'):
 			self.f.read_ascii(60, 2)
 
 	def test_read_ascii_fixed_negative(self):
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*-1'):
+		with self.assertRaisesRegex(hprof.EofError, '-1'):
 			self.f.read_ascii(-1, 1)
 
 	def test_read_ascii_fixed_negative_len(self):
@@ -285,11 +281,11 @@ class TestAsciiReads(TestCase):
 			self.f.read_ascii(55)
 
 	def test_read_terminated_ascii_outside(self):
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*60.*57'):
+		with self.assertRaisesRegex(hprof.EofError, '60.*57'):
 			self.f.read_ascii(60)
 
 	def test_read_terminated_ascii_negative(self):
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*-4'):
+		with self.assertRaisesRegex(hprof.EofError, '-4'):
 			self.f.read_ascii(-4)
 
 class TestUtf8Reads(TestCase):
@@ -342,245 +338,13 @@ class TestUtf8Reads(TestCase):
 			self.f.read_utf8(55,10)
 
 	def test_read_utf8_fixed_outside(self):
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*60.*57'):
+		with self.assertRaisesRegex(hprof.EofError, '60.*57'):
 			self.f.read_utf8(60, 2)
 
 	def test_read_utf8_fixed_negative(self):
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*-1'):
+		with self.assertRaisesRegex(hprof.EofError, '-1'):
 			self.f.read_utf8(-1, 1)
 
 	def test_read_utf8_fixed_negative_len(self):
 		with self.assertRaisesRegex(ValueError, '-2'):
 			self.f.read_utf8(43, -2)
-
-class TestStream(TestCase):
-	def setUp(self):
-		self.f = hprof.HprofFile(inputfile)
-
-	def tearDown(self):
-		self.f.close()
-
-	def test_uint_stream(self):
-		s = self.f.stream(40)
-		self.assertEqual(s.addr, 40)
-		self.assertEqual(s.read_uint(), 0x41424344)
-		self.assertEqual(s.addr, 44)
-		self.assertEqual(s.read_uint(), 0)
-		self.assertEqual(s.addr, 48)
-		self.assertEqual(s.read_uint(), 0xc3b64600)
-		self.assertEqual(s.addr, 52)
-		self.assertEqual(s.read_uint(), 0xaa464748)
-		self.assertEqual(s.addr, 56)
-		with self.assertRaisesRegex(hprof.EofError, 'read.*56:60.*57'):
-			s.read_uint()
-		self.assertEqual(s.addr, 56)
-
-	def test_int_stream(self):
-		s = self.f.stream(40)
-		self.assertEqual(s.addr, 40)
-		self.assertEqual(s.read_int(), 0x41424344)
-		self.assertEqual(s.addr, 44)
-		self.assertEqual(s.read_int(), 0)
-		self.assertEqual(s.addr, 48)
-		self.assertEqual(s.read_int(), -0x3c49ba00)
-		self.assertEqual(s.addr, 52)
-		self.assertEqual(s.read_int(), -0x55b9b8b8)
-		self.assertEqual(s.addr, 56)
-		with self.assertRaisesRegex(hprof.EofError, 'read.*56:60.*57'):
-			s.read_int()
-		self.assertEqual(s.addr, 56)
-
-	def test_mixed_stream(self):
-		s = self.f.stream(40)
-		self.assertEqual(s.addr, 40)
-		self.assertEqual(s.read_ascii(), 'ABCD')
-		self.assertEqual(s.addr, 45)
-		self.assertEqual(s.read_uint(), 0xc3)
-		self.assertEqual(s.addr, 49)
-		self.assertEqual(s.read_int(), -0x49b9ff56)
-		self.assertEqual(s.addr, 53)
-		self.assertEqual(s.read_ascii(2), 'FG')
-		self.assertEqual(s.addr, 55)
-		with self.assertRaisesRegex(hprof.EofError, 'read.*55:59.*57'):
-			s.read_ascii(4)
-		self.assertEqual(s.addr, 55)
-		self.assertEqual(s.read_ascii(2), 'HI')
-		self.assertEqual(s.addr, 57)
-
-	def test_skip(self):
-		s = self.f.stream(40)
-		self.assertEqual(s.addr, 40)
-		self.assertEqual(s.read_ascii(), 'ABCD')
-		self.assertEqual(s.addr, 45)
-		s.skip(3)
-		self.assertEqual(s.addr, 48)
-		self.assertEqual(s.read_uint(), 0xc3b64600)
-		self.assertEqual(s.addr, 52)
-
-	def test_skip_first(self):
-		s = self.f.stream(40)
-		self.assertEqual(s.addr, 40)
-		s.skip(1)
-		self.assertEqual(s.addr, 41)
-		self.assertEqual(s.read_ascii(), 'BCD')
-		self.assertEqual(s.addr, 45)
-
-	def test_skip_negative(self):
-		s = self.f.stream(40)
-		s.read_ascii()
-		self.assertEqual(s.addr, 45)
-		s.skip(-3)
-		self.assertEqual(s.addr, 42)
-		self.assertEqual(s.read_ascii(), 'CD')
-		self.assertEqual(s.addr, 45)
-		s.skip(-4)
-		self.assertEqual(s.addr, 41)
-		self.assertEqual(s.read_ascii(), 'BCD')
-		self.assertEqual(s.addr, 45)
-
-	def test_skip_outside(self):
-		s = self.f.stream(40)
-		s.read_ascii()
-		s.skip(-4)
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*-3'):
-			s.skip(-44)
-		self.assertEqual(s.read_ascii(), 'BCD')
-		s.skip(8)
-		self.assertEqual(s.addr, 53)
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*60.*57'):
-			s.skip(7)
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*59.*57'):
-			s.skip(6)
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*58.*57'):
-			s.skip(5)
-		self.assertEqual(s.addr, 53)
-		s.skip(4)
-		self.assertEqual(s.addr, 57)
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*58.*57'):
-			s.skip(1)
-		self.assertEqual(s.addr, 57)
-		s.skip(-2)
-		self.assertEqual(s.addr, 55)
-		self.assertEqual(s.read_ascii(2), 'HI')
-		self.assertEqual(s.addr, 57)
-
-	def test_jump_forward(self):
-		s = self.f.stream(40)
-		s.read_ascii()
-		s.jump_to(50)
-		self.assertEqual(s.addr, 50)
-		self.assertEqual(s.read_ascii(1), 'F')
-		self.assertEqual(s.addr, 51)
-
-	def test_jump_forward_from_start(self):
-		s = self.f.stream(40)
-		s.jump_to(50)
-		self.assertEqual(s.addr, 50)
-		self.assertEqual(s.read_uint(), 0x4600aa46)
-		self.assertEqual(s.addr, 54)
-
-	def test_jump_backward(self):
-		s = self.f.stream(40)
-		s.read_ascii()
-		self.assertEqual(s.addr, 45)
-		s.jump_to(42)
-		self.assertEqual(s.addr, 42)
-		self.assertEqual(s.read_ascii(), 'CD')
-		self.assertEqual(s.addr, 45)
-		s.jump_to(40)
-		self.assertEqual(s.addr, 40)
-		self.assertEqual(s.read_ascii(), 'ABCD')
-		self.assertEqual(s.addr, 45)
-
-	def test_jump_outside(self):
-		s = self.f.stream(40)
-		s.jump_to(43)
-		self.assertEqual(s.addr, 43)
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*-2'):
-			s.jump_to(-2)
-		self.assertEqual(s.addr, 43)
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*58.*57'):
-			s.jump_to(58)
-		self.assertEqual(s.addr, 43)
-		self.assertEqual(s.read_ascii(), 'D')
-		self.assertEqual(s.addr, 45)
-		s.jump_to(57)
-		self.assertEqual(s.addr, 57)
-		with self.assertRaisesRegex(hprof.EofError, 'read.*57:58.*57'):
-			s.read_ascii(1)
-		self.assertEqual(s.addr, 57)
-
-	def test_pos_after_invalid_ascii(self):
-		s = self.f.stream(40)
-		s.jump_to(48)
-		self.assertEqual(s.addr, 48)
-		with self.assertRaises(UnicodeError):
-			s.read_ascii()
-		self.assertEqual(s.addr, 48) # the failed ascii read didn't consume anything.
-
-	def test_pos_after_spill(self):
-		s = self.f.stream(40)
-		s.jump_to(55)
-		with self.assertRaisesRegex(hprof.EofError, 'read.*55:59.*57'):
-			s.read_uint()
-		self.assertEqual(s.addr, 55)
-
-	def test_concurrent_streams(self):
-		s = self.f.stream(40)
-		t = self.f.stream(40)
-		self.assertEqual(s.read_ascii(), 'ABCD')
-		self.assertEqual(s.addr, 45)
-		self.assertEqual(t.addr, 40)
-		self.assertEqual(t.read_ascii(), 'ABCD')
-		self.assertEqual(s.read_uint(), 0xc3)
-		self.assertEqual(t.read_ascii(), '')
-		self.assertEqual(s.read_uint(), 0xb64600aa)
-		self.assertEqual(s.read_uint(), 0x46474849)
-		self.assertEqual(t.read_uint(), 0xc3b6)
-		self.assertEqual(s.addr, 57)
-		self.assertEqual(t.addr, 50)
-		s.jump_to(54)
-		self.assertEqual(s.addr, 54)
-		self.assertEqual(s.read_ascii(3), 'GHI')
-		self.assertEqual(t.read_uint(), 0x4600aa46)
-
-	def test_concurrent_stream_and_random_read(self):
-		s = self.f.stream(40)
-		self.assertEqual(s.read_ascii(), 'ABCD')
-		self.assertEqual(s.addr, 45)
-		self.assertEqual(self.f.read_ascii(53, 3), 'FGH')
-		self.assertEqual(s.addr, 45)
-		self.assertEqual(s.read_uint(), 0xc3)
-		self.assertEqual(s.addr, 49)
-
-	def test_new_stream_negative(self):
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*-1'):
-			s = self.f.stream(-1)
-
-	def test_new_stream_at_zero(self):
-		s = self.f.stream(0)
-		self.assertEqual(s.addr, 0)
-		self.assertEqual(s.read_bytes(4), b'JAVA')
-		self.assertEqual(s.addr, 4)
-
-	def test_new_stream_no_arg(self):
-		s = self.f.stream()
-		self.assertEqual(s.addr, 0)
-		self.assertEqual(s.read_bytes(3), b'JAV')
-		self.assertEqual(s.addr, 3)
-
-	def test_new_stream_at_offset(self):
-		s = self.f.stream(2)
-		self.assertEqual(s.addr, 2)
-		self.assertEqual(s.read_bytes(4), b'VA P')
-		self.assertEqual(s.addr, 6)
-
-	def test_new_stream_at_end(self):
-		s = self.f.stream(57)
-		self.assertEqual(s.addr, 57)
-		self.assertEqual(s.read_bytes(0), b'')
-		self.assertEqual(s.addr, 57)
-
-	def test_new_stream_outside(self):
-		with self.assertRaisesRegex(hprof.EofError, 'jump.*58.*57'):
-			self.f.stream(58)
