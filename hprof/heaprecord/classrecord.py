@@ -6,17 +6,6 @@ from .heaprecord import HeapRecord
 from ..errors import *
 from ..offset import offset, AutoOffsets, idoffset
 
-def _only_last(generator):
-	for prev in generator:
-		pass
-	return prev
-
-def _except_last(generator):
-	prev = next(generator)
-	for val in generator:
-		yield prev
-		prev = val
-
 ioff = AutoOffsets(0,
 	'COUNT', 2,
 	'DATA')
@@ -27,6 +16,7 @@ doff = AutoOffsets(0,
 	'END')
 
 class ClassRecord(HeapRecord):
+	__slots__ = '_if_start_offset'
 	TAG = 0x20
 
 	_offsets = AutoOffsets(1,
@@ -48,37 +38,34 @@ class ClassRecord(HeapRecord):
 		super().__init__(hf, addr)
 		if self._read_ushort(self._off.CPOOLSIZE) != 0:
 			raise FileFormatError('cannot handle constant pools yet')
+		self._if_start_offset = self._static_fields_end_offset()
 
-	def _read_static_fields(self):
+	def static_fields(self):
 		count = self._read_ushort(self._off.NSTATIC)
 		offset = self._off.STATICS
 		for i in range(count):
 			sfield = StaticFieldRecord(self.hf, self.addr + offset)
 			yield sfield
 			offset += len(sfield)
-		yield offset
 
-	def _if_start_offset(self):
-		for v in self._read_static_fields():
-			pass
-		return v
+	def _static_fields_end_offset(self):
+		# pretty much the same as static_fields(), except we just return the offset at the end.
+		count = self._read_ushort(self._off.NSTATIC)
+		offset = self._off.STATICS
+		idsize = self.hf.idsize
+		for i in range(count):
+			jtype = self._read_jtype(offset + doff[idsize].TYPE)
+			offset += doff[idsize].END + (idsize if jtype.value == 2 else jtype.size()) # TODO: need a better JavaType.size()
+		return offset
 
-	def _read_instance_fields(self):
-		base = self._if_start_offset()
-		count = self._read_ushort(base + ioff.COUNT)
-		offset = base + ioff.DATA
+	def instance_fields(self):
+		count = self._read_ushort(self._if_start_offset + ioff.COUNT)
+		offset = self._if_start_offset + ioff.DATA
 		assert type(offset) is int
 		for i in range(count):
 			ifield = FieldDeclRecord(self.hf, self.addr + offset)
 			yield ifield
 			offset += len(ifield)
-		yield offset
-
-	def instance_fields(self):
-		yield from _except_last(self._read_instance_fields())
-
-	def static_fields(self):
-		yield from _except_last(self._read_static_fields())
 
 	@property
 	def super_class_id(self):
@@ -93,7 +80,8 @@ class ClassRecord(HeapRecord):
 		return self._read_id(self._off.ID)
 
 	def __len__(self):
-		return _only_last(self._read_instance_fields())
+		ifield_count = self._read_ushort(self._if_start_offset + ioff.COUNT)
+		return self._if_start_offset + ioff.DATA + ifield_count * doff[self.hf.idsize].END
 
 	def __str__(self):
 		return 'ClassRecord(id=0x%x)' % self.id
