@@ -27,7 +27,6 @@ def _get_record_type(tag):
 class HeapRecord(CommonRecord):
 	@staticmethod
 	def create(hf, addr):
-		from .roots import UnknownRoot
 		tag = hf.read_byte(addr)
 		try:
 			rtype = _get_record_type(tag)
