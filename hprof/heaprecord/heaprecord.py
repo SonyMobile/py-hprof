@@ -4,21 +4,33 @@
 from ..commonrecord import CommonRecord
 from ..errors import *
 
-def _descendants(cls):
+_descendants = {}
+
+def _find_descendants(cls):
 	yield cls
 	for child in cls.__subclasses__():
-		yield from _descendants(child)
+		yield from _find_descendants(child)
+
+def _get_record_type(tag):
+	try:
+		return _descendants[tag]
+	except KeyError:
+		pass
+	# not found; let's see if rebuilding the cache helps (probably not, though)
+	_descendants.clear()
+	for cls in _find_descendants(HeapRecord):
+		ctag = getattr(cls, 'TAG', None)
+		if ctag is not None:
+			_descendants[ctag] = cls
+	return _descendants[tag]
 
 class HeapRecord(CommonRecord):
 	@staticmethod
 	def create(hf, addr):
 		from .roots import UnknownRoot
 		tag = hf.read_byte(addr)
-		# TODO: some form of caching here might not be a bad idea.
-		rtype = None
-		for candidate in _descendants(HeapRecord):
-			if getattr(candidate, 'TAG', None) == tag:
-				rtype = candidate
-		if rtype is None:
+		try:
+			rtype = _get_record_type(tag)
+		except KeyError:
 			raise FileFormatError('unknown HeapDump subrecord tag 0x%02x at address 0x%x' % (tag, addr))
 		return rtype(hf, addr)
