@@ -4,21 +4,22 @@
 from . import base
 from ..offset import *
 
-offsets = AutoOffsets(base.offsets.BODY,
-	'ID', idoffset(1),
-	'STR'
-)
 
 class Utf8(base.Record):
 	TAG = 1
 
+	_offsets = AutoOffsets(base.offsets.BODY,
+		'ID', idoffset(1),
+		'STR'
+	)
+
 	@property
 	def str(self):
-		return self._read_utf8(offsets.STR, len(self) - offsets.STR)
+		return self._read_utf8(self._off.STR, len(self) - self._off.STR)
 
 	@property
 	def id(self):
-		return self._read_id(offsets.ID)
+		return self._read_id(self._off.ID)
 
 	def __str__(self):
 		return self.str

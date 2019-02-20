@@ -48,10 +48,31 @@ def byteoffset(bytes):
 
 class AutoOffsets(object):
 	def __init__(self, *args):
+		self._offsets = {}
+		self._flattened = {}
 		# if we were running python 3.6, we could make use of order-preserved kwargs... :/
 		pos = args[0]
 		for i in range(1, len(args), 2):
 			name = args[i]
+			self._offsets[name] = pos
 			setattr(self, name, pos)
 			if i + 1 < len(args):
 				pos += args[i+1]
+
+	def _flatargs(self, idsize):
+		prev = 0
+		for name, value in self._offsets.items():
+			if type(value) is not int:
+				value = value.flatten(idsize)
+			yield value - prev
+			yield name
+			prev = value
+
+	def __getitem__(self, idsize):
+		try:
+			return self._flattened[idsize]
+		except KeyError:
+			pass
+		flat = AutoOffsets(*self._flatargs(idsize))
+		self._flattened[idsize] = flat
+		return flat

@@ -107,10 +107,6 @@ class HprofFile(object):
 			raise RefError('name', nameid)
 
 	def _read_bytes(self, start, nbytes):
-		if isinstance(start, offset):
-			start = start.flatten(self.idsize)
-		if isinstance(nbytes, offset):
-			nbytes = nbytes.flatten(self.idsize)
 		if start < 0:
 			raise EofError('tried to read at address %d' % start)
 		length = len(self._data)

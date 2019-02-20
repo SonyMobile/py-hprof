@@ -125,3 +125,32 @@ class TestOffset(TestCase):
 			a.ids = 10
 		with self.assertRaises(AttributeError):
 			a.newattribute = 10
+
+class TestAutoOffset(TestCase):
+	def test_autooffset_odd(self):
+		offsets = AutoOffsets(0, 'JUNK', idoffset(1), 'STUFF', 7, 'THINGS', idoffset(2))
+		self.assertEqual(offsets.JUNK,   offset(0, 0))
+		self.assertEqual(offsets.STUFF,  offset(0, 1))
+		self.assertEqual(offsets.THINGS, offset(7, 1))
+
+	def test_autooffset_even(self):
+		offsets = AutoOffsets(offset(7, 17), 'JUNK', 4, 'STUFF', idoffset(3), 'THINGS', byteoffset(5), 'NOTHING')
+		self.assertEqual(offsets.JUNK,    offset( 7, 17))
+		self.assertEqual(offsets.STUFF,   offset(11, 17))
+		self.assertEqual(offsets.THINGS,  offset(11, 20))
+		self.assertEqual(offsets.NOTHING, offset(16, 20))
+
+	def test_autooffset_flattened(self):
+		offsets = AutoOffsets(3, 'ONE', idoffset(1), 'TWO', idoffset(2), 'THREE', 3, 'FOUR')
+		two = offsets[2]
+		five = offsets[5]
+		self.assertIs(offsets[2], two) # check that value is cached
+		self.assertIs(offsets[5], five)
+		self.assertEqual(two.ONE, 3)
+		self.assertEqual(two.TWO, 5)
+		self.assertEqual(two.THREE, 9)
+		self.assertEqual(two.FOUR, 12)
+		self.assertEqual(five.ONE, 3)
+		self.assertEqual(five.TWO, 8)
+		self.assertEqual(five.THREE, 18)
+		self.assertEqual(five.FOUR, 21)

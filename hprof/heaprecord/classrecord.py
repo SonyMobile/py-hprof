@@ -17,21 +17,6 @@ def _except_last(generator):
 		yield prev
 		prev = val
 
-coff = AutoOffsets(1,
-	'ID',        idoffset(1),
-	'STRACE',    4,
-	'SUPER',     idoffset(1),
-	'LOADER',    idoffset(1),
-	'SIGNER',    idoffset(1),
-	'PROT_DOM',  idoffset(1),
-	'RESERVED1', idoffset(1),
-	'RESERVED1', idoffset(1),
-	'OBJSIZE',   4,
-	'CPOOLSIZE', 2,
-	'CPOOL',     0, # TODO: will need to split offsets here once we allow constant pools
-	'NSTATIC',   2,
-	'STATICS')
-
 ioff = AutoOffsets(0,
 	'COUNT', 2,
 	'DATA')
@@ -44,14 +29,29 @@ doff = AutoOffsets(0,
 class ClassRecord(HeapRecord):
 	TAG = 0x20
 
+	_offsets = AutoOffsets(1,
+		'ID',        idoffset(1),
+		'STRACE',    4,
+		'SUPER',     idoffset(1),
+		'LOADER',    idoffset(1),
+		'SIGNER',    idoffset(1),
+		'PROT_DOM',  idoffset(1),
+		'RESERVED1', idoffset(1),
+		'RESERVED1', idoffset(1),
+		'OBJSIZE',   4,
+		'CPOOLSIZE', 2,
+		'CPOOL',     0, # TODO: will need to split offsets here once we allow constant pools
+		'NSTATIC',   2,
+		'STATICS')
+
 	def __init__(self, hf, addr):
 		super().__init__(hf, addr)
-		if self._read_ushort(coff.CPOOLSIZE) != 0:
+		if self._read_ushort(self._off.CPOOLSIZE) != 0:
 			raise FileFormatError('cannot handle constant pools yet')
 
 	def _read_static_fields(self):
-		count = self._read_ushort(coff.NSTATIC)
-		offset = coff.STATICS.flatten(self.hf.idsize)
+		count = self._read_ushort(self._off.NSTATIC)
+		offset = self._off.STATICS
 		for i in range(count):
 			sfield = StaticFieldRecord(self.hf, self.addr + offset)
 			yield sfield
@@ -82,15 +82,15 @@ class ClassRecord(HeapRecord):
 
 	@property
 	def super_class_id(self):
-		return self._read_id(coff.SUPER)
+		return self._read_id(self._off.SUPER)
 
 	@property
 	def instance_size(self):
-		return self._read_uint(coff.OBJSIZE)
+		return self._read_uint(self._off.OBJSIZE)
 
 	@property
 	def id(self):
-		return self._read_id(coff.ID)
+		return self._read_id(self._off.ID)
 
 	def __len__(self):
 		return _only_last(self._read_instance_fields())
@@ -101,14 +101,14 @@ class ClassRecord(HeapRecord):
 class FieldDeclRecord(HeapRecord):
 	@property
 	def type(self):
-		return self._read_jtype(doff.TYPE)
+		return self._read_jtype(doff[self.hf.idsize].TYPE)
 
 	@property
 	def nameid(self):
-		return self._read_id(doff.NAMEID)
+		return self._read_id(doff[self.hf.idsize].NAMEID)
 
 	def __len__(self):
-		return doff.END.flatten(self.hf.idsize)
+		return doff[self.hf.idsize].END
 
 	def __str__(self):
 		return 'FieldDeclRecord(nameid=0x%x, type=%s)' % (self.nameid, self.type)
@@ -120,7 +120,7 @@ class StaticFieldRecord(HeapRecord):
 
 	@property
 	def value(self):
-		return self._read_jvalue(doff.END, self.decl.type)
+		return self._read_jvalue(doff[self.hf.idsize].END, self.decl.type)
 
 	def __len__(self):
 		d = self.decl
