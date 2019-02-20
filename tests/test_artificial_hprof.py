@@ -162,11 +162,12 @@ class TestErrors(TestCase):
 	def test_duplicate_id_error(self):
 		hb = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 0x12345)
 		with hb.record(1, 3) as r:
-			r.id(0x0102030405060708090a0b0c0d0e0f)
+			id1 = r.id(0x0102030405060708090a0b0c0d0e0f)
 			r.bytes(b'string1')
 		with hb.record(1, 5) as r:
 			r.id(0x0102030405060708090a0b0c0d0e0f)
 			r.bytes(b'string2')
 		addrs, data = hb.build()
+		hf = hprof.open(bytes(data))
 		with self.assertRaisesRegex(hprof.FileFormatError, 'duplicate name id'):
-			hprof.open(bytes(data))
+			hf.name(id1)

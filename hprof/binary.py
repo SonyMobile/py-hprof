@@ -45,23 +45,50 @@ class HprofFile(object):
 		self.starttime = datetime.fromtimestamp(timestamp_ms / 1000)
 		self._first_record_addr = base + 12
 		self._dumps = None
-
-		self._names = {}
-		for r in self.records():
-			if type(r) is Utf8:
-				nameid = r.id
-				if nameid in self._names:
-					old = self._names[nameid]
-					raise FileFormatError(
-							'duplicate name id 0x%x: "%s" at 0x%x and "%s" at 0x%x'
-							% (nameid, old.str, old.addr, r.str, r.addr))
-				self._names[nameid] = r
+		self._names = None
+		self._names_done = False
 
 	def __enter__(self):
 		return self
 
 	def __exit__(self, exc_type, exc_value, traceback):
 		self.close()
+
+	def _gen_from_records(self, need_dumps):
+		''' traversing all the records can take a while; try to generate several things at once '''
+		need_names = not self._names_done
+		seen_name_ids = set()
+		if self._names is None:
+			self._names = {}
+		names = self._names
+		curdump = None
+		dumps = []
+		for r in self.records():
+			if need_names and type(r) is Utf8:
+				nameid = r.id
+				if nameid in names:
+					# might be okay; we may be recursing (through Dump/Heap classes)
+					if nameid in seen_name_ids:
+						old = names[nameid]
+						raise FileFormatError(
+								'duplicate name id 0x%x: "%s" at 0x%x and "%s" at 0x%x'
+								% (nameid, old.str, old.addr, r.str, r.addr))
+				else:
+					names[nameid] = r
+				seen_name_ids.add(nameid)
+			if need_dumps and type(r) is HeapDumpSegment:
+				if curdump is None:
+					curdump = Dump(self)
+					dumps.append(curdump)
+				curdump._add_segment(r)
+			elif need_dumps and type(r) is HeapDumpEnd:
+				if curdump is None:
+					dumps.append(Dump(self))
+				curdump = None
+		if need_names:
+			self._names_done = True
+		if need_dumps:
+			self._dumps = tuple(dumps)
 
 	def records(self):
 		addr = self._first_record_addr
@@ -76,19 +103,7 @@ class HprofFile(object):
 
 	def dumps(self):
 		if self._dumps is None:
-			curdump = None
-			dumps = []
-			for r in self.records():
-				if type(r) is HeapDumpSegment:
-					if curdump is None:
-						curdump = Dump(self)
-						dumps.append(curdump)
-					curdump._add_segment(r)
-				elif type(r) is HeapDumpEnd:
-					if curdump is None:
-						dumps.append(Dump(self))
-					curdump = None
-			self._dumps = tuple(dumps)
+			self._gen_from_records(True)
 		yield from self._dumps
 
 	def close(self):
@@ -101,6 +116,12 @@ class HprofFile(object):
 			self._f = None
 
 	def name(self, nameid):
+		try:
+			return self._names[nameid]
+		except (KeyError, TypeError):
+			pass
+		if not self._names_done:
+			self._gen_from_records(False)
 		try:
 			return self._names[nameid]
 		except KeyError:

@@ -293,3 +293,22 @@ class TestDumpDuplicateIds(TestCase):
 		a, = a.objects()
 		b, = b.objects()
 		self.assertNotEqual(a, b)
+
+@varying_idsize
+class TestDumpNameAfterDumps(TestCase):
+	def setUp(self):
+		hb = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 12345)
+		with hb.record(28, 0) as r:
+			with r.subrecord(0xfe) as info:
+				info.uint(300)
+				info.id(1)
+		with hb.record(1, 0) as r:
+			r.id(1)
+			r.bytes('otherheap')
+		addrs, data = hb.build()
+		self.hf = hprof.open(bytes(data))
+
+	def test_dump_name_after_dump(self):
+		dump, = self.hf.dumps()
+		heap, = dump.heaps()
+		self.assertEqual(heap.name, 'otherheap')
