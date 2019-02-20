@@ -9,19 +9,25 @@ def _shorten(s, maxlength):
 		return s[:min(l, maxlength-3)] + '...'
 	return s
 
-def dump(hfile):
+def dump(hfile, printobjs):
 	for di, dump in enumerate(hfile.dumps()):
 		for hi, heap in enumerate(dump.heaps()):
 			info = 'DUMP %d, HEAP %d (type=%d name=%s)' % (di, hi, heap.type, heap.name)
-			for obj in heap.objects():
-				print(info, obj)
+			if printobjs:
+				for obj in heap.objects():
+					print(info, obj)
+			else:
+				print(info)
 
 if __name__ == '__main__':
 	import sys
+	objs = '-q' not in sys.argv
 	for filename in sys.argv[1:]:
+		if filename == '-q':
+			continue
 		stars = max(0, (96 - len(filename)))
 		lstars = stars // 2
 		rstars = stars - lstars
 		print(lstars * '*' + '* ' + filename + ' *' + rstars * '*')
 		with hprof.open(filename) as hf:
-			dump(hf)
+			dump(hf, objs)
