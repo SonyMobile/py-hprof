@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from ..immutable import Immutable
+from .._slotted import Slotted
 
-class Object(Immutable):
+class Object(object, metaclass=Slotted):
 	__slots__ = '_object_heap', '_object_record'
 
 	def __init__(self, heap, record):

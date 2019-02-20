@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from .immutable import Immutable
+from ._slotted import Slotted
 
-class CommonRecord(Immutable):
+class CommonRecord(object, metaclass=Slotted):
 	__slots__ = 'hf', 'addr'
 
 	def __init__(self, hf, addr):

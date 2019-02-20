@@ -47,15 +47,6 @@ class TestCommonRecord(TestCase):
 		self.assertNotEqual(u, s)
 		self.assertNotEqual(u, t)
 
-	def test_commonrecord_immutable(self):
-		r = CommonRecord(None, 20)
-		with self.assertRaises(AttributeError):
-			r.newattribute = 10
-		with self.assertRaises(AttributeError):
-			r.hf = 'fileC'
-		with self.assertRaises(AttributeError):
-			r.addr = 70
-
 	def test_commonrecord_str(self):
 		class Corporeal(Record):
 			__slots__ = ()
@@ -90,15 +81,11 @@ class TestRecordSubclasses(TestCase):
 					subcls(fileB, 20)
 				) for subcls in recurse_subclasses(CommonRecord)]
 
-	def test_recordsubclasses_immutable(self):
+	def test_recordsubclasses_slotted(self):
 		for t in self.recs:
 			for r in t:
 				with self.assertRaises(AttributeError, msg='%s (maybe you need __slots__?)' % type(r)):
 					r.newattribute = 10
-				with self.assertRaises(AttributeError, msg=type(r)):
-					r.hf = 'fileC'
-				with self.assertRaises(AttributeError, msg=type(r)):
-					r.addr = 70
 
 	def test_recordsubclasses_equality(self):
 		def msg(r, s):

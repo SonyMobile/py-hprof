@@ -3,11 +3,11 @@
 
 from ..errors import *
 from ..heaprecord import *
-from ..immutable import Immutable
+from .._slotted import Slotted
 
 from .object import Object
 
-class Dump(Immutable):
+class Dump(object, metaclass=Slotted):
 	__slots__ = 'hf', '_heaps', '_current_heap'
 
 	def __init__(self, hf):
@@ -43,7 +43,7 @@ class Dump(Immutable):
 	def heaps(self):
 		yield from self._heaps.values()
 
-class Heap(Immutable):
+class Heap(object, metaclass=Slotted):
 	__slots__ = 'dump', 'name', 'type', '_objects'
 
 	def __init__(self, dump, name, heaptype):
