@@ -53,9 +53,11 @@ class ClassRecord(HeapRecord):
 		count = self._read_ushort(self._off.NSTATIC)
 		offset = self._off.STATICS
 		idsize = self.hf.idsize
+		typeoff = doff[idsize].TYPE
+		decllen = doff[idsize].END
 		for i in range(count):
-			jtype = self._read_jtype(offset + doff[idsize].TYPE)
-			offset += doff[idsize].END + jtype.size(idsize)
+			jtype = self._read_jtype(offset + typeoff)
+			offset += decllen + jtype.size(idsize)
 		return offset
 
 	def instance_fields(self):
