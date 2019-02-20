@@ -6,30 +6,26 @@ from .offset import idoffset
 
 @unique
 class JavaType(Enum):
-	object  =  2
-	boolean =  4
-	char    =  5
-	float   =  6
-	double  =  7
-	byte    =  8
-	short   =  9
-	int     = 10
-	long    = 11
+	def __init__(self, value, size):
+		self._value_ = value
+		self._size = size
 
-	def size(self):
-		return _sizes[self]
+	object  =  2, None
+	boolean =  4, 1
+	char    =  5, 2
+	float   =  6, 4
+	double  =  7, 8
+	byte    =  8, 1
+	short   =  9, 2
+	int     = 10, 4
+	long    = 11, 8
+
+	def size(self, idsize):
+		s = self._size
+		if s is None:
+			return idsize
+		else:
+			return s
 
 	def __str__(self):
 		return self.name
-
-_sizes = {
-	JavaType.boolean: 1,
-	JavaType.char:    2,
-	JavaType.float:   4,
-	JavaType.double:  8,
-	JavaType.byte:    1,
-	JavaType.short:   2,
-	JavaType.int:     4,
-	JavaType.long:    8,
-	JavaType.object:  idoffset(1)
-}

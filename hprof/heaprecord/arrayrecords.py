@@ -29,7 +29,7 @@ class PrimitiveArrayRecord(HeapRecord):
 		return self._read_jtype(self._off.TYPE)
 
 	def __len__(self):
-		return self._off.DATA + self.count * self.type.size()
+		return self._off.DATA + self.count * self.type.size(self.hf.idsize)
 
 	def __str__(self):
 		return 'PrimitiveArrayRecord(type=%s, count=%d)' % (self.type, self.count)
@@ -37,7 +37,7 @@ class PrimitiveArrayRecord(HeapRecord):
 	def __getitem__(self, ix):
 		if 0 <= ix < self.count:
 			t = self.type
-			offset = self._off.DATA + ix * t.size()
+			offset = self._off.DATA + ix * t.size(self.hf.idsize)
 			return self._read_jvalue(offset, t)
 		else:
 			raise IndexError('tried to read element %d in a size %d array' % (ix, self.count))

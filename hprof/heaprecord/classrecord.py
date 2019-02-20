@@ -55,7 +55,7 @@ class ClassRecord(HeapRecord):
 		idsize = self.hf.idsize
 		for i in range(count):
 			jtype = self._read_jtype(offset + doff[idsize].TYPE)
-			offset += doff[idsize].END + (idsize if jtype.value == 2 else jtype.size()) # TODO: need a better JavaType.size()
+			offset += doff[idsize].END + jtype.size(idsize)
 		return offset
 
 	def instance_fields(self):
@@ -112,9 +112,7 @@ class StaticFieldRecord(HeapRecord):
 
 	def __len__(self):
 		d = self.decl
-		v = len(d) + d.type.size()
-		if type(v) is not int:
-			v = v.flatten(self.hf.idsize)
+		v = len(d) + d.type.size(self.hf.idsize)
 		return v
 
 	def __str__(self):
