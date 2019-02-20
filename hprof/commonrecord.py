@@ -4,11 +4,13 @@
 from ._slotted import Slotted
 
 class CommonRecord(object, metaclass=Slotted):
-	__slots__ = 'hf', 'addr'
+	__slots__ = 'hf', 'addr', '_off'
 
 	def __init__(self, hf, addr):
 		self.hf = hf
 		self.addr = addr
+		if hasattr(self, '_offsets'):
+			self._off = self._offsets[self.hf.idsize]
 
 	def __eq__(self, other):
 		return self.addr == other.addr and self.hf == other.hf and type(self) is type(other)
@@ -20,11 +22,6 @@ class CommonRecord(object, metaclass=Slotted):
 	@property
 	def id(self):
 		raise AttributeError('record type %s has no id' % type(self).__name__)
-
-	@property
-	def _off(self):
-		''' convenience for subclasses that have a class-wide _offsets; get flattened offsets '''
-		return self._offsets[self.hf.idsize]
 
 	def _read_utf8(self, offset, nbytes):
 		return self.hf.read_utf8(self.addr + offset, nbytes)
