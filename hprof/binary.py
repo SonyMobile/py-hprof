@@ -13,6 +13,10 @@ from .offset import offset
 from .record import Record, HeapDumpSegment, HeapDumpEnd, Utf8
 from .types import JavaType
 
+_jtlookup = {}
+for _jt in JavaType:
+	_jtlookup[_jt.value] = _jt
+
 def open(path):
 	return HprofFile(path)
 
@@ -141,8 +145,8 @@ class HprofFile(object):
 	def read_jtype(self, addr):
 		b, = self._read_bytes(addr, 1)
 		try:
-			return JavaType(b)
-		except ValueError:
+			return _jtlookup[b]
+		except KeyError as e:
 			raise FileFormatError('invalid JavaType: 0x%x' % b)
 
 	def read_jvalue(self, addr, jtype):
