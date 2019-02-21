@@ -3,7 +3,7 @@
 
 from ._slotted import Slotted
 
-class CommonRecord(object, metaclass=Slotted):
+class HprofSlice(object, metaclass=Slotted):
 	__slots__ = 'hf', 'addr', '_off'
 
 	def __init__(self, hf, addr):
@@ -14,14 +14,6 @@ class CommonRecord(object, metaclass=Slotted):
 
 	def __eq__(self, other):
 		return self.addr == other.addr and self.hf == other.hf and type(self) is type(other)
-
-	@property
-	def tag(self):
-		return self.hf.read_byte(self.addr)
-
-	@property
-	def id(self):
-		raise AttributeError('record type %s has no id' % type(self).__name__)
 
 	def _read_utf8(self, offset, nbytes):
 		return self.hf.read_utf8(self.addr + offset, nbytes)
@@ -40,3 +32,8 @@ class CommonRecord(object, metaclass=Slotted):
 
 	def _read_ushort(self, offset):
 		return self.hf.read_ushort(self.addr + offset)
+
+class CommonRecord(HprofSlice, metaclass=Slotted):
+	@property
+	def tag(self):
+		return self.hf.read_byte(self.addr)

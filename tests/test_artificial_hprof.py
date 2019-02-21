@@ -149,8 +149,6 @@ class TestArtificialHprof(TestCase):
 		self.assertEqual(r.tag, 255)
 		self.assertEqual(r.timestamp, datetime.fromtimestamp(0x168e143f263 / 1000 + 0x10000 / 1000000))
 		self.assertEqual(r.relative_timestamp, timedelta(microseconds = 0x10000))
-		with self.assertRaisesRegex(AttributeError, 'has no id'):
-			r.id
 		self.assertEqual(len(r), 70)
 		s = str(r)
 		self.assertTrue(s.startswith('Unhandled('))

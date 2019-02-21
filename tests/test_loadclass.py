@@ -49,10 +49,6 @@ class TestLoadClass(TestCase):
 	def test_loadclass_addr(self):
 		self.assertEqual(self.c.addr, self.addrs[1])
 
-	def test_loadclass_id(self):
-		with self.assertRaisesRegex(AttributeError, 'has no id'):
-			self.c.id
-
 	def test_loadclass_type(self):
 		self.assertIs(type(self.c), hprof.record.ClassLoad)
 

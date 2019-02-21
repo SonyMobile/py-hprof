@@ -45,10 +45,6 @@ class TestHeapDumpSegment(TestCase):
 	def test_heapdumpsegment_addr(self):
 		self.assertEqual(self.d.addr, self.addrs[0])
 
-	def test_heapdumpsegment_id(self):
-		with self.assertRaisesRegex(AttributeError, 'has no id'):
-			self.d.id
-
 	def test_heapdumpsegment_type(self):
 		self.assertIs(type(self.d), hprof.record.HeapDumpSegment)
 

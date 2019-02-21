@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from .heaprecord import Allocation, HeapRecord
+from .heaprecord import Allocation
 
 from ..errors import *
 from ..offset import offset, AutoOffsets, idoffset
+from ..commonrecord import HprofSlice
 
 ioff = AutoOffsets(0,
 	'COUNT', 2,
@@ -84,7 +85,7 @@ class ClassRecord(Allocation):
 	def __str__(self):
 		return 'ClassRecord(id=0x%x)' % self.id
 
-class FieldDeclRecord(HeapRecord):
+class FieldDeclRecord(HprofSlice):
 	@property
 	def type(self):
 		return self._read_jtype(doff[self.hf.idsize].TYPE)
@@ -99,7 +100,7 @@ class FieldDeclRecord(HeapRecord):
 	def __str__(self):
 		return 'FieldDeclRecord(nameid=0x%x, type=%s)' % (self.nameid, self.type)
 
-class StaticFieldRecord(HeapRecord):
+class StaticFieldRecord(HprofSlice):
 	@property
 	def decl(self):
 		return FieldDeclRecord(self.hf, self.addr)

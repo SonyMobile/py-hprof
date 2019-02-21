@@ -29,10 +29,6 @@ class TestHeapDumpEnd(TestCase):
 	def test_heapdumpend_addr(self):
 		self.assertEqual(self.e.addr, self.addrs[0])
 
-	def test_heapdumpend_id(self):
-		with self.assertRaisesRegex(AttributeError, 'has no id'):
-			self.e.id
-
 	def test_heapdumpend_type(self):
 		self.assertIs(type(self.e), hprof.record.HeapDumpEnd)
 
