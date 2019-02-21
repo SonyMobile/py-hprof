@@ -5,8 +5,6 @@ from ..errors import *
 from ..heaprecord import *
 from .._slotted import Slotted
 
-from .object import Object
-
 class Dump(object, metaclass=Slotted):
 	__slots__ = 'hf', '_heaps', '_current_heap'
 
@@ -21,6 +19,7 @@ class Dump(object, metaclass=Slotted):
 			if type(r) is HeapDumpInfo:
 				self._set_curheap(r.type, r.name.str)
 			elif type(r) is ObjectRecord:
+				r.heap = self._curheap
 				objid = r.id
 				if any(objid in h._objects for h in self._heaps.values()):
 					raise FileFormatError('duplicate object id 0x%x' % objid)
@@ -43,6 +42,7 @@ class Dump(object, metaclass=Slotted):
 	def heaps(self):
 		yield from self._heaps.values()
 
+
 class Heap(object, metaclass=Slotted):
 	__slots__ = 'dump', 'name', 'type', '_objects'
 
@@ -50,14 +50,13 @@ class Heap(object, metaclass=Slotted):
 		self.dump = dump
 		self.name = name
 		self.type = heaptype
-		self._objects = {}
+		self._objects = {} # id -> object record
 
 	def _add_object(self, objrec):
 		self._objects[objrec.id] = objrec
 
 	def objects(self):
-		for objrec in self._objects.values():
-			yield Object(self, objrec)
+		yield from self._objects.values()
 
 	def __str__(self):
 		return 'Heap(type=%d, name=%s)' % (self.type, self.name)

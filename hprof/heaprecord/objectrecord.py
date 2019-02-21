@@ -10,6 +10,8 @@ from ..offset import offset, AutoOffsets, idoffset
 class ObjectRecord(HeapRecord):
 	TAG = 0x21
 
+	__slots__ = 'heap',
+
 	_offsets = AutoOffsets(1,
 		'ID',       idoffset(1),
 		'STRACE',   4,

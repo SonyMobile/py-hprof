@@ -25,11 +25,12 @@ def _get_record_type(tag):
 	return _descendants[tag]
 
 class HeapRecord(CommonRecord):
-	@staticmethod
-	def create(hf, addr):
-		tag = hf.read_byte(addr)
-		try:
-			rtype = _get_record_type(tag)
-		except KeyError:
-			raise FileFormatError('unknown HeapDump subrecord tag 0x%02x at address 0x%x' % (tag, addr))
-		return rtype(hf, addr)
+	pass
+
+def create(hf, addr):
+	tag = hf.read_byte(addr)
+	try:
+		rtype = _get_record_type(tag)
+	except KeyError:
+		raise FileFormatError('unknown HeapDump subrecord tag 0x%02x at address 0x%x' % (tag, addr))
+	return rtype(hf, addr)
