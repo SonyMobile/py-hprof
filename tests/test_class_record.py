@@ -60,13 +60,13 @@ class TestClassRecord(TestCase):
 	### type-specific fields ###
 
 	def test_class_super(self):
-		self.assertEqual(self.cls.super_class_id, self.superid)
+		self.assertEqual(self.cls.hprof_super_class_id, self.superid)
 
 	def test_class_instance_size(self):
-		self.assertEqual(self.cls.instance_size, 80)
+		self.assertEqual(self.cls.hprof_instance_size, 80)
 
 	def test_class_static_fields(self):
-		a, b, c = self.cls.static_fields()
+		a, b, c = self.cls.hprof_static_fields()
 		self.assertIs(type(a), hprof.heaprecord.StaticFieldRecord)
 		self.assertIs(type(b), hprof.heaprecord.StaticFieldRecord)
 		self.assertIs(type(c), hprof.heaprecord.StaticFieldRecord)
@@ -96,7 +96,7 @@ class TestClassRecord(TestCase):
 		self.assertEqual(len(cd), self.idsize + 1)
 
 	def test_class_instance_fields(self):
-		a, b, c, d = self.cls.instance_fields()
+		a, b, c, d = self.cls.hprof_instance_fields()
 		self.assertIs(type(a), hprof.heaprecord.FieldDeclRecord)
 		self.assertIs(type(b), hprof.heaprecord.FieldDeclRecord)
 		self.assertIs(type(c), hprof.heaprecord.FieldDeclRecord)
@@ -124,16 +124,13 @@ class TestClassRecord(TestCase):
 	### generic record fields ###
 
 	def test_class_addr(self):
-		self.assertEqual(self.cls.addr, 40)
+		self.assertEqual(self.cls.hprof_addr, 40)
 
 	def test_class_id(self):
-		self.assertEqual(self.cls.id, self.clsid)
+		self.assertEqual(self.cls.hprof_id, self.clsid)
 
 	def test_class_type(self):
 		self.assertIs(type(self.cls), hprof.heaprecord.ClassRecord)
-
-	def test_class_tag(self):
-		self.assertEqual(self.cls.tag, 0x20)
 
 	def test_class_len(self):
 		self.assertEqual(len(self.cls), 1 + 24 + self.idsize * 15)

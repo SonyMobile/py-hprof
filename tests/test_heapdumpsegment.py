@@ -35,21 +35,18 @@ class TestHeapDumpSegment(TestCase):
 		b = next(subs)
 		with self.assertRaises(StopIteration):
 			next(subs)
-		self.assertEqual(a.addr, self.d.addr + 9)
-		self.assertEqual(b.addr, self.d.addr + 9 + len(a))
+		self.assertEqual(a.hprof_addr, self.d.hprof_addr + 9)
+		self.assertEqual(b.hprof_addr, self.d.hprof_addr + 9 + len(a))
 		self.assertEqual(len(a), 1 + self.idsize)
 		self.assertEqual(len(b), 1 + self.idsize)
 
 	### generic record fields ###
 
 	def test_heapdumpsegment_addr(self):
-		self.assertEqual(self.d.addr, self.addrs[0])
+		self.assertEqual(self.d.hprof_addr, self.addrs[0])
 
 	def test_heapdumpsegment_type(self):
 		self.assertIs(type(self.d), hprof.record.HeapDumpSegment)
-
-	def test_heapdumpsegment_tag(self):
-		self.assertEqual(self.d.tag, 28)
 
 	def test_heapdumpsegment_rawbody(self):
 		self.assertEqual(self.d.rawbody, self.data[self.addrs[0] + 9:])

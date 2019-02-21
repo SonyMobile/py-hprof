@@ -42,20 +42,16 @@ class TestObject(TestCase):
 	### generic record fields ###
 
 	def test_object_addr(self):
-		self.assertEqual(self.o.addr, self.addrs[0] + 9)
-		self.assertEqual(self.p.addr, self.addrs[0] + 9 + 13 + 2 * self.idsize)
+		self.assertEqual(self.o.hprof_addr, self.addrs[0] + 9)
+		self.assertEqual(self.p.hprof_addr, self.addrs[0] + 9 + 13 + 2 * self.idsize)
 
 	def test_object_id(self):
-		self.assertEqual(self.o.id, self.id1)
-		self.assertEqual(self.p.id, self.id2)
+		self.assertEqual(self.o.hprof_id, self.id1)
+		self.assertEqual(self.p.hprof_id, self.id2)
 
 	def test_object_type(self):
 		self.assertIs(type(self.o), hprof.heaprecord.ObjectRecord)
 		self.assertIs(type(self.p), hprof.heaprecord.ObjectRecord)
-
-	def test_object_tag(self):
-		self.assertEqual(self.o.tag, 33)
-		self.assertEqual(self.p.tag, 33)
 
 	def test_object_len(self):
 		self.assertEqual(len(self.o), 13 + 2 * self.idsize)

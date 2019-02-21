@@ -72,7 +72,7 @@ class HprofFile(object):
 						old = names[nameid]
 						raise FileFormatError(
 								'duplicate name id 0x%x: "%s" at 0x%x and "%s" at 0x%x'
-								% (nameid, old.str, old.addr, r.str, r.addr))
+								% (nameid, old.str, old.hprof_addr, r.str, r.hprof_addr))
 				else:
 					names[nameid] = r
 				seen_name_ids.add(nameid)

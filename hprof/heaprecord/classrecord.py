@@ -17,10 +17,10 @@ doff = AutoOffsets(0,
 	'END')
 
 class ClassRecord(Allocation):
-	__slots__ = '_if_start_offset'
-	TAG = 0x20
+	__slots__ = '_hprof_if_start_offset'
+	HPROF_DUMP_TAG = 0x20
 
-	_offsets = AutoOffsets(1,
+	_hprof_offsets = AutoOffsets(1,
 		'ID',        idoffset(1),
 		'STRACE',    4,
 		'SUPER',     idoffset(1),
@@ -37,65 +37,65 @@ class ClassRecord(Allocation):
 
 	def __init__(self, hf, addr):
 		super().__init__(hf, addr)
-		if self._read_ushort(self._off.CPOOLSIZE) != 0:
+		if self._hprof_ushort(self._hproff.CPOOLSIZE) != 0:
 			raise FileFormatError('cannot handle constant pools yet')
-		self._if_start_offset = self._static_fields_end_offset()
+		self._hprof_if_start_offset = self._hprof_static_fields_end_offset()
 
-	def static_fields(self):
-		count = self._read_ushort(self._off.NSTATIC)
-		offset = self._off.STATICS
+	def hprof_static_fields(self):
+		count = self._hprof_ushort(self._hproff.NSTATIC)
+		offset = self._hproff.STATICS
 		for i in range(count):
-			sfield = StaticFieldRecord(self.hf, self.addr + offset)
+			sfield = StaticFieldRecord(self.hprof_file, self.hprof_addr + offset)
 			yield sfield
 			offset += len(sfield)
 
-	def _static_fields_end_offset(self):
+	def _hprof_static_fields_end_offset(self):
 		# pretty much the same as static_fields(), except we just return the offset at the end.
-		count = self._read_ushort(self._off.NSTATIC)
-		offset = self._off.STATICS
-		idsize = self.hf.idsize
+		count = self._hprof_ushort(self._hproff.NSTATIC)
+		offset = self._hproff.STATICS
+		idsize = self.hprof_file.idsize
 		typeoff = doff[idsize].TYPE
 		decllen = doff[idsize].END
 		for i in range(count):
-			jtype = self._read_jtype(offset + typeoff)
+			jtype = self._hprof_jtype(offset + typeoff)
 			offset += decllen + jtype.size(idsize)
 		return offset
 
-	def instance_fields(self):
-		count = self._read_ushort(self._if_start_offset + ioff.COUNT)
-		offset = self._if_start_offset + ioff.DATA
+	def hprof_instance_fields(self):
+		count = self._hprof_ushort(self._hprof_if_start_offset + ioff.COUNT)
+		offset = self._hprof_if_start_offset + ioff.DATA
 		assert type(offset) is int
 		for i in range(count):
-			ifield = FieldDeclRecord(self.hf, self.addr + offset)
+			ifield = FieldDeclRecord(self.hprof_file, self.hprof_addr + offset)
 			yield ifield
 			offset += len(ifield)
 
 	@property
-	def super_class_id(self):
-		return self._read_id(self._off.SUPER)
+	def hprof_super_class_id(self):
+		return self._hprof_id(self._hproff.SUPER)
 
 	@property
-	def instance_size(self):
-		return self._read_uint(self._off.OBJSIZE)
+	def hprof_instance_size(self):
+		return self._hprof_uint(self._hproff.OBJSIZE)
 
 	def __len__(self):
-		ifield_count = self._read_ushort(self._if_start_offset + ioff.COUNT)
-		return self._if_start_offset + ioff.DATA + ifield_count * doff[self.hf.idsize].END
+		ifield_count = self._hprof_ushort(self._hprof_if_start_offset + ioff.COUNT)
+		return self._hprof_if_start_offset + ioff.DATA + ifield_count * doff[self.hprof_file.idsize].END
 
 	def __str__(self):
-		return 'ClassRecord(id=0x%x)' % self.id
+		return 'ClassRecord(id=0x%x)' % self.hprof_id
 
 class FieldDeclRecord(HprofSlice):
 	@property
 	def type(self):
-		return self._read_jtype(doff[self.hf.idsize].TYPE)
+		return self._hprof_jtype(doff[self.hprof_file.idsize].TYPE)
 
 	@property
 	def nameid(self):
-		return self._read_id(doff[self.hf.idsize].NAMEID)
+		return self._hprof_id(doff[self.hprof_file.idsize].NAMEID)
 
 	def __len__(self):
-		return doff[self.hf.idsize].END
+		return doff[self.hprof_file.idsize].END
 
 	def __str__(self):
 		return 'FieldDeclRecord(nameid=0x%x, type=%s)' % (self.nameid, self.type)
@@ -103,15 +103,15 @@ class FieldDeclRecord(HprofSlice):
 class StaticFieldRecord(HprofSlice):
 	@property
 	def decl(self):
-		return FieldDeclRecord(self.hf, self.addr)
+		return FieldDeclRecord(self.hprof_file, self.hprof_addr)
 
 	@property
 	def value(self):
-		return self._read_jvalue(doff[self.hf.idsize].END, self.decl.type)
+		return self._hprof_jvalue(doff[self.hprof_file.idsize].END, self.decl.type)
 
 	def __len__(self):
 		d = self.decl
-		v = len(d) + d.type.size(self.hf.idsize)
+		v = len(d) + d.type.size(self.hprof_file.idsize)
 		return v
 
 	def __str__(self):

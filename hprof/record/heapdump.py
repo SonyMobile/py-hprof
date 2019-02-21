@@ -16,7 +16,7 @@ class HeapDumpSegment(base.Record):
 		offset = base.offsets.BODY
 		end = len(self)
 		while offset < end:
-			r = heaprecord.create(self.hf, self.addr + offset)
+			r = heaprecord.create(self.hprof_file, self.hprof_addr + offset)
 			offset += len(r)
 			if offset > end:
 				raise FileFormatError('subrecord ends at 0x%x, dump segment ends at 0x%x' % (offset, end))

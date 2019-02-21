@@ -105,7 +105,7 @@ class TestDump(TestCase):
 		dumpA, _, _ = self.hf.dumps()
 		undefA, = (h for h in dumpA.heaps() if h.type == -1)
 		obj = undefA.objects()
-		self.assertEqual(next(obj).id, 1)
+		self.assertEqual(next(obj).hprof_id, 1)
 		with self.assertRaises(StopIteration):
 			next(obj)
 
@@ -113,8 +113,8 @@ class TestDump(TestCase):
 		dumpA, _, _ = self.hf.dumps()
 		heapA, = (h for h in dumpA.heaps() if h.type == 77)
 		obj = heapA.objects()
-		self.assertEqual(next(obj).id, 2)
-		self.assertEqual(next(obj).id, 3)
+		self.assertEqual(next(obj).hprof_id, 2)
+		self.assertEqual(next(obj).hprof_id, 3)
 		with self.assertRaises(StopIteration):
 			next(obj)
 
@@ -122,7 +122,7 @@ class TestDump(TestCase):
 		_, _, dumpB = self.hf.dumps()
 		heapB, = (h for h in dumpB.heaps() if h.type == 77)
 		obj = heapB.objects()
-		self.assertEqual(next(obj).id, 6)
+		self.assertEqual(next(obj).hprof_id, 6)
 		with self.assertRaises(StopIteration):
 			next(obj)
 
@@ -130,9 +130,9 @@ class TestDump(TestCase):
 		_, _, dumpB = self.hf.dumps()
 		mountainB, = (h for h in dumpB.heaps() if h.type == 18671)
 		obj = mountainB.objects()
-		self.assertEqual(next(obj).id, 4)
-		self.assertEqual(next(obj).id, 5)
-		self.assertEqual(next(obj).id, 7)
+		self.assertEqual(next(obj).hprof_id, 4)
+		self.assertEqual(next(obj).hprof_id, 5)
+		self.assertEqual(next(obj).hprof_id, 7)
 		with self.assertRaises(StopIteration):
 			next(obj)
 
@@ -166,7 +166,7 @@ class TestDump(TestCase):
 		for dump in self.hf.dumps():
 			for heap in dump.heaps():
 				for obj in heap.objects():
-					self.assertIs(obj.heap, heap)
+					self.assertIs(obj.hprof_heap, heap)
 
 	def test_heap_str(self):
 		dumpA, _, dumpB = self.hf.dumps()

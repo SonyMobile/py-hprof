@@ -11,19 +11,19 @@ offsets = AutoOffsets(1,
 	'END')
 
 class HeapDumpInfo(HeapRecord):
-	TAG = 0xfe
+	HPROF_DUMP_TAG = 0xfe
 
 	@property
 	def type(self):
-		return self._read_uint(offsets.TYPE)
+		return self._hprof_uint(offsets.TYPE)
 
 	@property
 	def name(self):
-		nameid = self._read_id(offsets.NAME)
-		return self.hf.name(nameid)
+		nameid = self._hprof_id(offsets.NAME)
+		return self.hprof_file.name(nameid)
 
 	def __len__(self):
-		return offsets.END.flatten(self.hf.idsize)
+		return offsets.END.flatten(self.hprof_file.idsize)
 
 	def __str__(self):
 		return 'HeapDumpInfo(type=%d name=%s)' % (self.type, self.name)

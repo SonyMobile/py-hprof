@@ -57,16 +57,13 @@ class TestObjArrayRecord(TestCase):
 	### generic record fields ###
 
 	def test_object_array_addr(self):
-		self.assertEqual(self.a.addr, 40)
+		self.assertEqual(self.a.hprof_addr, 40)
 
 	def test_object_array_id(self):
-		self.assertEqual(self.a.id, self.aid)
+		self.assertEqual(self.a.hprof_id, self.aid)
 
 	def test_object_array_type(self):
 		self.assertIs(type(self.a), hprof.heaprecord.ObjectArrayRecord)
-
-	def test_object_array_tag(self):
-		self.assertEqual(self.a.tag, 0x22)
 
 	def test_object_array_len(self):
 		self.assertEqual(len(self.a), 1 + 8 + self.idsize * 7)

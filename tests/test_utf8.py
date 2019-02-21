@@ -41,9 +41,9 @@ class TestUtf8(TestCase):
 	### generic record fields ###
 
 	def test_utf8_addr(self):
-		self.assertEqual(next(self.recs).addr, 31)
-		self.assertEqual(next(self.recs).addr, 52 + self.idsize)
-		self.assertEqual(next(self.recs).addr, 66 + 2 * self.idsize)
+		self.assertEqual(next(self.recs).hprof_addr, 31)
+		self.assertEqual(next(self.recs).hprof_addr, 52 + self.idsize)
+		self.assertEqual(next(self.recs).hprof_addr, 66 + 2 * self.idsize)
 
 	def test_utf8_id(self):
 		self.assertEqual(next(self.recs).id, 0x0203)
@@ -54,11 +54,6 @@ class TestUtf8(TestCase):
 		self.assertIs(type(next(self.recs)), hprof.record.Utf8)
 		self.assertIs(type(next(self.recs)), hprof.record.Utf8)
 		self.assertIs(type(next(self.recs)), hprof.record.Utf8)
-
-	def test_utf8_tag(self):
-		self.assertEqual(next(self.recs).tag, 1)
-		self.assertEqual(next(self.recs).tag, 1)
-		self.assertEqual(next(self.recs).tag, 1)
 
 	def test_utf8_timestamp(self):
 		self.assertEqual(next(self.recs).timestamp, datetime.fromtimestamp(0x168e143f263 / 1000))

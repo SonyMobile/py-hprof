@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from ..commonrecord import CommonRecord
+from ..commonrecord import HprofSlice
 from ..errors import *
 
 _descendants = {}
@@ -19,12 +19,12 @@ def _get_record_type(tag):
 	# not found; let's see if rebuilding the cache helps (probably not, though)
 	_descendants.clear()
 	for cls in _find_descendants(HeapRecord):
-		ctag = getattr(cls, 'TAG', None)
+		ctag = getattr(cls, 'HPROF_DUMP_TAG', None)
 		if ctag is not None:
 			_descendants[ctag] = cls
 	return _descendants[tag]
 
-class HeapRecord(CommonRecord):
+class HeapRecord(HprofSlice):
 	pass
 
 def create(hf, addr):
@@ -36,8 +36,8 @@ def create(hf, addr):
 	return rtype(hf, addr)
 
 class Allocation(HeapRecord):
-	__slots__ = 'heap',
+	__slots__ = 'hprof_heap',
 
 	@property
-	def id(self):
-		return self._read_id(self._off.ID)
+	def hprof_id(self):
+		return self._hprof_id(self._hproff.ID)

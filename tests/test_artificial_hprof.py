@@ -104,11 +104,6 @@ class TestArtificialHprof(TestCase):
 		self.assertEqual(len(next(records)), 17)
 		self.assertEqual(len(next(records)), 9)
 
-	def test_record_tags(self):
-		self.open()
-		for i, r in enumerate(self.f.records()):
-			self.assertEqual(r.tag, self.data[self.addrs[i]])
-
 	def test_record_time(self):
 		self.open()
 		base = 0x168e143f263 * 1000
@@ -146,7 +141,6 @@ class TestArtificialHprof(TestCase):
 		next(records)
 		r = next(records)
 		self.assertIs(type(r), hprof.record.Unhandled)
-		self.assertEqual(r.tag, 255)
 		self.assertEqual(r.timestamp, datetime.fromtimestamp(0x168e143f263 / 1000 + 0x10000 / 1000000))
 		self.assertEqual(r.relative_timestamp, timedelta(microseconds = 0x10000))
 		self.assertEqual(len(r), 70)

@@ -64,16 +64,13 @@ class TestPrimitiveArrayRecord(TestCase):
 	### generic record fields ###
 
 	def test_primitive_array_addr(self):
-		self.assertEqual(self.a.addr, 40)
+		self.assertEqual(self.a.hprof_addr, 40)
 
 	def test_primitive_array_id(self):
-		self.assertEqual(self.a.id, self.aid)
+		self.assertEqual(self.a.hprof_id, self.aid)
 
 	def test_primitive_array_type(self):
 		self.assertIs(type(self.a), hprof.heaprecord.PrimitiveArrayRecord)
-
-	def test_primitive_array_tag(self):
-		self.assertEqual(self.a.tag, 0x23)
 
 	def test_primitive_array_len(self):
 		self.assertEqual(len(self.a), 10 + self.idsize + self.COUNT * self.ESIZE)

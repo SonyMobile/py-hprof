@@ -8,11 +8,9 @@ from ..offset import offset, AutoOffsets, idoffset
 
 
 class ObjectRecord(Allocation):
-	TAG = 0x21
+	HPROF_DUMP_TAG = 0x21
 
-	__slots__ = 'heap',
-
-	_offsets = AutoOffsets(1,
+	_hprof_offsets = AutoOffsets(1,
 		'ID',       idoffset(1),
 		'STRACE',   4,
 		'CLSID',    idoffset(1),
@@ -20,12 +18,8 @@ class ObjectRecord(Allocation):
 		'DATA'
 	)
 
-	@property
-	def datalen(self):
-		return self._read_uint(self._off.DATASIZE)
-
 	def __len__(self):
-		return self._off.DATA + self.datalen
+		return self._hproff.DATA + self._hprof_uint(self._hproff.DATASIZE)
 
 	def __str__(self):
-		return 'ObjectRecord(id=0x%x)' % self.id
+		return 'ObjectRecord(id=0x%x)' % self.hprof_id

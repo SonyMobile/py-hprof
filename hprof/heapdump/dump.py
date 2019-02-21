@@ -14,13 +14,13 @@ class Dump(object, metaclass=Slotted):
 		self._current_heap = None
 
 	def _add_segment(self, seg):
-		assert seg.hf is self.hf
+		assert seg.hprof_file is self.hf
 		for r in seg.records():
 			if type(r) is HeapDumpInfo:
 				self._set_curheap(r.type, r.name.str)
 			elif type(r) is ObjectRecord:
-				r.heap = self._curheap
-				objid = r.id
+				r.hprof_heap = self._curheap
+				objid = r.hprof_id
 				if any(objid in h._objects for h in self._heaps.values()):
 					raise FileFormatError('duplicate object id 0x%x' % objid)
 				self._curheap._add_object(r)
@@ -53,7 +53,7 @@ class Heap(object, metaclass=Slotted):
 		self._objects = {} # id -> object record
 
 	def _add_object(self, objrec):
-		self._objects[objrec.id] = objrec
+		self._objects[objrec.hprof_id] = objrec
 
 	def objects(self):
 		yield from self._objects.values()

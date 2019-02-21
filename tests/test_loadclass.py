@@ -47,13 +47,10 @@ class TestLoadClass(TestCase):
 	### generic record fields ###
 
 	def test_loadclass_addr(self):
-		self.assertEqual(self.c.addr, self.addrs[1])
+		self.assertEqual(self.c.hprof_addr, self.addrs[1])
 
 	def test_loadclass_type(self):
 		self.assertIs(type(self.c), hprof.record.ClassLoad)
-
-	def test_loadclass_tag(self):
-		self.assertEqual(self.c.tag, 2)
 
 	def test_loadclass_rawbody(self):
 		self.assertEqual(self.c.rawbody, self.data[self.addrs[1] + 9:])

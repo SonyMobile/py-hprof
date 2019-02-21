@@ -2,24 +2,24 @@
 #coding=utf8
 
 from unittest import TestCase
-from hprof.commonrecord import CommonRecord
+from hprof.commonrecord import HprofSlice
 from hprof.record import Record
 from hprof.heaprecord import HeapRecord
 
-class TestCommonRecord(TestCase):
+class TestHprofSlice(TestCase):
 	def test_commonrecord_no_id(self):
-		r = CommonRecord(None, 10)
+		r = HprofSlice(None, 10)
 		with self.assertRaises(AttributeError):
 			r.id
 
 	def test_commonrecord_no_len(self):
-		r = CommonRecord(None, 10)
+		r = HprofSlice(None, 10)
 		with self.assertRaises(TypeError):
 			len(r)
 
 	def test_commonrecord_not_ordered(self):
-		r = CommonRecord(None, 10)
-		s = CommonRecord(None, 20)
+		r = HprofSlice(None, 10)
+		s = HprofSlice(None, 20)
 		with self.assertRaises(TypeError):
 			r < s
 		with self.assertRaises(TypeError):
@@ -30,10 +30,10 @@ class TestCommonRecord(TestCase):
 			r >= s
 
 	def test_commonrecord_equality(self):
-		r = CommonRecord('fileA', 10)
-		s = CommonRecord('fileA', 20)
-		t = CommonRecord('fileA', 20)
-		u = CommonRecord('fileB', 20)
+		r = HprofSlice('fileA', 10)
+		s = HprofSlice('fileA', 20)
+		t = HprofSlice('fileA', 20)
+		u = HprofSlice('fileB', 20)
 		self.assertNotEqual(r, s)
 		self.assertNotEqual(r, t)
 		self.assertNotEqual(r, u)
@@ -79,7 +79,7 @@ class TestRecordSubclasses(TestCase):
 					subcls(fileA, 20),
 					subcls(fileA, 20),
 					subcls(fileB, 20)
-				) for subcls in recurse_subclasses(CommonRecord)]
+				) for subcls in recurse_subclasses(HprofSlice)]
 
 	def test_recordsubclasses_slotted(self):
 		for t in self.recs:
@@ -89,11 +89,11 @@ class TestRecordSubclasses(TestCase):
 
 	def test_recordsubclasses_equality(self):
 		def msg(r, s):
-			return '(%s, %d) == (%s, %d)' % (r.hf, r.addr, s.hf, s.addr)
+			return '(%s, %d) == (%s, %d)' % (r.hprof_file, r.hprof_addr, s.hprof_file, s.hprof_addr)
 		flattened = sum(self.recs, tuple())
 		for r in flattened:
 			for s in flattened:
-				if type(r) is type(s) and r.hf == s.hf and r.addr == s.addr:
+				if type(r) is type(s) and r.hprof_file == s.hprof_file and r.hprof_addr == s.hprof_addr:
 					self.assertEqual(r, s, msg=msg(r,s))
 				else:
 					self.assertNotEqual(r, s, msg=msg(r,s))

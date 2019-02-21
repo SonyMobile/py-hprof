@@ -27,13 +27,10 @@ class TestHeapDumpEnd(TestCase):
 	### generic record fields ###
 
 	def test_heapdumpend_addr(self):
-		self.assertEqual(self.e.addr, self.addrs[0])
+		self.assertEqual(self.e.hprof_addr, self.addrs[0])
 
 	def test_heapdumpend_type(self):
 		self.assertIs(type(self.e), hprof.record.HeapDumpEnd)
-
-	def test_heapdumpend_tag(self):
-		self.assertEqual(self.e.tag, 44)
 
 	def test_heapdumpend_rawbody(self):
 		self.assertEqual(self.e.rawbody, b'')

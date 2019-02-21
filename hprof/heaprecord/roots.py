@@ -9,10 +9,10 @@ from ..errors import RefError
 class GcRoot(HeapRecord):
 	@property
 	def objid(self):
-		return self._read_id(self._off.ID)
+		return self._hprof_id(self._hproff.ID)
 
 	def __len__(self):
-		return self._off.END
+		return self._hproff.END
 
 	def _info(self):
 		return 'objid=0x%x' % self.objid
@@ -21,26 +21,26 @@ class GcRoot(HeapRecord):
 		return '%s(%s)' % (type(self).__name__, self._info())
 
 class UnknownRoot(GcRoot):
-	TAG = 0xff
-	_offsets = AutoOffsets(1, 'ID', idoffset(1), 'END')
+	HPROF_DUMP_TAG = 0xff
+	_hprof_offsets = AutoOffsets(1, 'ID', idoffset(1), 'END')
 
 class GlobalJniRoot(GcRoot):
-	TAG = 0x01
-	_offsets = AutoOffsets(1,
+	HPROF_DUMP_TAG = 0x01
+	_hprof_offsets = AutoOffsets(1,
 			'ID',     idoffset(1),
 			'REFID',  idoffset(1),
 			'END')
 
 	@property
 	def grefid(self):
-		return self._read_id(self._off.REFID)
+		return self._hprof_id(self._hproff.REFID)
 
 	def _info(self):
 		return super()._info() + ', grefid=0x%x' % self.grefid
 
 class LocalJniRoot(GcRoot):
-	TAG = 0x02
-	_offsets = AutoOffsets(1,
+	HPROF_DUMP_TAG = 0x02
+	_hprof_offsets = AutoOffsets(1,
 			'ID',     idoffset(1),
 			'STRACE', 4,
 			'FRAME',  4,
@@ -50,8 +50,8 @@ class LocalJniRoot(GcRoot):
 		return super()._info() + ' in <func>' # TODO: actually show the function here.
 
 class JavaStackRoot(GcRoot):
-	TAG = 0x03
-	_offsets = AutoOffsets(1,
+	HPROF_DUMP_TAG = 0x03
+	_hprof_offsets = AutoOffsets(1,
 			'ID',     idoffset(1),
 			'THREAD', 4,
 			'FRAME',  4,
@@ -61,8 +61,8 @@ class JavaStackRoot(GcRoot):
 		return super()._info() + ' in <func>' # TODO: not <func>
 
 class NativeStackRoot(GcRoot):
-	TAG = 0x04
-	_offsets = AutoOffsets(1,
+	HPROF_DUMP_TAG = 0x04
+	_hprof_offsets = AutoOffsets(1,
 			'ID',     idoffset(1),
 			'THREAD', 4,
 			'END')
@@ -71,12 +71,12 @@ class NativeStackRoot(GcRoot):
 		return super()._info() + ' from thread ???' # TODO: not "???"
 
 class StickyClassRoot(GcRoot):
-	TAG = 0x05
-	_offsets = AutoOffsets(1, 'ID', idoffset(1), 'END')
+	HPROF_DUMP_TAG = 0x05
+	_hprof_offsets = AutoOffsets(1, 'ID', idoffset(1), 'END')
 
 class ThreadRoot(GcRoot):
-	TAG = 0x08
-	_offsets = AutoOffsets(1,
+	HPROF_DUMP_TAG = 0x08
+	_hprof_offsets = AutoOffsets(1,
 			'ID',     idoffset(1),
 			'THREAD', 4,
 			'STRACE', 4,
@@ -86,11 +86,11 @@ class ThreadRoot(GcRoot):
 		return super()._info() + ' from thread ???' # TODO: actually show the thread here.
 
 class InternedStringRoot(GcRoot):
-	TAG = 0x89
-	_offsets = AutoOffsets(1, 'ID', idoffset(1), 'END')
+	HPROF_DUMP_TAG = 0x89
+	_hprof_offsets = AutoOffsets(1, 'ID', idoffset(1), 'END')
 
 class VmInternalRoot(GcRoot):
-	TAG = 0x8d
-	_offsets = AutoOffsets(1,
+	HPROF_DUMP_TAG = 0x8d
+	_hprof_offsets = AutoOffsets(1,
 			'ID',    idoffset(1),
 			'END')

@@ -4,7 +4,7 @@
 from datetime import timedelta
 
 from ..offset import *
-from ..commonrecord import CommonRecord
+from ..commonrecord import HprofSlice
 
 def _word_groups(b):
 	for i in range(0, len(b), 4):
@@ -22,7 +22,7 @@ offsets = AutoOffsets(0,
 	'BODY'
 )
 
-class Record(CommonRecord):
+class Record(HprofSlice):
 	@staticmethod
 	def create(hf, addr):
 		tag = hf.read_byte(addr)
@@ -35,18 +35,18 @@ class Record(CommonRecord):
 
 	@property
 	def rawbody(self):
-		return self.hf.read_bytes(self.addr+9, len(self)-9)
+		return self.hprof_file.read_bytes(self.hprof_addr+9, len(self)-9)
 
 	@property
 	def timestamp(self):
-		return self.hf.starttime + self.relative_timestamp
+		return self.hprof_file.starttime + self.relative_timestamp
 
 	@property
 	def relative_timestamp(self):
-		return timedelta(microseconds = self.hf.read_uint(self.addr + 1))
+		return timedelta(microseconds = self.hprof_file.read_uint(self.hprof_addr + 1))
 
 	def __len__(self):
-		return 9 + self.hf.read_uint(self.addr + 5)
+		return 9 + self.hprof_file.read_uint(self.hprof_addr + 5)
 
 	def __str__(self):
 		data = self.rawbody
