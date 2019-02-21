@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from .heaprecord import HeapRecord
+from .heaprecord import Allocation
 
 from ..offset import offset, AutoOffsets, idoffset
 
 
 
-class ObjectRecord(HeapRecord):
+class ObjectRecord(Allocation):
 	TAG = 0x21
 
 	__slots__ = 'heap',
@@ -19,10 +19,6 @@ class ObjectRecord(HeapRecord):
 		'DATASIZE', 4,
 		'DATA'
 	)
-
-	@property
-	def id(self):
-		return self._read_id(self._off.ID)
 
 	@property
 	def datalen(self):

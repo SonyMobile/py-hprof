@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from .heaprecord import HeapRecord
+from .heaprecord import Allocation, HeapRecord
 
 from ..errors import *
 from ..offset import offset, AutoOffsets, idoffset
@@ -15,7 +15,7 @@ doff = AutoOffsets(0,
 	'TYPE',   1,
 	'END')
 
-class ClassRecord(HeapRecord):
+class ClassRecord(Allocation):
 	__slots__ = '_if_start_offset'
 	TAG = 0x20
 
@@ -76,10 +76,6 @@ class ClassRecord(HeapRecord):
 	@property
 	def instance_size(self):
 		return self._read_uint(self._off.OBJSIZE)
-
-	@property
-	def id(self):
-		return self._read_id(self._off.ID)
 
 	def __len__(self):
 		ifield_count = self._read_ushort(self._if_start_offset + ioff.COUNT)

@@ -45,7 +45,7 @@ class TestPrimitiveArrayRecord(TestCase):
 		pass
 
 	def test_primitive_array_count(self):
-		self.assertEqual(self.a.count, self.COUNT)
+		self.assertEqual(self.a.length, self.COUNT)
 
 	def test_primitive_array_type(self):
 		self.assertEqual(self.a.type.value, self.ETYPE)

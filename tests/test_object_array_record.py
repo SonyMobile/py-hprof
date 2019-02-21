@@ -39,7 +39,7 @@ class TestObjArrayRecord(TestCase):
 		pass
 
 	def test_object_array_count(self):
-		self.assertEqual(self.a.count, 5)
+		self.assertEqual(self.a.length, 5)
 
 	def test_object_array_values(self):
 		self.assertEqual(self.a[0], self.id1)

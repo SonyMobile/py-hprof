@@ -34,3 +34,10 @@ def create(hf, addr):
 	except KeyError:
 		raise FileFormatError('unknown HeapDump subrecord tag 0x%02x at address 0x%x' % (tag, addr))
 	return rtype(hf, addr)
+
+class Allocation(HeapRecord):
+	__slots__ = 'heap',
+
+	@property
+	def id(self):
+		return self._read_id(self._off.ID)
