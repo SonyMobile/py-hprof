@@ -48,26 +48,6 @@ class TestHeapDumpInfo(TestCase):
 		self.assertEqual(self.infoB.type, 18671)
 		self.assertEqual(self.infoC.type, 77)
 
-	# TODO: enable this test after refactoring Record class hierarchy
-	'''
-		def test_heapdumpinfo_equality(self):
-			other = hprof.heaprecord.HeapDumpInfo(self.infoA.hf, self.infoA.addr)
-			self.assertEqual(self.infoA, other)
-			self.assertEqual(self.infoA, self.infoC)
-			self.assertEqual(self.infoC, other)
-			self.assertEqual(self.infoC, self.infoA)
-			self.assertNotEqual(self.infoA, self.infoB)
-			self.assertNotEqual(self.infoC, self.infoB)
-			self.assertNotEqual(self.infoB, self.infoA)
-			self.assertNotEqual(self.infoB, self.infoC)
-			self.assertNotEqual(undef, self.infoA)
-			self.assertNotEqual(undef, self.infoB)
-			self.assertNotEqual(undef, self.infoC)
-			self.assertNotEqual(self.infoA, undef)
-			self.assertNotEqual(self.infoB, undef)
-			self.assertNotEqual(self.infoC, undef)
-	'''
-
 	def test_heapdumpinfo_str(self):
 		self.assertEqual(str(self.infoA), 'HeapDumpInfo(type=77 name=heap)')
 		self.assertEqual(str(self.infoB), 'HeapDumpInfo(type=18671 name=mountain)')

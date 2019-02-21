@@ -39,10 +39,6 @@ class TestObject(TestCase):
 	def test_object_class(self):
 		pass # TODO: we don't know about classes yet
 
-	def test_object_fields(self):
-		pass # TODO: we don't know about classes yet, so we don't know the field names...
-		# something like: self.assertEqual(self.o.mValue, 0x1badd00d) etc...
-
 	### generic record fields ###
 
 	def test_object_addr(self):
