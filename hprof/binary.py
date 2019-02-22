@@ -36,8 +36,9 @@ class HprofFile(object):
 		if ident != b'JAVA PROFILE ':
 			raise FileFormatError('bad header: expected JAVA PROFILE, but found %s' % repr(ident))
 		version = self.read_ascii(13)
-		if version != '1.0.3':
-			raise FileFormatError('bad version: expected 1.0.3, but found %s' % version)
+		accepted_versions = ('1.0.2', '1.0.3')
+		if version not in accepted_versions:
+			raise FileFormatError('bad version %s; expected one of %s' % (version, ', '.join(accepted_versions)))
 		base = 13 + len(version) + 1
 
 		self.idsize = self.read_uint(base)

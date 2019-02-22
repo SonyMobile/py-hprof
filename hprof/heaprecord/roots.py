@@ -74,6 +74,14 @@ class StickyClassRoot(GcRoot):
 	HPROF_DUMP_TAG = 0x05
 	_hprof_offsets = AutoOffsets(1, 'ID', idoffset(1), 'END')
 
+class ThreadBlockRoot(GcRoot):
+	HPROF_DUMP_TAG = 0x06
+	_hprof_offsets = AutoOffsets(1, 'ID', idoffset(1), 'THREAD', 4, 'END')
+
+class MonitorRoot(GcRoot):
+	HPROF_DUMP_TAG = 0x07
+	_hprof_offsets = AutoOffsets(1, 'ID', idoffset(1), 'END')
+
 class ThreadRoot(GcRoot):
 	HPROF_DUMP_TAG = 0x08
 	_hprof_offsets = AutoOffsets(1,
