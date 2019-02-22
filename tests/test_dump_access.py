@@ -322,3 +322,35 @@ class TestDumpAccess(TestCase):
 			self.queue.missing
 
 	# TODO: test class name lookup!
+
+	def test_hprof_get_class_info_object(self):
+		info = self.hf.get_class_info(self.object_clsid)
+		self.assertIs(type(info), hprof.record.ClassLoad)
+		self.assertEqual(info.class_id, self.object_clsid)
+		self.assertEqual(info.name, 'java.lang.Object')
+
+	def test_hprof_get_class_info_object_array(self):
+		info = self.hf.get_class_info(self.barray_clsid)
+		self.assertIs(type(info), hprof.record.ClassLoad)
+		self.assertEqual(info.class_id, self.barray_clsid)
+		self.assertEqual(info.name, 'com.example.Buddy[]')
+
+	def test_hprof_get_class_info_missing(self):
+		with self.assertRaisesRegex(hprof.ClassNotFoundError, 'class id 0x123'):
+			self.hf.get_class_info(0x123)
+
+	def test_hprof_get_primitive_array_class_info(self):
+		info = self.hf.get_primitive_array_class_info(hprof.JavaType.short)
+		self.assertIs(type(info), hprof.record.ClassLoad)
+		self.assertEqual(info.class_id, self.shortarray_clsid)
+		self.assertEqual(info.name, 'short[]')
+
+	def test_hprof_get_primitive_array_class_info_missing(self):
+		with self.assertRaisesRegex(hprof.ClassNotFoundError, r'object\[\]'):
+			self.hf.get_primitive_array_class_info(hprof.JavaType.object)
+
+	def test_hprof_get_primitive_array_class_info_faketype(self):
+		class FakeJavaType(object):
+			name = 'something'
+		with self.assertRaises(hprof.ClassNotFoundError):
+			self.hf.get_primitive_array_class_info(FakeJavaType())
