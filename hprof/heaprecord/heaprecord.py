@@ -3,6 +3,7 @@
 
 from ..commonrecord import HprofSlice
 from ..errors import *
+from ..types import JavaType
 
 _descendants = {}
 
@@ -38,6 +39,37 @@ def create(hf, addr):
 class Allocation(HeapRecord):
 	__slots__ = 'hprof_heap',
 
+	def __init__(self, hf, addr):
+		super().__init__(hf, addr)
+		self.hprof_heap = None
+
 	@property
 	def hprof_id(self):
 		return self._hprof_id(self._hproff.ID)
+
+	@property
+	def hprof_class(self):
+		return self.hprof_heap.dump.get_class(self.hprof_class_id)
+
+	@property
+	def hprof_class_id(self):
+		raise NotImplementedError(type(self)) # pragma: no cover
+
+	def __getattr__(self, name):
+		return self.__getitem__(name)
+
+	def __getitem__(self, name):
+		cls = self.hprof_class
+		try:
+			jtype, offset = cls._hprof_instance_field_lookup(name)
+		except FieldNotFoundError:
+			try:
+				return cls[name]
+			except FieldNotFoundError as e:
+				e.type = 'static or instance'
+				raise
+		value = self._hprof_jvalue(self._hproff.DATA + offset, jtype)
+		if jtype == JavaType.object:
+			return self.hprof_heap.dump.get_object(value)
+		else:
+			return value

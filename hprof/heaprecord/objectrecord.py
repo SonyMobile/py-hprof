@@ -3,8 +3,9 @@
 
 from .heaprecord import Allocation
 
+from ..errors import FieldNotFoundError
 from ..offset import offset, AutoOffsets, idoffset
-
+from ..types import JavaType
 
 
 class ObjectRecord(Allocation):
@@ -18,8 +19,15 @@ class ObjectRecord(Allocation):
 		'DATA'
 	)
 
+	@property
+	def hprof_class_id(self):
+		return self._hprof_id(self._hproff.CLSID)
+
 	def __len__(self):
 		return self._hproff.DATA + self._hprof_uint(self._hproff.DATASIZE)
 
 	def __str__(self):
 		return 'ObjectRecord(id=0x%x)' % self.hprof_id
+
+	def __getattr__(self, name):
+		return self[name]

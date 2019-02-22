@@ -6,6 +6,7 @@ from .heaprecord import Allocation
 from ..errors import *
 from ..offset import offset, AutoOffsets, idoffset
 from ..commonrecord import HprofSlice
+from ..types import JavaType
 
 ioff = AutoOffsets(0,
 	'COUNT', 2,
@@ -48,6 +49,10 @@ class ClassRecord(Allocation):
 			sfield = StaticFieldRecord(self.hprof_file, self.hprof_addr + offset)
 			yield sfield
 			offset += len(sfield)
+		superid = self.hprof_super_class_id
+		if superid != 0:
+			supercls = self.hprof_heap.dump.get_class(superid)
+			yield from supercls.hprof_static_fields()
 
 	def _hprof_static_fields_end_offset(self):
 		# pretty much the same as static_fields(), except we just return the offset at the end.
@@ -70,6 +75,32 @@ class ClassRecord(Allocation):
 			yield ifield
 			offset += len(ifield)
 
+	def _hprof_instance_field_lookup(self, name):
+		count = self._hprof_ushort(self._hprof_if_start_offset + ioff.COUNT)
+		offset = self._hprof_if_start_offset + ioff.DATA
+		field_offset = 0
+		idsize = self.hprof_file.idsize
+		typeoff = doff[idsize].TYPE
+		decllen = doff[idsize].END
+		for i in range(count):
+			# TODO: could we do lookups by name id, rather than (string) name? Probably. Need to look out for duplicate names with different IDs, though.
+			field_name_id = self._hprof_id(offset)
+			field_type = self._hprof_jtype(offset + typeoff)
+			if self.hprof_file.name(field_name_id).str == name:
+				return field_type, field_offset
+			offset += decllen
+			field_offset += field_type.size(idsize)
+		super_id = self.hprof_super_class_id
+		if super_id == 0:
+			raise FieldNotFoundError('instance', name, self.hprof_name)
+		supercls = self.hprof_heap.dump.get_class(super_id)
+		try:
+			field_type, superoffset = supercls._hprof_instance_field_lookup(name)
+		except FieldNotFoundError as e:
+			e.add_class(self.hprof_name)
+			raise e
+		return field_type, field_offset + superoffset
+
 	@property
 	def hprof_super_class_id(self):
 		return self._hprof_id(self._hproff.SUPER)
@@ -78,12 +109,39 @@ class ClassRecord(Allocation):
 	def hprof_instance_size(self):
 		return self._hprof_uint(self._hproff.OBJSIZE)
 
+	@property
+	def hprof_name(self):
+		return self.hprof_file.get_class_info(self.hprof_id).name
+
 	def __len__(self):
 		ifield_count = self._hprof_ushort(self._hprof_if_start_offset + ioff.COUNT)
 		return self._hprof_if_start_offset + ioff.DATA + ifield_count * doff[self.hprof_file.idsize].END
 
 	def __str__(self):
 		return 'ClassRecord(id=0x%x)' % self.hprof_id
+
+	def __getattr__(self, name):
+		return self[name]
+
+	def __getitem__(self, name):
+		for sf in self.hprof_static_fields():
+			decl = sf.decl
+			if self.hprof_file.name(decl.nameid).str == name:
+				t = decl.type
+				v = sf.value
+				if t == JavaType.object:
+					return self.hprof_heap.dump.get_object(v)
+				else:
+					return v
+		super_id = self.hprof_super_class_id
+		if super_id == 0:
+			raise FieldNotFoundError('static', name, self.hprof_name)
+		supercls = self.hprof_heap.dump.get_class(super_id)
+		try:
+			return supercls[name]
+		except FieldNotFoundError as e:
+			e.add_class(self.hprof_name)
+			raise
 
 class FieldDeclRecord(HprofSlice):
 	@property

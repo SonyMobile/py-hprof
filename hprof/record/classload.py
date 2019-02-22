@@ -23,5 +23,9 @@ class ClassLoad(base.Record):
 	def serial(self):
 		return self._hprof_uint(self._hproff.SERIAL)
 
+	@property
+	def class_id(self):
+		return self._hprof_id(self._hproff.CLSID)
+
 	def __str__(self):
 		return 'ClassLoad(%s)' % self.name

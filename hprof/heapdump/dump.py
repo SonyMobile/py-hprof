@@ -18,12 +18,11 @@ class Dump(object, metaclass=Slotted):
 		for r in seg.records():
 			if type(r) is HeapDumpInfo:
 				self._set_curheap(r.type, r.name.str)
-			elif type(r) is ObjectRecord:
-				r.hprof_heap = self._curheap
+			elif isinstance(r, Allocation):
 				objid = r.hprof_id
-				if any(objid in h._objects for h in self._heaps.values()):
+				if any(h.has_id(objid) for h in self._heaps.values()):
 					raise FileFormatError('duplicate object id 0x%x' % objid)
-				self._curheap._add_object(r)
+				self._curheap._add_alloc(objid, r)
 
 	def _set_curheap(self, htype, hname):
 		if htype not in self._heaps:
@@ -42,20 +41,48 @@ class Dump(object, metaclass=Slotted):
 	def heaps(self):
 		yield from self._heaps.values()
 
+	def get_class(self, clsid):
+		for h in self._heaps.values():
+			try:
+				return h._classes[clsid]
+			except KeyError:
+				pass
+		raise ClassNotFoundError('Failed to find class object with id 0x%x' % clsid)
+
+	def get_object(self, objid):
+		for h in self._heaps.values():
+			try:
+				return h._objects[objid]
+			except KeyError:
+				pass
+			try:
+				return h._classes[objid]
+			except KeyError:
+				pass
+		raise RefError('Failed to find object with id 0x%x' % objid)
 
 class Heap(object, metaclass=Slotted):
-	__slots__ = 'dump', 'name', 'type', '_objects'
+	__slots__ = 'dump', 'name', 'type', '_objects', '_classes'
 
 	def __init__(self, dump, name, heaptype):
 		self.dump = dump
 		self.name = name
 		self.type = heaptype
-		self._objects = {} # id -> object record
+		self._objects = {} # id -> object record (does not include classes)
+		self._classes = {} # id -> class record
 
-	def _add_object(self, objrec):
-		self._objects[objrec.hprof_id] = objrec
+	def _add_alloc(self, objid, record):
+		record.hprof_heap = self
+		if type(record) is ClassRecord:
+			self._classes[objid] = record
+		else:
+			self._objects[objid] = record
+
+	def has_id(self, objid):
+		return objid in self._classes or objid in self._objects
 
 	def objects(self):
+		yield from self._classes.values()
 		yield from self._objects.values()
 
 	def __str__(self):

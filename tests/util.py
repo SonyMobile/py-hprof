@@ -37,6 +37,12 @@ class HprofBuilder(object):
 		self._record_addrs.append(len(self))
 		return _Record(self, tag, timestamp)
 
+	def name(self, ident, name):
+		with self.record(1, 0) as r:
+			out = r.id(ident)
+			r.bytes(name)
+		return out
+
 	def _myturn(self, who):
 		assert who not in self._writers
 		self._writers.append(who)

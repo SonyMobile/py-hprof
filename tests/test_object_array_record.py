@@ -13,20 +13,31 @@ class TestObjArrayRecord(TestCase):
 	def setUp(self):
 		hb = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 787878)
 		with hb.record(28, 0) as dump:
+			with dump.subrecord(33) as obj1:
+				self.id1 = obj1.id(489)
+				obj1.uint(0)
+				obj1.id(1010)
+				obj1.uint(0)
 			with dump.subrecord(34) as array:
 				self.aid = array.id(self.idsize * 31)
 				array.uint(1234) # stack trace
 				array.uint(5)    # element count
 				array.id(112)    # array class id
-				self.id1 = array.id(489)
+				array.id(self.id1)
 				array.id(self.id1)
 				self.id2 = array.id(0x1234567891234567)
 				array.id(self.id1)
 				array.id(self.id2)
+			with dump.subrecord(33) as obj2:
+				obj2.id(self.id2)
+				obj2.uint(0)
+				obj2.id(1010)
+				obj2.uint(0)
 		addrs, data = hb.build()
 		self.hf = hprof.open(bytes(data))
-		dump, = self.hf.records()
-		self.a, = dump.records()
+		dump, = self.hf.dumps()
+		heap, = dump.heaps()
+		self.obj1, self.a, self.obj2 = sorted(heap.objects(), key=lambda r: r.hprof_addr)
 
 	def tearDown(self):
 		self.a = None
@@ -42,11 +53,16 @@ class TestObjArrayRecord(TestCase):
 		self.assertEqual(self.a.length, 5)
 
 	def test_object_array_values(self):
-		self.assertEqual(self.a[0], self.id1)
-		self.assertEqual(self.a[1], self.id1)
-		self.assertEqual(self.a[2], self.id2)
-		self.assertEqual(self.a[3], self.id1)
-		self.assertEqual(self.a[4], self.id2)
+		self.assertEqual(self.a[0].hprof_id, self.id1)
+		self.assertEqual(self.a[1].hprof_id, self.id1)
+		self.assertEqual(self.a[2].hprof_id, self.id2)
+		self.assertEqual(self.a[3].hprof_id, self.id1)
+		self.assertEqual(self.a[4].hprof_id, self.id2)
+		self.assertEqual(self.a[0], self.obj1)
+		self.assertEqual(self.a[1], self.obj1)
+		self.assertEqual(self.a[2], self.obj2)
+		self.assertEqual(self.a[3], self.obj1)
+		self.assertEqual(self.a[4], self.obj2)
 
 	def test_object_array_read_outside(self):
 		with self.assertRaisesRegex(IndexError, '-1.*5'):
@@ -57,7 +73,7 @@ class TestObjArrayRecord(TestCase):
 	### generic record fields ###
 
 	def test_object_array_addr(self):
-		self.assertEqual(self.a.hprof_addr, 40)
+		self.assertEqual(self.a.hprof_addr, 49 + self.idsize * 2)
 
 	def test_object_array_id(self):
 		self.assertEqual(self.a.hprof_id, self.aid)

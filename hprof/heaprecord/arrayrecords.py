@@ -3,6 +3,7 @@
 
 from .heaprecord import Allocation
 
+from ..errors import FieldNotFoundError
 from ..offset import offset, AutoOffsets, idoffset
 from ..types import JavaType
 
@@ -25,6 +26,10 @@ class PrimitiveArrayRecord(Array):
 	def hprof_elem_type(self):
 		return self._hprof_jtype(self._hproff.TYPE)
 
+	@property
+	def hprof_class_id(self):
+		return self.hprof_file.get_primitive_array_class_info(self.hprof_elem_type).class_id
+
 	def __len__(self):
 		return self._hproff.DATA + self.length * self.hprof_elem_type.size(self.hprof_file.idsize)
 
@@ -32,12 +37,16 @@ class PrimitiveArrayRecord(Array):
 		return 'PrimitiveArrayRecord(type=%s, count=%d)' % (self.hprof_elem_type, self.length)
 
 	def __getitem__(self, ix):
-		if 0 <= ix < self.length:
-			t = self.hprof_elem_type
-			offset = self._hproff.DATA + ix * t.size(self.hprof_file.idsize)
-			return self._hprof_jvalue(offset, t)
+		if type(ix) is int:
+			if 0 <= ix < self.length:
+				t = self.hprof_elem_type
+				offset = self._hproff.DATA + ix * t.size(self.hprof_file.idsize)
+				return self._hprof_jvalue(offset, t)
+			else:
+				raise IndexError('tried to read element %d in a size %d array' % (ix, self.length))
 		else:
-			raise IndexError('tried to read element %d in a size %d array' % (ix, self.length))
+			# it's a field access; fall back to normal object field handling
+			return super().__getitem__(ix)
 
 class ObjectArrayRecord(Array):
 	HPROF_DUMP_TAG = 0x22
@@ -55,8 +64,18 @@ class ObjectArrayRecord(Array):
 	def __str__(self):
 		return 'ObjectArrayRecord(count=%d)' % self.length
 
+	@property
+	def hprof_class_id(self):
+		return self._hprof_id(self._hproff.CLSID)
+
 	def __getitem__(self, ix):
-		if 0 <= ix < self.length:
-			return self._hprof_id(self._hproff.DATA + ix * self.hprof_file.idsize)
+		if type(ix) is int:
+			# it's an array read!
+			if 0 <= ix < self.length:
+				v = self._hprof_id(self._hproff.DATA + ix * self.hprof_file.idsize)
+				return self.hprof_heap.dump.get_object(v)
+			else:
+				raise IndexError('tried to read element %d in a size %d array' % (ix, self.length))
 		else:
-			raise IndexError('tried to read element %d in a size %d array' % (ix, self.length))
+			# it's a field access; fall back to normal object field handling
+			return super().__getitem__(ix)

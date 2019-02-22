@@ -12,7 +12,7 @@ def _shorten(s, maxlength):
 def dump(hfile):
 	for r in hfile.records():
 		data = _shorten(str(r), 100)
-		print('%10x: %s %3d/%-10s %s' % (r.addr, r.timestamp.strftime('%H:%M:%S.%f'), r.tag, type(r).__name__, data))
+		print('%10x: %s %-10s %s' % (r.hprof_addr, r.timestamp.strftime('%H:%M:%S.%f'), type(r).__name__, data))
 
 if __name__ == '__main__':
 	import sys

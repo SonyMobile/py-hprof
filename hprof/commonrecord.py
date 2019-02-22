@@ -9,8 +9,8 @@ class HprofSlice(object, metaclass=Slotted):
 	def __init__(self, hf, addr):
 		self.hprof_file = hf
 		self.hprof_addr = addr
-		if hasattr(self, '_hprof_offsets'):
-			self._hproff = self._hprof_offsets[self.hprof_file.idsize]
+		if hasattr(type(self), '_hprof_offsets'):
+			self._hproff = type(self)._hprof_offsets[self.hprof_file.idsize]
 
 	def __eq__(self, other):
 		return self.hprof_addr == other.hprof_addr and self.hprof_file == other.hprof_file and type(self) is type(other)

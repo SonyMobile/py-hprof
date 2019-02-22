@@ -10,7 +10,7 @@ import struct
 from .heapdump import Dump
 from .errors import *
 from .offset import offset
-from .record import Record, HeapDumpSegment, HeapDumpEnd, Utf8
+from .record import Record, HeapDumpSegment, HeapDumpEnd, Utf8, ClassLoad
 from .types import JavaType
 
 _jtlookup = {}
@@ -126,6 +126,21 @@ class HprofFile(object):
 			return self._names[nameid]
 		except KeyError:
 			raise RefError('name', nameid)
+
+	def get_class_info(self, clsid):
+		# TODO: probably cache this.
+		for r in self.records():
+			if type(r) is ClassLoad and r.class_id == clsid:
+				return r
+		raise ClassNotFoundError('ClassLoad record for class id 0x%x' % clsid)
+
+	def get_primitive_array_class_info(self, primitive_type):
+		# TODO: probably cache this.
+		expected_name = primitive_type.name + '[]'
+		for r in self.records():
+			if type(r) is ClassLoad and r.name == expected_name:
+				return r
+		raise ClassNotFoundError('Primitive array type %s[]' % primitive_type)
 
 	def _read_bytes(self, start, nbytes):
 		if start < 0:

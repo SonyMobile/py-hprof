@@ -17,7 +17,7 @@ class TestClassRecord(TestCase):
 			with dump.subrecord(32) as cls:
 				self.clsid    = cls.id(97812097)
 				cls.uint(12344)  # stack trace
-				self.superid  = cls.id(1919)
+				self.superid  = cls.id(0)
 				cls.id(33)       # loader id
 				cls.id(34)       # signer id
 				cls.id(35)       # protection domain id
@@ -49,8 +49,9 @@ class TestClassRecord(TestCase):
 				cls.byte(6)      # field 3 type (float)
 		addrs, data = hb.build()
 		self.hf = hprof.open(bytes(data))
-		dump, = self.hf.records()
-		self.cls, = dump.records()
+		dump, = self.hf.dumps()
+		heap, = dump.heaps()
+		self.cls, = heap.objects()
 
 	def tearDown(self):
 		self.cls = None
