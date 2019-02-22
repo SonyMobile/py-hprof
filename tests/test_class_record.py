@@ -25,7 +25,13 @@ class TestClassRecord(TestCase):
 				cls.id(0)        # reserved2
 				cls.uint(80)     # instance size
 
-				cls.ushort(0)    # constant pool size (TODO: test with non-zero)
+				cls.ushort(2)    # constant pool size
+				cls.short(1)
+				cls.byte(10)
+				cls.uint(0x1000)
+				cls.short(20)
+				cls.byte(8)
+				cls.byte(99)
 
 				cls.ushort(3)    # static field count
 				self.sf0id = cls.id(104)
@@ -134,7 +140,7 @@ class TestClassRecord(TestCase):
 		self.assertIs(type(self.cls), hprof.heaprecord.ClassRecord)
 
 	def test_class_len(self):
-		self.assertEqual(len(self.cls), 1 + 24 + self.idsize * 15)
+		self.assertEqual(len(self.cls), 1 + 35 + self.idsize * 15)
 
 	def test_class_str(self):
 		self.assertEqual(str(self.cls), 'ClassRecord(id=0x%0x)' % self.clsid)
@@ -179,8 +185,3 @@ class TestNoConstantPool(TestCase):
 				cls.byte(6)      # field 3 type (float)
 		addrs, data = hb.build()
 		self.hf = hprof.open(bytes(data))
-
-	def test_no_constant_pool(self): # TODO: support constant pools; remove this test.
-		dump, = self.hf.records()
-		with self.assertRaisesRegex(hprof.FileFormatError, 'constant pool'):
-			cls, = dump.records()

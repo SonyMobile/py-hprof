@@ -18,7 +18,7 @@ doff = AutoOffsets(0,
 	'END')
 
 class ClassRecord(Allocation):
-	__slots__ = '_hprof_if_start_offset'
+	__slots__ = '_hprof_sf_start_offset', '_hprof_if_start_offset'
 	HPROF_DUMP_TAG = 0x20
 
 	_hprof_offsets = AutoOffsets(1,
@@ -32,19 +32,25 @@ class ClassRecord(Allocation):
 		'RESERVED1', idoffset(1),
 		'OBJSIZE',   4,
 		'CPOOLSIZE', 2,
-		'CPOOL',     0, # TODO: will need to split offsets here once we allow constant pools
-		'NSTATIC',   2,
-		'STATICS')
+		'CPOOL')
 
 	def __init__(self, hf, addr):
 		super().__init__(hf, addr)
-		if self._hprof_ushort(self._hproff.CPOOLSIZE) != 0:
-			raise FileFormatError('cannot handle constant pools yet')
+		self._hprof_sf_start_offset = self._hprof_cpool_end_offset()
 		self._hprof_if_start_offset = self._hprof_static_fields_end_offset()
 
+	def _hprof_cpool_end_offset(self):
+		count = self._hprof_ushort(self._hproff.CPOOLSIZE)
+		offset = self._hproff.CPOOL
+		idsize = self.hprof_file.idsize
+		for i in range(count):
+			jtype = self._hprof_jtype(offset+2)
+			offset += 3 + jtype.size(idsize)
+		return offset
+
 	def hprof_static_fields(self):
-		count = self._hprof_ushort(self._hproff.NSTATIC)
-		offset = self._hproff.STATICS
+		count = self._hprof_ushort(self._hprof_sf_start_offset)
+		offset = self._hprof_sf_start_offset + 2
 		for i in range(count):
 			sfield = StaticFieldRecord(self.hprof_file, self.hprof_addr + offset)
 			yield sfield
@@ -56,8 +62,8 @@ class ClassRecord(Allocation):
 
 	def _hprof_static_fields_end_offset(self):
 		# pretty much the same as static_fields(), except we just return the offset at the end.
-		count = self._hprof_ushort(self._hproff.NSTATIC)
-		offset = self._hproff.STATICS
+		count = self._hprof_ushort(self._hprof_sf_start_offset)
+		offset = self._hprof_sf_start_offset + 2
 		idsize = self.hprof_file.idsize
 		typeoff = doff[idsize].TYPE
 		decllen = doff[idsize].END
