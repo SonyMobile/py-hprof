@@ -50,11 +50,19 @@ class TestDump(TestCase):
 				obj.uint(94)
 				obj.id(83)
 				obj.uint(0)
-			with dump.subrecord(0x21) as obj:
-				obj.id(5)
-				obj.uint(95)
-				obj.id(83)
-				obj.uint(0)
+			with dump.subrecord(0x20) as cls:
+				cls.id(5)
+				cls.uint(95)
+				cls.id(0)
+				cls.id(0)
+				cls.id(0)
+				cls.id(0)
+				cls.id(0)
+				cls.id(0)
+				cls.uint(0)
+				cls.ushort(0)
+				cls.ushort(0)
+				cls.ushort(0)
 			with dump.subrecord(0xfe) as info:
 				info.uint(77)
 				info.id(heapnameid)
@@ -93,6 +101,112 @@ class TestDump(TestCase):
 		with self.assertRaises(StopIteration):
 			next(dumps)
 
+	def test_dump_a_get_object(self):
+		dumpA, _, _ = self.hf.dumps()
+		self.assertEqual(dumpA.get_object(1).hprof_id, 1)
+		self.assertEqual(dumpA.get_object(2).hprof_id, 2)
+		self.assertEqual(dumpA.get_object(3).hprof_id, 3)
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x4'):
+			dumpA.get_object(4)
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x5'):
+			dumpA.get_object(5)
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x6'):
+			dumpA.get_object(6)
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x7'):
+			dumpA.get_object(7)
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x8'):
+			dumpA.get_object(8)
+
+	def test_dump_empty_get_object(self):
+		_, empty, _ = self.hf.dumps()
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x1'):
+			empty.get_object(1)
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x2'):
+			empty.get_object(2)
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x3'):
+			empty.get_object(3)
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x4'):
+			empty.get_object(4)
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x5'):
+			empty.get_object(5)
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x6'):
+			empty.get_object(6)
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x7'):
+			empty.get_object(7)
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x8'):
+			empty.get_object(8)
+
+	def test_dump_b_get_object(self):
+		_, _, dumpB = self.hf.dumps()
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x1'):
+			dumpB.get_object(1)
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x2'):
+			dumpB.get_object(2)
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x3'):
+			dumpB.get_object(3)
+		self.assertEqual(dumpB.get_object(4).hprof_id, 4)
+		self.assertEqual(dumpB.get_object(5).hprof_id, 5)
+		self.assertEqual(dumpB.get_object(6).hprof_id, 6)
+		self.assertEqual(dumpB.get_object(7).hprof_id, 7)
+		with self.assertRaisesRegex(hprof.errors.RefError, 'object.*id 0x8'):
+			dumpB.get_object(8)
+
+	def test_dump_a_get_class(self):
+		dumpA, _, _ = self.hf.dumps()
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x1'):
+			dumpA.get_class(1)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x2'):
+			dumpA.get_class(2)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x3'):
+			dumpA.get_class(3)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x4'):
+			dumpA.get_class(4)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x5'):
+			dumpA.get_class(5)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x6'):
+			dumpA.get_class(6)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x7'):
+			dumpA.get_class(7)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x8'):
+			dumpA.get_class(8)
+
+	def test_dump_empty_get_class(self):
+		_, empty, _ = self.hf.dumps()
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x1'):
+			empty.get_class(1)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x2'):
+			empty.get_class(2)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x3'):
+			empty.get_class(3)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x4'):
+			empty.get_class(4)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x5'):
+			empty.get_class(5)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x6'):
+			empty.get_class(6)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x7'):
+			empty.get_class(7)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x8'):
+			empty.get_class(8)
+
+	def test_dump_b_get_class(self):
+		_, _, dumpB = self.hf.dumps()
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x1'):
+			dumpB.get_class(1)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x2'):
+			dumpB.get_class(2)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x3'):
+			dumpB.get_class(3)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x4'):
+			dumpB.get_class(4)
+		self.assertEqual(dumpB.get_class(5).hprof_id, 5)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x6'):
+			dumpB.get_class(6)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x7'):
+			dumpB.get_class(7)
+		with self.assertRaisesRegex(hprof.errors.ClassNotFoundError, 'class.*id 0x8'):
+			dumpB.get_class(8)
+
 	def test_dump_heaps(self):
 		dumpA, empty, dumpB = self.hf.dumps()
 		expectedA = (-1, '<unspecified>'), (77, 'heap')
@@ -129,12 +243,11 @@ class TestDump(TestCase):
 	def test_heapB_mountain_objs(self):
 		_, _, dumpB = self.hf.dumps()
 		mountainB, = (h for h in dumpB.heaps() if h.type == 18671)
-		obj = mountainB.objects()
-		self.assertEqual(next(obj).hprof_id, 4)
-		self.assertEqual(next(obj).hprof_id, 5)
-		self.assertEqual(next(obj).hprof_id, 7)
-		with self.assertRaises(StopIteration):
-			next(obj)
+		obj = sorted(mountainB.objects(), key=lambda r: r.hprof_addr)
+		self.assertEqual(len(obj), 3)
+		self.assertEqual(obj[0].hprof_id, 4)
+		self.assertEqual(obj[1].hprof_id, 5)
+		self.assertEqual(obj[2].hprof_id, 7)
 
 	def test_heap_equality(self):
 		dumpA, empty, dumpB = self.hf.dumps()
