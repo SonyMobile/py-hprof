@@ -84,14 +84,14 @@ class TestDump(TestCase):
 
 	def test_dump_type(self):
 		dumpA, empty, dumpB = self.hf.dumps()
-		self.assertIs(type(dumpA), hprof.heapdump.Dump)
-		self.assertIs(type(empty), hprof.heapdump.Dump)
-		self.assertIs(type(dumpB), hprof.heapdump.Dump)
+		self.assertIs(type(dumpA), hprof.Dump)
+		self.assertIs(type(empty), hprof.Dump)
+		self.assertIs(type(dumpB), hprof.Dump)
 
 	def test_heap_type(self):
 		for dump in self.hf.dumps():
 			for heap in dump.heaps():
-				self.assertIs(type(heap), hprof.heapdump.Heap)
+				self.assertIs(type(heap), hprof.Heap)
 
 	def test_dump_count(self):
 		dumps = self.hf.dumps()

@@ -66,6 +66,9 @@ class TestApiSurface(TestCase):
 			),
 			'JavaType': ('object', 'boolean', 'char', 'float', 'double', 'byte', 'short', 'int', 'long'),
 
+			'Dump': ('hf', 'get_class', 'get_object', 'heaps'),
+			'Heap': ('dump', 'has_id', 'name', 'type', 'objects'),
+
 			'Error': (),
 			'RefError': (),
 			'ClassNotFoundError': (),
@@ -110,10 +113,6 @@ class TestApiSurface(TestCase):
 				'FieldDecl': hprofslice('name', 'type'),
 				'StaticField': hprofslice('decl', 'value'),
 			},
-			'heapdump': {
-				'Dump': ('hf', 'get_class', 'get_object', 'heaps'),
-				'Heap': ('dump', 'has_id', 'name', 'type', 'objects'),
-			}
 		})
 
 	def test_api_surface(self):

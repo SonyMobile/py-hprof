@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from .._errors import *
-from ..heaprecord import *
-from .._slotted import Slotted
+from ._errors import *
+from .heaprecord import *
+from ._slotted import Slotted
 
 class Dump(object, metaclass=Slotted):
 	__slots__ = 'hf', '_heaps', '_current_heap'

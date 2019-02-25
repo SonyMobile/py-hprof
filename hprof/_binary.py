@@ -7,7 +7,7 @@ from mmap import mmap, MAP_PRIVATE, PROT_READ
 import builtins
 import struct
 
-from .heapdump import Dump
+from ._dump import Dump
 from ._errors import *
 from ._offset import offset
 from .record import create, HeapDumpSegment, HeapDumpEnd, Utf8, ClassLoad
