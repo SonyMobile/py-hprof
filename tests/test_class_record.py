@@ -20,6 +20,12 @@ class TestClassRecord(TestCase):
 		hb.name(54321, 'mGood')
 		hb.name(12346, 'mBye')
 		hb.name(12347, 'eeee')
+		hb.name(111, 'com.example.Spinny')
+		with hb.record(2, 0) as load:
+			load.uint(0)
+			load.id(97812097)
+			load.uint(0)
+			load.id(111)
 		with hb.record(28, 0) as dump:
 			with dump.subrecord(32) as cls:
 				self.clsid    = cls.id(97812097)
@@ -138,7 +144,7 @@ class TestClassRecord(TestCase):
 	### generic record fields ###
 
 	def test_class_addr(self):
-		self.assertEqual(self.cls.hprof_addr, 40 + (9 + self.idsize) * 7 + len('sHellosWorldsTwirledmAwaymGoodmByeeeee'))
+		self.assertEqual(self.cls.hprof_addr, 185 + 10 * self.idsize)
 
 	def test_class_id(self):
 		self.assertEqual(self.cls.hprof_id, self.clsid)
@@ -150,7 +156,7 @@ class TestClassRecord(TestCase):
 		self.assertEqual(len(self.cls), 1 + 35 + self.idsize * 15)
 
 	def test_class_str(self):
-		self.assertEqual(str(self.cls), 'Class(id=0x%0x)' % self.clsid)
+		self.assertEqual(str(self.cls), 'Class(com.example.Spinny)')
 
 @varying_idsize
 class TestNoConstantPool(TestCase):

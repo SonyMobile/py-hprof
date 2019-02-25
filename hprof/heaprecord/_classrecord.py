@@ -124,7 +124,7 @@ class Class(Allocation):
 		return self._hprof_if_start_offset + ioff.DATA + ifield_count * doff[self.hprof_file.idsize].END
 
 	def __str__(self):
-		return 'Class(id=0x%x)' % self.hprof_id
+		return 'Class(%s)' % self.hprof_name
 
 	def __getattr__(self, name):
 		return self[name]
