@@ -22,17 +22,16 @@ offsets = AutoOffsets(0,
 	'BODY'
 )
 
-class Record(HprofSlice):
-	@staticmethod
-	def create(hf, addr):
-		tag = hf.read_byte(addr)
-		# TODO: some form of caching here might not be a bad idea.
-		rtype = Unhandled
-		for candidate in Record.__subclasses__():
-			if getattr(candidate, 'TAG', None) == tag:
-				rtype = candidate
-		return rtype(hf, addr)
+def create(hf, addr):
+	tag = hf.read_byte(addr)
+	# TODO: some form of caching here might not be a bad idea.
+	rtype = Unhandled
+	for candidate in Record.__subclasses__():
+		if getattr(candidate, 'TAG', None) == tag:
+			rtype = candidate
+	return rtype(hf, addr)
 
+class Record(HprofSlice):
 	@property
 	def rawbody(self):
 		return self.hprof_file.read_bytes(self.hprof_addr+9, len(self)-9)

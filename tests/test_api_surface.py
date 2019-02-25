@@ -37,7 +37,7 @@ def hprofslice(*fields):
 	return tuple(fields) + ('hprof_file', 'hprof_addr')
 
 def baserecord(*fields):
-	return hprofslice('rawbody', 'timestamp', 'relative_timestamp', 'create', *fields) # TODO: create() should not be a Record method.
+	return hprofslice('rawbody', 'timestamp', 'relative_timestamp', *fields)
 
 def record(*fields):
 	return baserecord('TAG', *fields)
@@ -74,6 +74,7 @@ class TestApiSurface(TestCase):
 			'FieldNotFoundError': (),
 
 			'record': {
+				'create': (),
 				'Record': baserecord(),
 
 				'Utf8': record('str', 'id'),

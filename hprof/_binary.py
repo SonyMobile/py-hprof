@@ -10,7 +10,7 @@ import struct
 from .heapdump import Dump
 from ._errors import *
 from ._offset import offset
-from .record import Record, HeapDumpSegment, HeapDumpEnd, Utf8, ClassLoad
+from .record import create, HeapDumpSegment, HeapDumpEnd, Utf8, ClassLoad
 from ._types import JavaType
 
 _jtlookup = {}
@@ -98,7 +98,7 @@ class HprofFile(object):
 				tag = self.read_byte(addr)
 			except EofError:
 				break # alright, everything lined up nicely!
-			r = Record.create(self, addr)
+			r = create(self, addr)
 			addr += len(r) # skip to the next record
 			yield r
 
