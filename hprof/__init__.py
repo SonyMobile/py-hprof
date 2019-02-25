@@ -6,5 +6,5 @@ from ._dump import Dump, Heap
 from ._errors import Error, FileFormatError, EofError, RefError, ClassNotFoundError, FieldNotFoundError
 from ._types import JavaType
 
-from . import heaprecord
+from . import heap
 from . import record

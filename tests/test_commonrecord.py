@@ -4,7 +4,7 @@
 from unittest import TestCase
 from hprof._commonrecord import HprofSlice
 from hprof.record import Record
-from hprof.heaprecord import HeapRecord
+from hprof.heap import HeapRecord
 
 class TestHprofSlice(TestCase):
 	def test_commonrecord_no_id(self):

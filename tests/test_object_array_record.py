@@ -79,7 +79,7 @@ class TestObjArrayRecord(TestCase):
 		self.assertEqual(self.a.hprof_id, self.aid)
 
 	def test_object_array_type(self):
-		self.assertIs(type(self.a), hprof.heaprecord.ObjectArray)
+		self.assertIs(type(self.a), hprof.heap.ObjectArray)
 
 	def test_object_array_len(self):
 		self.assertEqual(len(self.a), 1 + 8 + self.idsize * 7)

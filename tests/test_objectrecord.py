@@ -71,8 +71,8 @@ class TestObject(TestCase):
 		self.assertEqual(self.p.hprof_id, self.id2)
 
 	def test_object_type(self):
-		self.assertIs(type(self.o), hprof.heaprecord.Object)
-		self.assertIs(type(self.p), hprof.heaprecord.Object)
+		self.assertIs(type(self.o), hprof.heap.Object)
+		self.assertIs(type(self.p), hprof.heap.Object)
 
 	def test_object_len(self):
 		self.assertEqual(len(self.o), 13 + 2 * self.idsize)

@@ -2,7 +2,7 @@
 #coding=utf8
 
 from ._errors import *
-from .heaprecord import *
+from .heap import *
 from ._slotted import Slotted
 
 class Dump(object, metaclass=Slotted):

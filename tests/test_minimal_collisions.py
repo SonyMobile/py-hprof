@@ -27,29 +27,29 @@ class TestMinimalCollisions(TestCase):
 
 	def test_collisions_none_missed(self):
 		already_tested = [ # don't lie!
-			hprof.heaprecord.Allocation,
-			hprof.heaprecord.Array,
-			hprof.heaprecord.ObjectArray,
-			hprof.heaprecord.PrimitiveArray,
-			hprof.heaprecord.Object,
-			hprof.heaprecord.Class,
+			hprof.heap.Allocation,
+			hprof.heap.Array,
+			hprof.heap.ObjectArray,
+			hprof.heap.PrimitiveArray,
+			hprof.heap.Object,
+			hprof.heap.Class,
 		]
-		self.assertCountEqual(_descendants(hprof.heaprecord.Allocation), already_tested)
+		self.assertCountEqual(_descendants(hprof.heap.Allocation), already_tested)
 
 	def test_collisions_allocation(self):
-		self._check(hprof.heaprecord.Allocation(self.hf, 0))
+		self._check(hprof.heap.Allocation(self.hf, 0))
 
 	def test_collisions_array(self):
-		self._check(hprof.heaprecord.Array(self.hf, 0), allowed=('length',))
+		self._check(hprof.heap.Array(self.hf, 0), allowed=('length',))
 
 	def test_collisions_objectarray(self):
-		self._check(hprof.heaprecord.ObjectArray(self.hf, 0), allowed=('length',))
+		self._check(hprof.heap.ObjectArray(self.hf, 0), allowed=('length',))
 
 	def test_collisions_primitivearray(self):
-		self._check(hprof.heaprecord.PrimitiveArray(self.hf, 0), allowed=('length',))
+		self._check(hprof.heap.PrimitiveArray(self.hf, 0), allowed=('length',))
 
 	def test_collisions_object(self):
-		self._check(hprof.heaprecord.Object(self.hf, 0))
+		self._check(hprof.heap.Object(self.hf, 0))
 
 	def test_collisions_class(self):
-		self._check(hprof.heaprecord.Class(self.hf, 0))
+		self._check(hprof.heap.Class(self.hf, 0))

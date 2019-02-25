@@ -86,7 +86,7 @@ class TestApiSurface(TestCase):
 				'HeapDumpEnd': record(),
 				'Unhandled': baserecord(),
 			},
-			'heaprecord': {
+			'heap': {
 				'create': (),
 				'HeapRecord': hprofslice(),
 				'HeapDumpInfo': hprofslice('HPROF_DUMP_TAG', 'name', 'type'),

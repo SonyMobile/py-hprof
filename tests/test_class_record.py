@@ -87,9 +87,9 @@ class TestClassRecord(TestCase):
 
 	def test_class_static_fields(self):
 		a, b, c = self.cls.hprof_static_fields()
-		self.assertIs(type(a), hprof.heaprecord.StaticField)
-		self.assertIs(type(b), hprof.heaprecord.StaticField)
-		self.assertIs(type(c), hprof.heaprecord.StaticField)
+		self.assertIs(type(a), hprof.heap.StaticField)
+		self.assertIs(type(b), hprof.heap.StaticField)
+		self.assertIs(type(c), hprof.heap.StaticField)
 		self.assertIs(   a.value, True)
 		self.assertEqual(b.value, '今')
 		self.assertEqual(c.value, self.sfobjid)
@@ -117,10 +117,10 @@ class TestClassRecord(TestCase):
 
 	def test_class_instance_fields(self):
 		a, b, c, d = self.cls.hprof_instance_fields()
-		self.assertIs(type(a), hprof.heaprecord.FieldDecl)
-		self.assertIs(type(b), hprof.heaprecord.FieldDecl)
-		self.assertIs(type(c), hprof.heaprecord.FieldDecl)
-		self.assertIs(type(d), hprof.heaprecord.FieldDecl)
+		self.assertIs(type(a), hprof.heap.FieldDecl)
+		self.assertIs(type(b), hprof.heap.FieldDecl)
+		self.assertIs(type(c), hprof.heap.FieldDecl)
+		self.assertIs(type(d), hprof.heap.FieldDecl)
 		self.assertEqual(a.name, 'mAway')
 		self.assertEqual(b.name, 'mGood')
 		self.assertEqual(c.name, 'mBye')
@@ -150,7 +150,7 @@ class TestClassRecord(TestCase):
 		self.assertEqual(self.cls.hprof_id, self.clsid)
 
 	def test_class_type(self):
-		self.assertIs(type(self.cls), hprof.heaprecord.Class)
+		self.assertIs(type(self.cls), hprof.heap.Class)
 
 	def test_class_len(self):
 		self.assertEqual(len(self.cls), 1 + 35 + self.idsize * 15)

@@ -80,8 +80,8 @@ class TestRoots(TestCase):
 	### type-specific fields ###
 
 	def test_root_obj_types(self):
-		self.assertIs(type(self.obj1), hprof.heaprecord.Object)
-		self.assertIs(type(self.obj2), hprof.heaprecord.Object)
+		self.assertIs(type(self.obj1), hprof.heap.Object)
+		self.assertIs(type(self.obj2), hprof.heap.Object)
 
 	def test_root_objid(self):
 		self.assertEqual(self.unknownroot       .objid, self.obj2.hprof_id)
@@ -146,19 +146,19 @@ class TestRoots(TestCase):
 			self.stickyroot.id
 
 	def test_root_type(self):
-		self.assertIs(type(self.unknownroot),      hprof.heaprecord.UnknownRoot)
-		self.assertIs(type(self.threadroot),       hprof.heaprecord.ThreadRoot)
-		self.assertIs(type(self.localjniroot1),    hprof.heaprecord.LocalJniRoot)
-		self.assertIs(type(self.localjniroot2),    hprof.heaprecord.LocalJniRoot)
-		self.assertIs(type(self.nativeroot),       hprof.heaprecord.NativeStackRoot)
-		self.assertIs(type(self.javaroot1),        hprof.heaprecord.JavaStackRoot)
-		self.assertIs(type(self.javaroot2),        hprof.heaprecord.JavaStackRoot)
-		self.assertIs(type(self.globaljniroot1),   hprof.heaprecord.GlobalJniRoot)
-		self.assertIs(type(self.globaljniroot2),   hprof.heaprecord.GlobalJniRoot)
-		self.assertIs(type(self.vmroot),           hprof.heaprecord.VmInternalRoot)
-		self.assertIs(type(self.invalidroot),      hprof.heaprecord.UnknownRoot)
-		self.assertIs(type(self.internroot),       hprof.heaprecord.InternedStringRoot)
-		self.assertIs(type(self.stickyroot),       hprof.heaprecord.StickyClassRoot)
+		self.assertIs(type(self.unknownroot),      hprof.heap.UnknownRoot)
+		self.assertIs(type(self.threadroot),       hprof.heap.ThreadRoot)
+		self.assertIs(type(self.localjniroot1),    hprof.heap.LocalJniRoot)
+		self.assertIs(type(self.localjniroot2),    hprof.heap.LocalJniRoot)
+		self.assertIs(type(self.nativeroot),       hprof.heap.NativeStackRoot)
+		self.assertIs(type(self.javaroot1),        hprof.heap.JavaStackRoot)
+		self.assertIs(type(self.javaroot2),        hprof.heap.JavaStackRoot)
+		self.assertIs(type(self.globaljniroot1),   hprof.heap.GlobalJniRoot)
+		self.assertIs(type(self.globaljniroot2),   hprof.heap.GlobalJniRoot)
+		self.assertIs(type(self.vmroot),           hprof.heap.VmInternalRoot)
+		self.assertIs(type(self.invalidroot),      hprof.heap.UnknownRoot)
+		self.assertIs(type(self.internroot),       hprof.heap.InternedStringRoot)
+		self.assertIs(type(self.stickyroot),       hprof.heap.StickyClassRoot)
 
 	def test_root_len(self):
 		self.assertEqual(len(self.unknownroot),        1 + self.idsize)

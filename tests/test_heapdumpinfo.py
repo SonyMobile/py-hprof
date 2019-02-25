@@ -34,9 +34,9 @@ class TestHeapDumpInfo(TestCase):
 		self.infoA, self.infoB, self.infoC = dump.records()
 
 	def test_heapdumpinfo_class(self):
-		self.assertIs(type(self.infoA), hprof.heaprecord.HeapDumpInfo)
-		self.assertIs(type(self.infoB), hprof.heaprecord.HeapDumpInfo)
-		self.assertIs(type(self.infoC), hprof.heaprecord.HeapDumpInfo)
+		self.assertIs(type(self.infoA), hprof.heap.HeapDumpInfo)
+		self.assertIs(type(self.infoB), hprof.heap.HeapDumpInfo)
+		self.assertIs(type(self.infoC), hprof.heap.HeapDumpInfo)
 
 	def test_heapdumpinfo_name(self):
 		self.assertEqual(self.infoA.name.str, 'heap')
