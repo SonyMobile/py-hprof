@@ -120,9 +120,9 @@ class TestClassRecord(TestCase):
 		self.assertEqual(str(a), 'StaticField(name=sHello, type=boolean, value=True)')
 		self.assertEqual(str(b), 'StaticField(name=sWorld, type=char, value=\'今\')')
 		self.assertEqual(str(c), 'StaticField(name=sTwirled, type=object, value=0x%x)' % (self.sfobjid))
-		self.assertEqual(len(a), self.idsize + 2)
-		self.assertEqual(len(b), self.idsize + 3)
-		self.assertEqual(len(c), 2 * self.idsize + 1)
+		self.assertEqual(a._hprof_len, self.idsize + 2)
+		self.assertEqual(b._hprof_len, self.idsize + 3)
+		self.assertEqual(c._hprof_len, 2 * self.idsize + 1)
 		ad = a.decl
 		bd = b.decl
 		cd = c.decl
@@ -135,9 +135,9 @@ class TestClassRecord(TestCase):
 		self.assertEqual(str(ad), 'FieldDecl(name=sHello, type=boolean)')
 		self.assertEqual(str(bd), 'FieldDecl(name=sWorld, type=char)')
 		self.assertEqual(str(cd), 'FieldDecl(name=sTwirled, type=object)')
-		self.assertEqual(len(ad), self.idsize + 1)
-		self.assertEqual(len(bd), self.idsize + 1)
-		self.assertEqual(len(cd), self.idsize + 1)
+		self.assertEqual(ad._hprof_len, self.idsize + 1)
+		self.assertEqual(bd._hprof_len, self.idsize + 1)
+		self.assertEqual(cd._hprof_len, self.idsize + 1)
 
 	def test_class_instance_fields(self):
 		a, b, c, d = self.cls.hprof_instance_fields()
@@ -157,10 +157,10 @@ class TestClassRecord(TestCase):
 		self.assertEqual(str(b), 'FieldDecl(name=mGood, type=short)')
 		self.assertEqual(str(c), 'FieldDecl(name=mBye, type=object)')
 		self.assertEqual(str(d), 'FieldDecl(name=eeee, type=float)')
-		self.assertEqual(len(a), 1 + self.idsize)
-		self.assertEqual(len(b), 1 + self.idsize)
-		self.assertEqual(len(c), 1 + self.idsize)
-		self.assertEqual(len(d), 1 + self.idsize)
+		self.assertEqual(a._hprof_len, 1 + self.idsize)
+		self.assertEqual(b._hprof_len, 1 + self.idsize)
+		self.assertEqual(c._hprof_len, 1 + self.idsize)
+		self.assertEqual(d._hprof_len, 1 + self.idsize)
 
 	def test_class_stacktrace(self): # TODO
 		pass
@@ -177,7 +177,7 @@ class TestClassRecord(TestCase):
 		self.assertIs(type(self.cls), hprof.heap.Class)
 
 	def test_class_len(self):
-		self.assertEqual(len(self.cls), 1 + 35 + self.idsize * 15)
+		self.assertEqual(self.cls._hprof_len, 1 + 35 + self.idsize * 15)
 
 	def test_class_str(self):
 		self.assertEqual(str(self.cls), 'Class(com.example.Spinny)')

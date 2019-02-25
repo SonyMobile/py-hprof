@@ -75,8 +75,8 @@ class TestObject(TestCase):
 		self.assertIs(type(self.p), hprof.heap.Object)
 
 	def test_object_len(self):
-		self.assertEqual(len(self.o), 13 + 2 * self.idsize)
-		self.assertEqual(len(self.p), 19 + 2 * self.idsize)
+		self.assertEqual(self.o._hprof_len, 13 + 2 * self.idsize)
+		self.assertEqual(self.p._hprof_len, 19 + 2 * self.idsize)
 
 	def test_object_str(self):
 		# TODO: when we know about classes, it should be part of the str output

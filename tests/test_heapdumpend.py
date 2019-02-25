@@ -36,7 +36,7 @@ class TestHeapDumpEnd(TestCase):
 		self.assertEqual(self.e.rawbody, b'')
 
 	def test_heapdumpend_len(self):
-		self.assertEqual(len(self.e), 9)
+		self.assertEqual(self.e._hprof_len, 9)
 
 	def test_heapdumpend_str(self):
 		self.assertEqual(str(self.e), 'HeapDumpEnd()')
@@ -50,5 +50,5 @@ class TestHeapDumpErrors(TestCase):
 		addrs, data = hb.build()
 		hf = hprof.open(bytes(data))
 		end, = hf.records()
-		self.assertEqual(len(end), 13)
+		self.assertEqual(end._hprof_len, 13)
 

@@ -11,7 +11,8 @@ class GcRoot(HeapRecord):
 	def objid(self):
 		return self._hprof_id(self._hproff.ID)
 
-	def __len__(self):
+	@property
+	def _hprof_len(self):
 		return self._hproff.END
 
 	def _info(self):

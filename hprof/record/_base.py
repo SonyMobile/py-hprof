@@ -34,7 +34,7 @@ def create(hf, addr):
 class Record(HprofSlice):
 	@property
 	def rawbody(self):
-		return self.hprof_file.read_bytes(self.hprof_addr+9, len(self)-9)
+		return self.hprof_file.read_bytes(self.hprof_addr+9, self._hprof_len - 9)
 
 	@property
 	def timestamp(self):
@@ -44,7 +44,8 @@ class Record(HprofSlice):
 	def relative_timestamp(self):
 		return timedelta(microseconds = self.hprof_file.read_uint(self.hprof_addr + 1))
 
-	def __len__(self):
+	@property
+	def _hprof_len(self):
 		return 9 + self.hprof_file.read_uint(self.hprof_addr + 5)
 
 	def __str__(self):

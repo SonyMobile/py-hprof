@@ -161,19 +161,19 @@ class TestRoots(TestCase):
 		self.assertIs(type(self.stickyroot),       hprof.heap.StickyClassRoot)
 
 	def test_root_len(self):
-		self.assertEqual(len(self.unknownroot),        1 + self.idsize)
-		self.assertEqual(len(self.threadroot),         9 + self.idsize)
-		self.assertEqual(len(self.localjniroot1),      9 + self.idsize)
-		self.assertEqual(len(self.localjniroot2),      9 + self.idsize)
-		self.assertEqual(len(self.nativeroot),         5 + self.idsize)
-		self.assertEqual(len(self.javaroot1),          9 + self.idsize)
-		self.assertEqual(len(self.javaroot2),          9 + self.idsize)
-		self.assertEqual(len(self.globaljniroot1),     1 + 2 * self.idsize)
-		self.assertEqual(len(self.globaljniroot2),     1 + 2 * self.idsize)
-		self.assertEqual(len(self.vmroot),             1 + self.idsize)
-		self.assertEqual(len(self.invalidroot),        1 + self.idsize)
-		self.assertEqual(len(self.internroot),         1 + self.idsize)
-		self.assertEqual(len(self.stickyroot),         1 + self.idsize)
+		self.assertEqual(self.unknownroot._hprof_len,        1 + self.idsize)
+		self.assertEqual(self.threadroot._hprof_len,         9 + self.idsize)
+		self.assertEqual(self.localjniroot1._hprof_len,      9 + self.idsize)
+		self.assertEqual(self.localjniroot2._hprof_len,      9 + self.idsize)
+		self.assertEqual(self.nativeroot._hprof_len,         5 + self.idsize)
+		self.assertEqual(self.javaroot1._hprof_len,          9 + self.idsize)
+		self.assertEqual(self.javaroot2._hprof_len,          9 + self.idsize)
+		self.assertEqual(self.globaljniroot1._hprof_len,     1 + 2 * self.idsize)
+		self.assertEqual(self.globaljniroot2._hprof_len,     1 + 2 * self.idsize)
+		self.assertEqual(self.vmroot._hprof_len,             1 + self.idsize)
+		self.assertEqual(self.invalidroot._hprof_len,        1 + self.idsize)
+		self.assertEqual(self.internroot._hprof_len,         1 + self.idsize)
+		self.assertEqual(self.stickyroot._hprof_len,         1 + self.idsize)
 
 	def test_root_str(self):
 		# TODO: when we know about threads and classes, improve expected str() result.

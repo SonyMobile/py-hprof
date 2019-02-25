@@ -99,10 +99,10 @@ class TestArtificialHprof(TestCase):
 	def test_record_length(self):
 		self.open()
 		records = self.f.records()
-		self.assertEqual(len(next(records)), 25)
-		self.assertEqual(len(next(records)), 70)
-		self.assertEqual(len(next(records)), 17)
-		self.assertEqual(len(next(records)), 9)
+		self.assertEqual(next(records)._hprof_len, 25)
+		self.assertEqual(next(records)._hprof_len, 70)
+		self.assertEqual(next(records)._hprof_len, 17)
+		self.assertEqual(next(records)._hprof_len, 9)
 
 	def test_record_time(self):
 		self.open()
@@ -143,7 +143,7 @@ class TestArtificialHprof(TestCase):
 		self.assertIs(type(r), hprof.record.Unhandled)
 		self.assertEqual(r.timestamp, datetime.fromtimestamp(0x168e143f263 / 1000 + 0x10000 / 1000000))
 		self.assertEqual(r.relative_timestamp, timedelta(microseconds = 0x10000))
-		self.assertEqual(len(r), 70)
+		self.assertEqual(r._hprof_len, 70)
 		s = str(r)
 		self.assertTrue(s.startswith('Unhandled('))
 		self.assertTrue(s.endswith(')'))

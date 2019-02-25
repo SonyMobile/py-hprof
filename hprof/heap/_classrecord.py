@@ -54,7 +54,7 @@ class Class(Allocation):
 		for i in range(count):
 			sfield = StaticField(self.hprof_file, self.hprof_addr + offset)
 			yield sfield
-			offset += len(sfield)
+			offset += sfield._hprof_len
 		superid = self.hprof_super_class_id
 		if superid != 0:
 			supercls = self.hprof_heap.dump.get_class(superid)
@@ -79,7 +79,7 @@ class Class(Allocation):
 		for i in range(count):
 			ifield = FieldDecl(self.hprof_file, self.hprof_addr + offset)
 			yield ifield
-			offset += len(ifield)
+			offset += ifield._hprof_len
 
 	def _hprof_instance_field_lookup(self, name):
 		count = self._hprof_ushort(self._hprof_if_start_offset + ioff.COUNT)
@@ -123,7 +123,8 @@ class Class(Allocation):
 	def hprof_name(self):
 		return self.hprof_file.get_class_info(self.hprof_id).class_name
 
-	def __len__(self):
+	@property
+	def _hprof_len(self):
 		ifield_count = self._hprof_ushort(self._hprof_if_start_offset + ioff.COUNT)
 		return self._hprof_if_start_offset + ioff.DATA + ifield_count * doff[self.hprof_file.idsize].END
 
@@ -163,7 +164,8 @@ class FieldDecl(HprofSlice):
 		nameid = self._hprof_id(doff[self.hprof_file.idsize].NAMEID)
 		return self.hprof_file.name(nameid).str
 
-	def __len__(self):
+	@property
+	def _hprof_len(self):
 		return doff[self.hprof_file.idsize].END
 
 	def __str__(self):
@@ -178,9 +180,10 @@ class StaticField(HprofSlice):
 	def value(self):
 		return self._hprof_jvalue(doff[self.hprof_file.idsize].END, self.decl.type)
 
-	def __len__(self):
+	@property
+	def _hprof_len(self):
 		d = self.decl
-		v = len(d) + d.type.size(self.hprof_file.idsize)
+		v = d._hprof_len + d.type.size(self.hprof_file.idsize)
 		return v
 
 	def __str__(self):

@@ -30,7 +30,8 @@ class PrimitiveArray(Array):
 	def hprof_class_id(self):
 		return self.hprof_file.get_primitive_array_class_info(self.hprof_elem_type).class_id
 
-	def __len__(self):
+	@property
+	def _hprof_len(self):
 		return self._hproff.DATA + self.length * self.hprof_elem_type.size(self.hprof_file.idsize)
 
 	def __str__(self):
@@ -58,7 +59,8 @@ class ObjectArray(Array):
 			'CLSID',  idoffset(1),
 			'DATA')
 
-	def __len__(self):
+	@property
+	def _hprof_len(self):
 		return self._hproff.DATA + self.length * self.hprof_file.idsize
 
 	def __str__(self):

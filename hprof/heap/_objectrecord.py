@@ -23,7 +23,8 @@ class Object(Allocation):
 	def hprof_class_id(self):
 		return self._hprof_id(self._hproff.CLSID)
 
-	def __len__(self):
+	@property
+	def _hprof_len(self):
 		return self._hproff.DATA + self._hprof_uint(self._hproff.DATASIZE)
 
 	def __str__(self):

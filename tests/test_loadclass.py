@@ -53,7 +53,7 @@ class TestLoadClass(TestCase):
 		self.assertEqual(self.c.rawbody, self.data[self.addrs[1] + 9:])
 
 	def test_loadclass_len(self):
-		self.assertEqual(len(self.c), len(self.data) - self.addrs[1])
+		self.assertEqual(self.c._hprof_len, len(self.data) - self.addrs[1])
 
 	def test_loadclass_str(self):
 		self.assertEqual(str(self.c), 'ClassLoad(com.example.MyFancyClass)')

@@ -15,7 +15,7 @@ class Utf8(_base.Record):
 
 	@property
 	def str(self):
-		return self._hprof_utf8(self._hproff.STR, len(self) - self._hproff.STR)
+		return self._hprof_utf8(self._hproff.STR, self._hprof_len - self._hproff.STR)
 
 	@property
 	def id(self):

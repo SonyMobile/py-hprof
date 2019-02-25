@@ -99,7 +99,7 @@ class HprofFile(object):
 			except EofError:
 				break # alright, everything lined up nicely!
 			r = create(self, addr)
-			addr += len(r) # skip to the next record
+			addr += r._hprof_len # skip to the next record
 			yield r
 
 	def dumps(self):

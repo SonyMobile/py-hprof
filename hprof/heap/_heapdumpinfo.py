@@ -22,7 +22,8 @@ class HeapDumpInfo(HeapRecord):
 		nameid = self._hprof_id(offsets.NAME)
 		return self.hprof_file.name(nameid)
 
-	def __len__(self):
+	@property
+	def _hprof_len(self):
 		return offsets.END.flatten(self.hprof_file.idsize)
 
 	def __str__(self):

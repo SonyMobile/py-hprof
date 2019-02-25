@@ -71,9 +71,9 @@ class TestUtf8(TestCase):
 		self.assertEqual(next(self.recs).rawbody, self.data[self.addr[2] + 9:len(self.data)])
 
 	def test_utf8_len(self):
-		self.assertEqual(len(next(self.recs)), 21 + self.idsize)
-		self.assertEqual(len(next(self.recs)), 14 + self.idsize)
-		self.assertEqual(len(next(self.recs)), 13 + self.idsize)
+		self.assertEqual(next(self.recs)._hprof_len, 21 + self.idsize)
+		self.assertEqual(next(self.recs)._hprof_len, 14 + self.idsize)
+		self.assertEqual(next(self.recs)._hprof_len, 13 + self.idsize)
 
 	def test_utf8_str(self):
 		self.assertEqual(str(next(self.recs)), 'Hello world!')
