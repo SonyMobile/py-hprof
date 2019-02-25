@@ -52,7 +52,7 @@ class Class(Allocation):
 		count = self._hprof_ushort(self._hprof_sf_start_offset)
 		offset = self._hprof_sf_start_offset + 2
 		for i in range(count):
-			sfield = StaticFieldRecord(self.hprof_file, self.hprof_addr + offset)
+			sfield = StaticField(self.hprof_file, self.hprof_addr + offset)
 			yield sfield
 			offset += len(sfield)
 		superid = self.hprof_super_class_id
@@ -77,7 +77,7 @@ class Class(Allocation):
 		offset = self._hprof_if_start_offset + ioff.DATA
 		assert type(offset) is int
 		for i in range(count):
-			ifield = FieldDeclRecord(self.hprof_file, self.hprof_addr + offset)
+			ifield = FieldDecl(self.hprof_file, self.hprof_addr + offset)
 			yield ifield
 			offset += len(ifield)
 
@@ -149,7 +149,7 @@ class Class(Allocation):
 			e.add_class(self.hprof_name)
 			raise
 
-class FieldDeclRecord(HprofSlice):
+class FieldDecl(HprofSlice):
 	@property
 	def type(self):
 		return self._hprof_jtype(doff[self.hprof_file.idsize].TYPE)
@@ -163,12 +163,12 @@ class FieldDeclRecord(HprofSlice):
 		return doff[self.hprof_file.idsize].END
 
 	def __str__(self):
-		return 'FieldDeclRecord(name=%s, type=%s)' % (self.name, self.type)
+		return 'FieldDecl(name=%s, type=%s)' % (self.name, self.type)
 
-class StaticFieldRecord(HprofSlice):
+class StaticField(HprofSlice):
 	@property
 	def decl(self):
-		return FieldDeclRecord(self.hprof_file, self.hprof_addr)
+		return FieldDecl(self.hprof_file, self.hprof_addr)
 
 	@property
 	def value(self):
@@ -186,4 +186,4 @@ class StaticFieldRecord(HprofSlice):
 			vstr = '0x%x' % v
 		else:
 			vstr = repr(v)
-		return 'StaticFieldRecord(name=%s, type=%s, value=%s)' % (decl.name, decl.type, vstr)
+		return 'StaticField(name=%s, type=%s, value=%s)' % (decl.name, decl.type, vstr)
