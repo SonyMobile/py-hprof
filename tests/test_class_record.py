@@ -182,46 +182,6 @@ class TestClassRecord(TestCase):
 	def test_class_str(self):
 		self.assertEqual(str(self.cls), 'Class(com.example.Spinny)')
 
-@varying_idsize
-class TestNoConstantPool(TestCase):
-	def setUp(self):
-		hb = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 787878)
-		with hb.record(28, 0) as dump:
-			with dump.subrecord(32) as cls:
-				self.clsid    = cls.id(97812097)
-				cls.uint(12344)  # stack trace
-				self.superid  = cls.id(1919)
-				cls.id(33)       # loader id
-				cls.id(34)       # signer id
-				cls.id(35)       # protection domain id
-				cls.id(0)        # reserved1
-				cls.id(0)        # reserved2
-				cls.uint(80)     # instance size
-
-				cls.ushort(1)    # constant pool size
-
-				cls.ushort(3)    # static field count
-				self.sf0id = cls.id(104)
-				cls.byte(4)      # static field 0 type (boolean)
-				cls.byte(1)      # static field 0 value
-				self.sf1id = cls.id(106)
-				cls.byte(5)      # static field 1 type (char)
-				cls.ushort(20170)# static field 1 value (今)
-				self.sf2id = cls.id(107)
-				cls.byte(2)      #static field 2 type (object)
-				self.sfobjid = cls.id(0x912018412515)
-
-				cls.ushort(4)    # instance field count (not including inherited fields)
-				self.if0id = cls.id(12345)
-				cls.byte(8)      # field 0 type (byte)
-				self.if1id = cls.id(54321)
-				cls.byte(9)      # field 1 type (short)
-				self.if2id = cls.id(12346)
-				cls.byte(2)      # field 2 type (object)
-				self.if3id = cls.id(12347)
-				cls.byte(6)      # field 3 type (float)
-		addrs, data = hb.build()
-		self.hf = hprof.open(bytes(data))
 
 @varying_idsize
 class TestMissingJavaLangClass(TestCase):
