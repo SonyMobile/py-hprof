@@ -73,7 +73,7 @@ class Heap(object, metaclass=Slotted):
 
 	def _add_alloc(self, objid, record):
 		record.hprof_heap = self
-		if type(record) is ClassRecord:
+		if type(record) is Class:
 			self._classes[objid] = record
 		else:
 			self._objects[objid] = record

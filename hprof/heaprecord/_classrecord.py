@@ -17,7 +17,7 @@ doff = AutoOffsets(0,
 	'TYPE',   1,
 	'END')
 
-class ClassRecord(Allocation):
+class Class(Allocation):
 	__slots__ = '_hprof_sf_start_offset', '_hprof_if_start_offset'
 	HPROF_DUMP_TAG = 0x20
 
@@ -124,7 +124,7 @@ class ClassRecord(Allocation):
 		return self._hprof_if_start_offset + ioff.DATA + ifield_count * doff[self.hprof_file.idsize].END
 
 	def __str__(self):
-		return 'ClassRecord(id=0x%x)' % self.hprof_id
+		return 'Class(id=0x%x)' % self.hprof_id
 
 	def __getattr__(self, name):
 		return self[name]

@@ -144,13 +144,13 @@ class TestClassRecord(TestCase):
 		self.assertEqual(self.cls.hprof_id, self.clsid)
 
 	def test_class_type(self):
-		self.assertIs(type(self.cls), hprof.heaprecord.ClassRecord)
+		self.assertIs(type(self.cls), hprof.heaprecord.Class)
 
 	def test_class_len(self):
 		self.assertEqual(len(self.cls), 1 + 35 + self.idsize * 15)
 
 	def test_class_str(self):
-		self.assertEqual(str(self.cls), 'ClassRecord(id=0x%0x)' % self.clsid)
+		self.assertEqual(str(self.cls), 'Class(id=0x%0x)' % self.clsid)
 
 @varying_idsize
 class TestNoConstantPool(TestCase):

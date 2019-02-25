@@ -101,7 +101,7 @@ class TestApiSurface(TestCase):
 				'InternedStringRoot': rootrecord(),
 
 				'Allocation': heap(),
-				'ClassRecord': heapobj('hprof_name', 'hprof_super_class_id', 'hprof_instance_size', 'hprof_instance_fields', 'hprof_static_fields'),
+				'Class': heapobj('hprof_name', 'hprof_super_class_id', 'hprof_instance_size', 'hprof_instance_fields', 'hprof_static_fields'),
 				'ObjectRecord': heapobj(),
 				'Array': heap('length'),
 				'ObjectArrayRecord': heapobj('length'),
