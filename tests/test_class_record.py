@@ -21,16 +21,22 @@ class TestClassRecord(TestCase):
 		hb.name(12346, 'mBye')
 		hb.name(12347, 'eeee')
 		hb.name(111, 'com.example.Spinny')
+		hb.name(444, 'java.lang.Class')
 		with hb.record(2, 0) as load:
 			load.uint(0)
 			load.id(97812097)
 			load.uint(0)
 			load.id(111)
+		with hb.record(2, 0) as load:
+			load.uint(0)
+			load.id(33)
+			load.uint(0)
+			load.id(444)
 		with hb.record(28, 0) as dump:
 			with dump.subrecord(32) as cls:
 				self.clsid    = cls.id(97812097)
 				cls.uint(12344)  # stack trace
-				self.superid  = cls.id(0)
+				self.superid  = cls.id(33)
 				cls.id(33)       # loader id
 				cls.id(34)       # signer id
 				cls.id(35)       # protection domain id
@@ -66,11 +72,24 @@ class TestClassRecord(TestCase):
 				cls.byte(2)      # field 2 type (object)
 				self.if3id = cls.id(12347)
 				cls.byte(6)      # field 3 type (float)
+			with dump.subrecord(32) as cls:
+				self.Classid = cls.id(33)
+				cls.uint(0)
+				cls.id(0) # super
+				cls.id(0) # loader
+				cls.id(0) # signer
+				cls.id(0) # prot. domain
+				cls.id(0) # reserved1
+				cls.id(0) # reserved2
+				cls.uint(16)
+				cls.ushort(0) # nothing in constant pool
+				cls.ushort(0) # no static fields
+				cls.ushort(0) # no instance fields
 		addrs, data = hb.build()
 		self.hf = hprof.open(bytes(data))
 		dump, = self.hf.dumps()
 		heap, = dump.heaps()
-		self.cls, = heap.objects()
+		self.cls, self.Class = sorted(heap.objects(), key=lambda r: r.hprof_addr)
 
 	def tearDown(self):
 		self.cls = None
@@ -81,6 +100,11 @@ class TestClassRecord(TestCase):
 
 	def test_class_super(self):
 		self.assertEqual(self.cls.hprof_super_class_id, self.superid)
+		self.assertEqual(self.Class.hprof_super_class_id, 0)
+
+	def test_class_class(self):
+		self.assertEqual(self.cls.hprof_class, self.Class)
+		self.assertEqual(self.Class.hprof_class, self.Class)
 
 	def test_class_instance_size(self):
 		self.assertEqual(self.cls.hprof_instance_size, 80)
@@ -144,7 +168,7 @@ class TestClassRecord(TestCase):
 	### generic record fields ###
 
 	def test_class_addr(self):
-		self.assertEqual(self.cls.hprof_addr, 185 + 10 * self.idsize)
+		self.assertEqual(self.cls.hprof_addr, 226 + 13 * self.idsize)
 
 	def test_class_id(self):
 		self.assertEqual(self.cls.hprof_id, self.clsid)
@@ -198,3 +222,86 @@ class TestNoConstantPool(TestCase):
 				cls.byte(6)      # field 3 type (float)
 		addrs, data = hb.build()
 		self.hf = hprof.open(bytes(data))
+
+@varying_idsize
+class TestMissingJavaLangClass(TestCase):
+	def setUp(self):
+		hb = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 787878)
+		hb.name(104, 'sHello')
+		hb.name(106, 'sWorld')
+		hb.name(107, 'sTwirled')
+		hb.name(12345, 'mAway')
+		hb.name(54321, 'mGood')
+		hb.name(12346, 'mBye')
+		hb.name(12347, 'eeee')
+		hb.name(111, 'com.example.Spinny')
+		hb.name(444, 'java.lang.Class')
+		with hb.record(2, 0) as load:
+			load.uint(0)
+			load.id(97812097)
+			load.uint(0)
+			load.id(111)
+		with hb.record(28, 0) as dump:
+			with dump.subrecord(32) as cls:
+				self.clsid    = cls.id(97812097)
+				cls.uint(12344)  # stack trace
+				self.superid  = cls.id(33)
+				cls.id(33)       # loader id
+				cls.id(34)       # signer id
+				cls.id(35)       # protection domain id
+				cls.id(0)        # reserved1
+				cls.id(0)        # reserved2
+				cls.uint(80)     # instance size
+
+				cls.ushort(2)    # constant pool size
+				cls.short(1)
+				cls.byte(10)
+				cls.uint(0x1000)
+				cls.short(20)
+				cls.byte(8)
+				cls.byte(99)
+
+				cls.ushort(3)    # static field count
+				self.sf0id = cls.id(104)
+				cls.byte(4)      # static field 0 type (boolean)
+				cls.byte(1)      # static field 0 value
+				self.sf1id = cls.id(106)
+				cls.byte(5)      # static field 1 type (char)
+				cls.ushort(20170)# static field 1 value (今)
+				self.sf2id = cls.id(107)
+				cls.byte(2)      #static field 2 type (object)
+				self.sfobjid = cls.id(0x912018412515)
+
+				cls.ushort(4)    # instance field count (not including inherited fields)
+				self.if0id = cls.id(12345)
+				cls.byte(8)      # field 0 type (byte)
+				self.if1id = cls.id(54321)
+				cls.byte(9)      # field 1 type (short)
+				self.if2id = cls.id(12346)
+				cls.byte(2)      # field 2 type (object)
+				self.if3id = cls.id(12347)
+				cls.byte(6)      # field 3 type (float)
+			with dump.subrecord(32) as cls:
+				self.Classid = cls.id(33)
+				cls.uint(0)
+				cls.id(0) # super
+				cls.id(0) # loader
+				cls.id(0) # signer
+				cls.id(0) # prot. domain
+				cls.id(0) # reserved1
+				cls.id(0) # reserved2
+				cls.uint(16)
+				cls.ushort(0) # nothing in constant pool
+				cls.ushort(0) # no static fields
+				cls.ushort(0) # no instance fields
+		addrs, data = hb.build()
+		self.hf = hprof.open(bytes(data))
+		dump, = self.hf.dumps()
+		heap, = dump.heaps()
+		self.cls, self.Class = sorted(heap.objects(), key=lambda r: r.hprof_addr)
+
+	def test_missing_java_lang_Class(self):
+		with self.assertRaisesRegex(hprof.ClassNotFoundError, 'java.lang.Class'):
+			self.cls.hprof_class
+		with self.assertRaisesRegex(hprof.ClassNotFoundError, 'java.lang.Class'):
+			self.Class.hprof_class

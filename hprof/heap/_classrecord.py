@@ -112,6 +112,10 @@ class Class(Allocation):
 		return self._hprof_id(self._hproff.SUPER)
 
 	@property
+	def hprof_class_id(self):
+		return self.hprof_file._get_java_lang_class_id()
+
+	@property
 	def hprof_instance_size(self):
 		return self._hprof_uint(self._hproff.OBJSIZE)
 

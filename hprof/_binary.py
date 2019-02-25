@@ -128,6 +128,13 @@ class HprofFile(object):
 		except KeyError:
 			raise RefError('name', nameid)
 
+	def _get_java_lang_class_id(self):
+		# TODO: probably cache this.
+		for r in self.records():
+			if type(r) is ClassLoad and r.class_name == 'java.lang.Class':
+				return r.class_id
+		raise ClassNotFoundError('java.lang.Class')
+
 	def get_class_info(self, clsid):
 		# TODO: probably cache this.
 		for r in self.records():
