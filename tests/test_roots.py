@@ -80,8 +80,8 @@ class TestRoots(TestCase):
 	### type-specific fields ###
 
 	def test_root_obj_types(self):
-		self.assertIs(type(self.obj1), hprof.heaprecord.ObjectRecord)
-		self.assertIs(type(self.obj2), hprof.heaprecord.ObjectRecord)
+		self.assertIs(type(self.obj1), hprof.heaprecord.Object)
+		self.assertIs(type(self.obj2), hprof.heaprecord.Object)
 
 	def test_root_objid(self):
 		self.assertEqual(self.unknownroot       .objid, self.obj2.hprof_id)

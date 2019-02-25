@@ -31,7 +31,7 @@ class TestMinimalCollisions(TestCase):
 			hprof.heaprecord.Array,
 			hprof.heaprecord.ObjectArrayRecord,
 			hprof.heaprecord.PrimitiveArrayRecord,
-			hprof.heaprecord.ObjectRecord,
+			hprof.heaprecord.Object,
 			hprof.heaprecord.Class,
 		]
 		self.assertCountEqual(_descendants(hprof.heaprecord.Allocation), already_tested)
@@ -49,7 +49,7 @@ class TestMinimalCollisions(TestCase):
 		self._check(hprof.heaprecord.PrimitiveArrayRecord(self.hf, 0), allowed=('length',))
 
 	def test_collisions_object(self):
-		self._check(hprof.heaprecord.ObjectRecord(self.hf, 0))
+		self._check(hprof.heaprecord.Object(self.hf, 0))
 
 	def test_collisions_class(self):
 		self._check(hprof.heaprecord.Class(self.hf, 0))

@@ -102,7 +102,7 @@ class TestApiSurface(TestCase):
 
 				'Allocation': heap(),
 				'Class': heapobj('hprof_name', 'hprof_super_class_id', 'hprof_instance_size', 'hprof_instance_fields', 'hprof_static_fields'),
-				'ObjectRecord': heapobj(),
+				'Object': heapobj(),
 				'Array': heap('length'),
 				'ObjectArrayRecord': heapobj('length'),
 				'PrimitiveArrayRecord': heapobj('length', 'hprof_elem_type'),

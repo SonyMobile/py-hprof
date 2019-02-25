@@ -8,7 +8,7 @@ from .._offset import offset, AutoOffsets, idoffset
 from .._types import JavaType
 
 
-class ObjectRecord(Allocation):
+class Object(Allocation):
 	HPROF_DUMP_TAG = 0x21
 
 	_hprof_offsets = AutoOffsets(1,
@@ -27,7 +27,8 @@ class ObjectRecord(Allocation):
 		return self._hproff.DATA + self._hprof_uint(self._hproff.DATASIZE)
 
 	def __str__(self):
-		return 'ObjectRecord(id=0x%x)' % self.hprof_id
+		cname = super().hprof_class.hprof_name
+		return 'Object(class=%s, id=0x%x)' % (cname, self.hprof_id)
 
 	def __getattr__(self, name):
 		return self[name]
