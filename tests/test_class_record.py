@@ -13,6 +13,13 @@ import hprof
 class TestClassRecord(TestCase):
 	def setUp(self):
 		hb = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 787878)
+		hb.name(104, 'sHello')
+		hb.name(106, 'sWorld')
+		hb.name(107, 'sTwirled')
+		hb.name(12345, 'mAway')
+		hb.name(54321, 'mGood')
+		hb.name(12346, 'mBye')
+		hb.name(12347, 'eeee')
 		with hb.record(28, 0) as dump:
 			with dump.subrecord(32) as cls:
 				self.clsid    = cls.id(97812097)
@@ -80,24 +87,24 @@ class TestClassRecord(TestCase):
 		self.assertIs(   a.value, True)
 		self.assertEqual(b.value, '今')
 		self.assertEqual(c.value, self.sfobjid)
-		self.assertEqual(str(a), 'StaticFieldRecord(nameid=0x%x, type=boolean, value=True)' % self.sf0id)
-		self.assertEqual(str(b), 'StaticFieldRecord(nameid=0x%x, type=char, value=\'今\')' % self.sf1id)
-		self.assertEqual(str(c), 'StaticFieldRecord(nameid=0x%x, type=object, value=0x%x)' % (self.sf2id, self.sfobjid))
+		self.assertEqual(str(a), 'StaticFieldRecord(name=sHello, type=boolean, value=True)')
+		self.assertEqual(str(b), 'StaticFieldRecord(name=sWorld, type=char, value=\'今\')')
+		self.assertEqual(str(c), 'StaticFieldRecord(name=sTwirled, type=object, value=0x%x)' % (self.sfobjid))
 		self.assertEqual(len(a), self.idsize + 2)
 		self.assertEqual(len(b), self.idsize + 3)
 		self.assertEqual(len(c), 2 * self.idsize + 1)
 		ad = a.decl
 		bd = b.decl
 		cd = c.decl
-		self.assertEqual(ad.nameid, self.sf0id)
-		self.assertEqual(bd.nameid, self.sf1id)
-		self.assertEqual(cd.nameid, self.sf2id)
+		self.assertEqual(ad.name, 'sHello')
+		self.assertEqual(bd.name, 'sWorld')
+		self.assertEqual(cd.name, 'sTwirled')
 		self.assertEqual(ad.type, hprof.JavaType.boolean)
 		self.assertEqual(bd.type, hprof.JavaType.char)
 		self.assertEqual(cd.type, hprof.JavaType.object)
-		self.assertEqual(str(ad), 'FieldDeclRecord(nameid=0x%x, type=boolean)' % self.sf0id)
-		self.assertEqual(str(bd), 'FieldDeclRecord(nameid=0x%x, type=char)' % self.sf1id)
-		self.assertEqual(str(cd), 'FieldDeclRecord(nameid=0x%x, type=object)' % self.sf2id)
+		self.assertEqual(str(ad), 'FieldDeclRecord(name=sHello, type=boolean)')
+		self.assertEqual(str(bd), 'FieldDeclRecord(name=sWorld, type=char)')
+		self.assertEqual(str(cd), 'FieldDeclRecord(name=sTwirled, type=object)')
 		self.assertEqual(len(ad), self.idsize + 1)
 		self.assertEqual(len(bd), self.idsize + 1)
 		self.assertEqual(len(cd), self.idsize + 1)
@@ -108,18 +115,18 @@ class TestClassRecord(TestCase):
 		self.assertIs(type(b), hprof.heaprecord.FieldDeclRecord)
 		self.assertIs(type(c), hprof.heaprecord.FieldDeclRecord)
 		self.assertIs(type(d), hprof.heaprecord.FieldDeclRecord)
-		self.assertEqual(a.nameid, self.if0id)
-		self.assertEqual(b.nameid, self.if1id)
-		self.assertEqual(c.nameid, self.if2id)
-		self.assertEqual(d.nameid, self.if3id)
+		self.assertEqual(a.name, 'mAway')
+		self.assertEqual(b.name, 'mGood')
+		self.assertEqual(c.name, 'mBye')
+		self.assertEqual(d.name, 'eeee')
 		self.assertEqual(a.type, hprof.JavaType.byte)
 		self.assertEqual(b.type, hprof.JavaType.short)
 		self.assertEqual(c.type, hprof.JavaType.object)
 		self.assertEqual(d.type, hprof.JavaType.float)
-		self.assertEqual(str(a), 'FieldDeclRecord(nameid=0x%x, type=byte)' % self.if0id)
-		self.assertEqual(str(b), 'FieldDeclRecord(nameid=0x%x, type=short)' % self.if1id)
-		self.assertEqual(str(c), 'FieldDeclRecord(nameid=0x%x, type=object)' % self.if2id)
-		self.assertEqual(str(d), 'FieldDeclRecord(nameid=0x%x, type=float)' % self.if3id)
+		self.assertEqual(str(a), 'FieldDeclRecord(name=mAway, type=byte)')
+		self.assertEqual(str(b), 'FieldDeclRecord(name=mGood, type=short)')
+		self.assertEqual(str(c), 'FieldDeclRecord(name=mBye, type=object)')
+		self.assertEqual(str(d), 'FieldDeclRecord(name=eeee, type=float)')
 		self.assertEqual(len(a), 1 + self.idsize)
 		self.assertEqual(len(b), 1 + self.idsize)
 		self.assertEqual(len(c), 1 + self.idsize)
@@ -131,7 +138,7 @@ class TestClassRecord(TestCase):
 	### generic record fields ###
 
 	def test_class_addr(self):
-		self.assertEqual(self.cls.hprof_addr, 40)
+		self.assertEqual(self.cls.hprof_addr, 40 + (9 + self.idsize) * 7 + len('sHellosWorldsTwirledmAwaymGoodmByeeeee'))
 
 	def test_class_id(self):
 		self.assertEqual(self.cls.hprof_id, self.clsid)

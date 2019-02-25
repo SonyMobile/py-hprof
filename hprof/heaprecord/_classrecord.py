@@ -132,7 +132,7 @@ class ClassRecord(Allocation):
 	def __getitem__(self, name):
 		for sf in self.hprof_static_fields():
 			decl = sf.decl
-			if self.hprof_file.name(decl.nameid).str == name:
+			if decl.name == name:
 				t = decl.type
 				v = sf.value
 				if t == JavaType.object:
@@ -155,14 +155,15 @@ class FieldDeclRecord(HprofSlice):
 		return self._hprof_jtype(doff[self.hprof_file.idsize].TYPE)
 
 	@property
-	def nameid(self):
-		return self._hprof_id(doff[self.hprof_file.idsize].NAMEID)
+	def name(self):
+		nameid = self._hprof_id(doff[self.hprof_file.idsize].NAMEID)
+		return self.hprof_file.name(nameid).str
 
 	def __len__(self):
 		return doff[self.hprof_file.idsize].END
 
 	def __str__(self):
-		return 'FieldDeclRecord(nameid=0x%x, type=%s)' % (self.nameid, self.type)
+		return 'FieldDeclRecord(name=%s, type=%s)' % (self.name, self.type)
 
 class StaticFieldRecord(HprofSlice):
 	@property
@@ -185,4 +186,4 @@ class StaticFieldRecord(HprofSlice):
 			vstr = '0x%x' % v
 		else:
 			vstr = repr(v)
-		return 'StaticFieldRecord(nameid=0x%x, type=%s, value=%s)' % (decl.nameid, decl.type, vstr)
+		return 'StaticFieldRecord(name=%s, type=%s, value=%s)' % (decl.name, decl.type, vstr)

@@ -107,7 +107,7 @@ class TestApiSurface(TestCase):
 				'ObjectArrayRecord': heapobj('length'),
 				'PrimitiveArrayRecord': heapobj('length', 'hprof_elem_type'),
 
-				'FieldDeclRecord': hprofslice('nameid', 'type'), # TODO: expose name instead of nameid?
+				'FieldDeclRecord': hprofslice('name', 'type'),
 				'StaticFieldRecord': hprofslice('decl', 'value'),
 			},
 			'heapdump': {
