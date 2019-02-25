@@ -12,6 +12,9 @@ class Array(Allocation):
 	def length(self):
 		return self._hprof_uint(self._hproff.COUNT)
 
+	def __len__(self):
+		return self.length
+
 class PrimitiveArray(Array):
 	HPROF_DUMP_TAG = 0x23
 

@@ -51,6 +51,7 @@ class TestObjArrayRecord(TestCase):
 
 	def test_object_array_count(self):
 		self.assertEqual(self.a.length, 5)
+		self.assertEqual(len(self.a), 5)
 
 	def test_object_array_values(self):
 		self.assertEqual(self.a[0].hprof_id, self.id1)
@@ -63,6 +64,24 @@ class TestObjArrayRecord(TestCase):
 		self.assertEqual(self.a[2], self.obj2)
 		self.assertEqual(self.a[3], self.obj1)
 		self.assertEqual(self.a[4], self.obj2)
+
+	def test_object_array_iterable(self):
+		iterator = iter(self.a)
+		self.assertEqual(next(iterator), self.obj1)
+		self.assertEqual(next(iterator), self.obj1)
+		self.assertEqual(next(iterator), self.obj2)
+		self.assertEqual(next(iterator), self.obj1)
+		self.assertEqual(next(iterator), self.obj2)
+		with self.assertRaises(StopIteration):
+			next(iterator)
+
+	def test_object_array_loopable(self):
+		expected = (self.obj1, self.obj1, self.obj2, self.obj1, self.obj2)
+		for i, o in enumerate(self.a):
+			self.assertEqual(o, expected[i])
+
+	def test_object_array_to_tuple(self):
+		self.assertEqual(tuple(self.a), (self.obj1, self.obj1, self.obj2, self.obj1, self.obj2))
 
 	def test_object_array_read_outside(self):
 		with self.assertRaisesRegex(IndexError, '-1.*5'):

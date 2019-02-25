@@ -46,6 +46,7 @@ class TestPrimitiveArrayRecord(TestCase):
 
 	def test_primitive_array_count(self):
 		self.assertEqual(self.a.length, self.COUNT)
+		self.assertEqual(len(self.a), self.COUNT)
 
 	def test_primitive_array_type(self):
 		self.assertEqual(self.a.type.value, self.ETYPE)
@@ -54,6 +55,20 @@ class TestPrimitiveArrayRecord(TestCase):
 	def test_primitive_array_values(self):
 		for i in range(self.COUNT):
 			self.assertEqual(self.a[i], self._val(i))
+
+	def test_primitive_array_iterable(self):
+		iterator = iter(self.a)
+		for i in range(self.COUNT):
+			self.assertEqual(next(iterator), self._val(i))
+		with self.assertRaises(StopIteration):
+			next(iterator)
+
+	def test_primitive_array_loopable(self):
+		for i, o in enumerate(self.a):
+			self.assertEqual(o, self._val(i))
+
+	def test_primitive_array_to_tuple(self):
+		self.assertEqual(tuple(self.a), tuple(self._val(i) for i in range(self.COUNT)))
 
 	def test_primitive_array_read_outside(self):
 		with self.assertRaisesRegex(IndexError, '-1.*%s' % self.COUNT):
