@@ -32,11 +32,8 @@ class TestLoadClass(TestCase):
 
 	### type-specific fields ###
 
-	def test_loadclass_serial(self):
-		self.assertEqual(self.c.serial, 0x1a2b3)
-
 	def test_loadclass_name(self):
-		self.assertEqual(self.c.name, 'com.example.MyFancyClass')
+		self.assertEqual(self.c.class_name, 'com.example.MyFancyClass')
 
 	def test_loadclass_stacktrace(self):
 		pass # TODO (stack traces not implemented yet)

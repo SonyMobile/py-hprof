@@ -139,7 +139,7 @@ class HprofFile(object):
 		# TODO: probably cache this.
 		expected_name = primitive_type.name + '[]'
 		for r in self.records():
-			if type(r) is ClassLoad and r.name == expected_name:
+			if type(r) is ClassLoad and r.class_name == expected_name:
 				return r
 		raise ClassNotFoundError('Primitive array type %s[]' % primitive_type)
 

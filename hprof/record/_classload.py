@@ -15,17 +15,13 @@ class ClassLoad(_base.Record):
 	)
 
 	@property
-	def name(self):
+	def class_name(self):
 		nameid = self._hprof_id(self._hproff.NAMEID)
 		return self.hprof_file.name(nameid).str
-
-	@property
-	def serial(self):
-		return self._hprof_uint(self._hproff.SERIAL)
 
 	@property
 	def class_id(self):
 		return self._hprof_id(self._hproff.CLSID)
 
 	def __str__(self):
-		return 'ClassLoad(%s)' % self.name
+		return 'ClassLoad(%s)' % self.class_name

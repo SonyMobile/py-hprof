@@ -78,7 +78,7 @@ class TestApiSurface(TestCase):
 				'Record': baserecord(),
 
 				'Utf8': record('str', 'id'),
-				'ClassLoad': record('name', 'class_id', 'serial'), # TODO: rename 'name' to 'class_name', remove 'serial'
+				'ClassLoad': record('class_name', 'class_id'),
 				'HeapDumpSegment': record('records'),
 				'HeapDumpEnd': record(),
 				'Unhandled': baserecord(),

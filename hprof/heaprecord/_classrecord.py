@@ -117,7 +117,7 @@ class ClassRecord(Allocation):
 
 	@property
 	def hprof_name(self):
-		return self.hprof_file.get_class_info(self.hprof_id).name
+		return self.hprof_file.get_class_info(self.hprof_id).class_name
 
 	def __len__(self):
 		ifield_count = self._hprof_ushort(self._hprof_if_start_offset + ioff.COUNT)
