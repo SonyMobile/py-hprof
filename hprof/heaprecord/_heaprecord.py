@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from ..commonrecord import HprofSlice
-from ..errors import *
-from ..types import JavaType
+from .._commonrecord import HprofSlice
+from .._errors import *
+from .._types import JavaType
 
 _descendants = {}
 

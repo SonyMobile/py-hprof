@@ -4,7 +4,7 @@
 from datetime import datetime, timedelta
 from unittest import TestCase
 
-from hprof.offset import *
+from hprof._offset import *
 
 class TestOffset(TestCase):
 	def test_offset_flatten(self):

@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from . import base
-from ..offset import *
+from . import _base
+from .._offset import *
 
 
-class Utf8(base.Record):
+class Utf8(_base.Record):
 	TAG = 1
 
-	_hprof_offsets = AutoOffsets(base.offsets.BODY,
+	_hprof_offsets = AutoOffsets(_base.offsets.BODY,
 		'ID', idoffset(1),
 		'STR'
 	)

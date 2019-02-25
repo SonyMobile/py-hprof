@@ -2,7 +2,6 @@
 #coding=utf8
 
 from enum import Enum, unique
-from .offset import idoffset
 
 @unique
 class JavaType(Enum):

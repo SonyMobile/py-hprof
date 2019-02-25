@@ -2,7 +2,7 @@
 #coding=utf8
 
 from unittest import TestCase
-from hprof.commonrecord import HprofSlice
+from hprof._commonrecord import HprofSlice
 from hprof.record import Record
 from hprof.heaprecord import HeapRecord
 

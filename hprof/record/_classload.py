@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from . import base
-from ..offset import *
+from . import _base
+from .._offset import *
 
-class ClassLoad(base.Record):
+class ClassLoad(_base.Record):
 	TAG = 2
 
-	_hprof_offsets = AutoOffsets(base.offsets.BODY,
+	_hprof_offsets = AutoOffsets(_base.offsets.BODY,
 		'SERIAL', 4,
 		'CLSID', idoffset(1),
 		'STRACE', 4,

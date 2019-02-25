@@ -8,10 +8,10 @@ import builtins
 import struct
 
 from .heapdump import Dump
-from .errors import *
-from .offset import offset
+from ._errors import *
+from ._offset import offset
 from .record import Record, HeapDumpSegment, HeapDumpEnd, Utf8, ClassLoad
-from .types import JavaType
+from ._types import JavaType
 
 _jtlookup = {}
 for _jt in JavaType:

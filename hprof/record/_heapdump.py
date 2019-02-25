@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from . import base
+from . import _base
 
 from .. import heaprecord
-from ..errors import *
+from .._errors import *
 
-class HeapDumpSegment(base.Record):
+class HeapDumpSegment(_base.Record):
 	TAG = 28
 
 	def __str__(self):
-		return 'HeapDumpSegment(payloadsize=%s)' % (len(self) - base.offsets.BODY)
+		return 'HeapDumpSegment(payloadsize=%s)' % (len(self) - _base.offsets.BODY)
 
 	def records(self):
-		offset = base.offsets.BODY
+		offset = _base.offsets.BODY
 		end = len(self)
 		while offset < end:
 			r = heaprecord.create(self.hprof_file, self.hprof_addr + offset)
@@ -22,5 +22,5 @@ class HeapDumpSegment(base.Record):
 				raise FileFormatError('subrecord ends at 0x%x, dump segment ends at 0x%x' % (offset, end))
 			yield r
 
-class HeapDumpEnd(base.Record):
+class HeapDumpEnd(_base.Record):
 	TAG = 44

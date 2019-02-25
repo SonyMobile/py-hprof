@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from .heaprecord import Allocation
+from ._heaprecord import Allocation
 
-from ..errors import *
-from ..offset import offset, AutoOffsets, idoffset
-from ..commonrecord import HprofSlice
-from ..types import JavaType
+from .._errors import *
+from .._offset import offset, AutoOffsets, idoffset
+from .._commonrecord import HprofSlice
+from .._types import JavaType
 
 ioff = AutoOffsets(0,
 	'COUNT', 2,

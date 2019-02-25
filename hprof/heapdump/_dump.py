@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from ..errors import *
+from .._errors import *
 from ..heaprecord import *
 from .._slotted import Slotted
 

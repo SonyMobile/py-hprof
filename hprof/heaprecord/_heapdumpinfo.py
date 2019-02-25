@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from .heaprecord import HeapRecord
-from ..errors import *
-from ..offset import AutoOffsets, idoffset
+from ._heaprecord import HeapRecord
+from .._errors import *
+from .._offset import AutoOffsets, idoffset
 
 offsets = AutoOffsets(1,
 	'TYPE', 4,

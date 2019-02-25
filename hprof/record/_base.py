@@ -3,8 +3,8 @@
 
 from datetime import timedelta
 
-from ..offset import *
-from ..commonrecord import HprofSlice
+from .._offset import *
+from .._commonrecord import HprofSlice
 
 def _word_groups(b):
 	for i in range(0, len(b), 4):

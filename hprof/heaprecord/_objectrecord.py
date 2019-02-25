@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from .heaprecord import Allocation
+from ._heaprecord import Allocation
 
-from ..errors import FieldNotFoundError
-from ..offset import offset, AutoOffsets, idoffset
-from ..types import JavaType
+from .._errors import FieldNotFoundError
+from .._offset import offset, AutoOffsets, idoffset
+from .._types import JavaType
 
 
 class ObjectRecord(Allocation):

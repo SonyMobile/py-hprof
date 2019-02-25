@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from .base import Record, Unhandled
-from .utf8 import Utf8
-from .classload import ClassLoad
-from .heapdump import HeapDumpSegment, HeapDumpEnd
+from ._base import Record, Unhandled
+from ._utf8 import Utf8
+from ._classload import ClassLoad
+from ._heapdump import HeapDumpSegment, HeapDumpEnd

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 #coding=utf8
 
-from .heaprecord import HeapRecord
+from ._heaprecord import HeapRecord
 
-from ..offset import offset, AutoOffsets, idoffset
-from ..errors import RefError
+from .._offset import offset, AutoOffsets, idoffset
+from .._errors import RefError
 
 class GcRoot(HeapRecord):
 	@property
