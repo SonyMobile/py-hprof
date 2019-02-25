@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-#coding=utf8
-
 from ._slotted import Slotted
 
 class HprofSlice(object, metaclass=Slotted):

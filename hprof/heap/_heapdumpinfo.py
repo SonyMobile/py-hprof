@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-#coding=utf8
-
 from ._heaprecord import HeapRecord
 from .._errors import *
 from .._offset import AutoOffsets, idoffset

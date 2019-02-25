@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-#coding=utf8
-
 from . import _base
 
 from .. import heap

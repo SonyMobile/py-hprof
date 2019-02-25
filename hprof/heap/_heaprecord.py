@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-#coding=utf8
-
 from .._commonrecord import HprofSlice
 from .._errors import *
 from .._types import JavaType

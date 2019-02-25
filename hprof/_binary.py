@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-#coding=utf8
-
 from datetime import datetime
 from mmap import mmap, MAP_PRIVATE, PROT_READ
 

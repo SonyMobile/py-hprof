@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-#coding=utf8
-
 from struct import pack, unpack
 from unittest import TestCase
 

@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-#coding=utf8
-
 class Slotted(type):
 	''' a metaclass that makes sure that classes have __slots__ set '''
 	def __new__(cls, name, bases, cdict):

@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-#coding=utf8
-
 from unittest import TestCase
 
 from .util import HprofBuilder, varying_idsize

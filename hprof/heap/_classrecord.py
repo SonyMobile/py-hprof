@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-#coding=utf8
-
 from ._heaprecord import Allocation
 
 from .._errors import *

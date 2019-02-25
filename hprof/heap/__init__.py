@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-#coding=utf8
-
 from ._arrayrecords import Array, ObjectArray, PrimitiveArray
 from ._classrecord import Class, FieldDecl, StaticField
 from ._heapdumpinfo import HeapDumpInfo
