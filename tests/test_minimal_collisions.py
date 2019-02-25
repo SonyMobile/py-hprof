@@ -29,8 +29,8 @@ class TestMinimalCollisions(TestCase):
 		already_tested = [ # don't lie!
 			hprof.heaprecord.Allocation,
 			hprof.heaprecord.Array,
-			hprof.heaprecord.ObjectArrayRecord,
-			hprof.heaprecord.PrimitiveArrayRecord,
+			hprof.heaprecord.ObjectArray,
+			hprof.heaprecord.PrimitiveArray,
 			hprof.heaprecord.Object,
 			hprof.heaprecord.Class,
 		]
@@ -43,10 +43,10 @@ class TestMinimalCollisions(TestCase):
 		self._check(hprof.heaprecord.Array(self.hf, 0), allowed=('length',))
 
 	def test_collisions_objectarray(self):
-		self._check(hprof.heaprecord.ObjectArrayRecord(self.hf, 0), allowed=('length',))
+		self._check(hprof.heaprecord.ObjectArray(self.hf, 0), allowed=('length',))
 
 	def test_collisions_primitivearray(self):
-		self._check(hprof.heaprecord.PrimitiveArrayRecord(self.hf, 0), allowed=('length',))
+		self._check(hprof.heaprecord.PrimitiveArray(self.hf, 0), allowed=('length',))
 
 	def test_collisions_object(self):
 		self._check(hprof.heaprecord.Object(self.hf, 0))

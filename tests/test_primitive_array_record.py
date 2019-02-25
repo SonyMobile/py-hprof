@@ -70,13 +70,13 @@ class TestPrimitiveArrayRecord(TestCase):
 		self.assertEqual(self.a.hprof_id, self.aid)
 
 	def test_primitive_array_type(self):
-		self.assertIs(type(self.a), hprof.heaprecord.PrimitiveArrayRecord)
+		self.assertIs(type(self.a), hprof.heaprecord.PrimitiveArray)
 
 	def test_primitive_array_len(self):
 		self.assertEqual(len(self.a), 10 + self.idsize + self.COUNT * self.ESIZE)
 
 	def test_primitive_array_str(self):
-		self.assertEqual(str(self.a), 'PrimitiveArrayRecord(type=%s, count=%d)' % (self.ENAME, self.COUNT))
+		self.assertEqual(str(self.a), 'PrimitiveArray(type=%s, id=0x%x, count=%d)' % (self.ENAME, self.aid, self.COUNT))
 
 
 class TestBooleanArrayRecord(TestPrimitiveArrayRecord):

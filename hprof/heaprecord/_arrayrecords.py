@@ -12,7 +12,7 @@ class Array(Allocation):
 	def length(self):
 		return self._hprof_uint(self._hproff.COUNT)
 
-class PrimitiveArrayRecord(Array):
+class PrimitiveArray(Array):
 	HPROF_DUMP_TAG = 0x23
 
 	_hprof_offsets = AutoOffsets(1,
@@ -34,7 +34,7 @@ class PrimitiveArrayRecord(Array):
 		return self._hproff.DATA + self.length * self.hprof_elem_type.size(self.hprof_file.idsize)
 
 	def __str__(self):
-		return 'PrimitiveArrayRecord(type=%s, count=%d)' % (self.hprof_elem_type, self.length)
+		return 'PrimitiveArray(type=%s, id=0x%x, count=%d)' % (self.hprof_elem_type, self.hprof_id, self.length)
 
 	def __getitem__(self, ix):
 		if type(ix) is int:
@@ -48,7 +48,7 @@ class PrimitiveArrayRecord(Array):
 			# it's a field access; fall back to normal object field handling
 			return super().__getitem__(ix)
 
-class ObjectArrayRecord(Array):
+class ObjectArray(Array):
 	HPROF_DUMP_TAG = 0x22
 
 	_hprof_offsets = AutoOffsets(1,
@@ -62,7 +62,7 @@ class ObjectArrayRecord(Array):
 		return self._hproff.DATA + self.length * self.hprof_file.idsize
 
 	def __str__(self):
-		return 'ObjectArrayRecord(count=%d)' % self.length
+		return 'ObjectArray(id=0x%x, count=%d)' % (self.hprof_id, self.length)
 
 	@property
 	def hprof_class_id(self):

@@ -79,10 +79,10 @@ class TestObjArrayRecord(TestCase):
 		self.assertEqual(self.a.hprof_id, self.aid)
 
 	def test_object_array_type(self):
-		self.assertIs(type(self.a), hprof.heaprecord.ObjectArrayRecord)
+		self.assertIs(type(self.a), hprof.heaprecord.ObjectArray)
 
 	def test_object_array_len(self):
 		self.assertEqual(len(self.a), 1 + 8 + self.idsize * 7)
 
 	def test_object_array_str(self):
-		self.assertEqual(str(self.a), 'ObjectArrayRecord(count=5)')
+		self.assertEqual(str(self.a), 'ObjectArray(id=0x%x, count=5)' % self.aid)

@@ -104,8 +104,8 @@ class TestApiSurface(TestCase):
 				'Class': heapobj('hprof_name', 'hprof_super_class_id', 'hprof_instance_size', 'hprof_instance_fields', 'hprof_static_fields'),
 				'Object': heapobj(),
 				'Array': heap('length'),
-				'ObjectArrayRecord': heapobj('length'),
-				'PrimitiveArrayRecord': heapobj('length', 'hprof_elem_type'),
+				'ObjectArray': heapobj('length'),
+				'PrimitiveArray': heapobj('length', 'hprof_elem_type'),
 
 				'FieldDeclRecord': hprofslice('name', 'type'),
 				'StaticFieldRecord': hprofslice('decl', 'value'),
