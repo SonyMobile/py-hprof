@@ -62,7 +62,7 @@ class TestApiSurface(TestCase):
 				'read_boolean', 'read_char', 'read_float', 'read_double',
 				'read_id', 'read_jtype', 'read_jvalue',
 				'read_bytes', 'read_ascii', 'read_utf8',
-				'get_class_info', 'get_primitive_array_class_info',
+				'get_class_info',
 			),
 			'JavaType': ('object', 'boolean', 'char', 'float', 'double', 'byte', 'short', 'int', 'long'),
 

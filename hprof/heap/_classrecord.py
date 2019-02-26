@@ -127,7 +127,7 @@ class Class(Allocation):
 
 		Since this object is a class, the returned value will be the ID of java.lang.Class.
 		'''
-		return self.hprof_file._get_java_lang_class_id()
+		return self.hprof_file.get_class_info('java.lang.Class').class_id
 
 	@property
 	def hprof_instance_size(self):

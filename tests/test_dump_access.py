@@ -340,17 +340,15 @@ class TestDumpAccess(TestCase):
 			self.hf.get_class_info(0x123)
 
 	def test_hprof_get_primitive_array_class_info(self):
-		info = self.hf.get_primitive_array_class_info(hprof.JavaType.short)
+		info = self.hf.get_class_info(hprof.JavaType.short.name + '[]')
 		self.assertIs(type(info), hprof.record.ClassLoad)
 		self.assertEqual(info.class_id, self.shortarray_clsid)
 		self.assertEqual(info.class_name, 'short[]')
 
 	def test_hprof_get_primitive_array_class_info_missing(self):
 		with self.assertRaisesRegex(hprof.ClassNotFoundError, r'object\[\]'):
-			self.hf.get_primitive_array_class_info(hprof.JavaType.object)
+			self.hf.get_class_info(hprof.JavaType.object.name + '[]')
 
 	def test_hprof_get_primitive_array_class_info_faketype(self):
-		class FakeJavaType(object):
-			name = 'something'
 		with self.assertRaises(hprof.ClassNotFoundError):
-			self.hf.get_primitive_array_class_info(FakeJavaType())
+			self.hf.get_class_info('something[]')

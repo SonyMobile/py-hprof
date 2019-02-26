@@ -134,13 +134,6 @@ class HprofFile(object):
 		except KeyError:
 			raise RefError('name', nameid)
 
-	def _get_java_lang_class_id(self):
-		# TODO: probably cache this.
-		for r in self.records():
-			if type(r) is ClassLoad and r.class_name == 'java.lang.Class':
-				return r.class_id
-		raise ClassNotFoundError('java.lang.Class')
-
 	def get_class_info(self, class_id_or_name):
 		'''return the hprof.record.ClassLoad record for the provided class object ID or name.'''
 		# TODO: probably cache this.
@@ -151,15 +144,6 @@ class HprofFile(object):
 		if type(key) is int:
 			key = hex(key)
 		raise ClassNotFoundError('ClassLoad record for class id %s' % key)
-
-	def get_primitive_array_class_info(self, primitive_type):
-		'''return the hprof.record.ClassLoad record for the array of the provided primitive type.'''
-		# TODO: probably cache this.
-		expected_name = primitive_type.name + '[]'
-		for r in self.records():
-			if type(r) is ClassLoad and r.class_name == expected_name:
-				return r
-		raise ClassNotFoundError('Primitive array type %s[]' % primitive_type)
 
 	def _read_bytes(self, start, nbytes):
 		if start < 0:
