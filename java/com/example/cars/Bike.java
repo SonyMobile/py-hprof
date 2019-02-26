@@ -1,4 +1,4 @@
-package com.example;
+package com.example.cars;
 
 public class Bike extends Vehicle {
 	public Bike(String make) {

@@ -2,6 +2,7 @@
 
 set -ex
 
+find . -name '*.class' | xargs rm
 javac Main.java
 
 # generate JVM hprof

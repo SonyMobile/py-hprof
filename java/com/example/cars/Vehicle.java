@@ -1,4 +1,4 @@
-package com.example;
+package com.example.cars;
 
 public abstract class Vehicle {
 	public final String make;

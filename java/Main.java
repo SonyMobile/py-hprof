@@ -1,23 +1,14 @@
-import com.example.Car;
-import com.example.Bike;
 import android.os.Debug;
+import com.example.cars.CarExample;
+import com.example.shadowing.ShadowingExample;
 
 public class Main {
-	private static Object bikeSuper;
-	private static String nothing = "not yet nothing";
-
 	public static void main(String[] args) {
-		nothing = null;
+		Object[] examples = new Object[3];
 
-		Object[] objs = new Object[] {
-			new Car("Lolvo"),
-			new Car("Yotoya"),
-			new Bike("Fånark"),
-			new Car("Bowie"),
-			new Bike("Descent")
-		};
-
-		bikeSuper = objs[4].getClass();
+		examples[0] = new CarExample();
+		examples[1] = null;
+		examples[2] = new ShadowingExample();
 
 		if (args.length > 0) {
 			Debug.dumpHprofData(args[0]);

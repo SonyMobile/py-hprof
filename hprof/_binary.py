@@ -141,13 +141,16 @@ class HprofFile(object):
 				return r.class_id
 		raise ClassNotFoundError('java.lang.Class')
 
-	def get_class_info(self, clsid):
-		'''return the hprof.record.ClassLoad record for the provided class object ID.'''
+	def get_class_info(self, class_id_or_name):
+		'''return the hprof.record.ClassLoad record for the provided class object ID or name.'''
 		# TODO: probably cache this.
+		key = class_id_or_name
 		for r in self.records():
-			if type(r) is ClassLoad and r.class_id == clsid:
+			if type(r) is ClassLoad and (r.class_id == key or r.class_name == key):
 				return r
-		raise ClassNotFoundError('ClassLoad record for class id 0x%x' % clsid)
+		if type(key) is int:
+			key = hex(key)
+		raise ClassNotFoundError('ClassLoad record for class id %s' % key)
 
 	def get_primitive_array_class_info(self, primitive_type):
 		'''return the hprof.record.ClassLoad record for the array of the provided primitive type.'''

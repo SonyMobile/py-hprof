@@ -1,4 +1,4 @@
-package com.example;
+package com.example.cars;
 
 public class Car extends Vehicle {
 	public static final int MAX_REASONABLE_WHEEL_COUNT = 8;

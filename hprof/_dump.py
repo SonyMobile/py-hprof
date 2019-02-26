@@ -54,8 +54,12 @@ class Dump(object, metaclass=Slotted):
 		may have up to three.'''
 		yield from self._heaps.values()
 
-	def get_class(self, clsid):
+	def get_class(self, class_id_or_name):
 		'''return the Class object with the given ID'''
+		if type(class_id_or_name) is int:
+			clsid = class_id_or_name
+		else:
+			clsid = self.hf.get_class_info(class_id_or_name).class_id
 		for h in self._heaps.values():
 			try:
 				return h._classes[clsid]
