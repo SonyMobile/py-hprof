@@ -20,6 +20,9 @@ offsets = AutoOffsets(0,
 )
 
 def create(hf, addr):
+	'''create an instance of an appropriate Record subclass, based on the tag found at addr.
+
+	You'll probably be better off getting them from HprofFile.records().'''
 	tag = hf.read_byte(addr)
 	# TODO: some form of caching here might not be a bad idea.
 	rtype = Unhandled
@@ -29,16 +32,25 @@ def create(hf, addr):
 	return rtype(hf, addr)
 
 class Record(HprofSlice):
+	'''Base record of the hprof file.
+
+	Members:
+	hprof_file -- the HprofFile this record belongs to.
+	hprof_addr -- the byte address of this record in hprof_file.
+	'''
 	@property
 	def rawbody(self):
+		'''the raw body bytes of this record; probably not interesting in most cases'''
 		return self.hprof_file.read_bytes(self.hprof_addr+9, self._hprof_len - 9)
 
 	@property
 	def timestamp(self):
+		'''the absolute timestamp of this record.'''
 		return self.hprof_file.starttime + self.relative_timestamp
 
 	@property
 	def relative_timestamp(self):
+		'''the timestamp of this record, relative to the start time of the hprof file.'''
 		return timedelta(microseconds = self.hprof_file.read_uint(self.hprof_addr + 1))
 
 	@property
@@ -57,4 +69,15 @@ class Record(HprofSlice):
 
 
 class Unhandled(Record):
-	pass
+	'''A record of a type that this library does not recognize.
+
+	Thanks to the record format explicitly declaring the length of each record, it is not
+	necessarily a showstopper -- we may be able to ignore it without problems.
+
+	If you want to handle it yourself, the rawbody() method may be useful. But hey, if you're doing
+	that, maybe you should be contributing to the library instead?
+
+	Members:
+	hprof_file -- the HprofFile this record belongs to.
+	hprof_addr -- the byte address of this record in hprof_file.
+	'''

@@ -3,6 +3,18 @@ from .heap import *
 from ._slotted import Slotted
 
 class Dump(object, metaclass=Slotted):
+	'''A single memory dump, usually acquired through hprof.HprofFile.dumps().
+
+	An hprof file may technically contain multiple dumps. A Dump object represents a single memory
+	dump, within which object references are valid. Object IDs and references may not work across
+	different dumps.
+
+	Note that this library is currently not very well-tested with multiple-dump hprof files.
+
+	Members:
+	hf -- the HprofFile this dump belongs to.
+	'''
+
 	__slots__ = 'hf', '_heaps', '_current_heap'
 
 	def __init__(self, hf):
@@ -36,9 +48,14 @@ class Dump(object, metaclass=Slotted):
 		return self._current_heap
 
 	def heaps(self):
+		'''yield all the heaps present in this dump.
+
+		This will normally be just one heap for most targets. Relatively recent Android versions
+		may have up to three.'''
 		yield from self._heaps.values()
 
 	def get_class(self, clsid):
+		'''return the Class object with the given ID'''
 		for h in self._heaps.values():
 			try:
 				return h._classes[clsid]
@@ -47,6 +64,10 @@ class Dump(object, metaclass=Slotted):
 		raise ClassNotFoundError('Failed to find class object with id 0x%x' % clsid)
 
 	def get_object(self, objid):
+		'''return the object with the given ID
+
+		This includes all kinds: normal instances, class objects, and primitive and object arrays.
+		'''
 		for h in self._heaps.values():
 			try:
 				return h._objects[objid]
@@ -59,6 +80,19 @@ class Dump(object, metaclass=Slotted):
 		raise RefError('Failed to find object with id 0x%x' % objid)
 
 class Heap(object, metaclass=Slotted):
+	'''A single heap, usually acquired through hprof.Dump.heaps().
+
+	Android's ART maintains several different heaps, which can hold references
+	to objects in each other.
+
+	Heaps are mostly handled transparently; you don't have to care which heap an object belongs to.
+
+	Fields:
+	dump -- our parent Dump object
+	name -- the name of our heap
+	type -- an integer used to identify heap types (-1 when no heap info was present)
+	'''
+
 	__slots__ = 'dump', 'name', 'type', '_objects', '_classes'
 
 	def __init__(self, dump, name, heaptype):
@@ -76,9 +110,14 @@ class Heap(object, metaclass=Slotted):
 			self._objects[objid] = record
 
 	def has_id(self, objid):
+		'''Check whether this heap contains the specified ID'''
 		return objid in self._classes or objid in self._objects
 
 	def objects(self):
+		'''yield all objects in this heap.
+
+		Includes all kinds: normal instances, class objects, and primitive and object arrays.
+		'''
 		yield from self._classes.values()
 		yield from self._objects.values()
 

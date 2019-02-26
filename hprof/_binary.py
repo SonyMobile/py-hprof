@@ -15,9 +15,12 @@ for _jt in JavaType:
 	_jtlookup[_jt.value] = _jt
 
 def open(path):
+	'''open an hprof file'''
 	return HprofFile(path)
 
 class HprofFile(object):
+	'''This object is your entry point into the hprof file.'''
+
 	def __init__(self, data):
 		''' data may be a file path or just plain bytes. '''
 		if type(data) is bytes:
@@ -89,6 +92,7 @@ class HprofFile(object):
 			self._dumps = tuple(dumps)
 
 	def records(self):
+		'''yield all top-level records from this file.'''
 		addr = self._first_record_addr
 		while True:
 			try:
@@ -100,11 +104,15 @@ class HprofFile(object):
 			yield r
 
 	def dumps(self):
+		'''yield hprof.Dump objects representing the memory dumps present in this file.
+
+		Dumps allow convenient exploration of objects, but may be a bit slow to initialize.'''
 		if self._dumps is None:
 			self._gen_from_records(True)
 		yield from self._dumps
 
 	def close(self):
+		''' close the hprof file '''
 		if self._data is not None:
 			if type(self._data) is mmap:
 				self._data.close()
@@ -114,6 +122,7 @@ class HprofFile(object):
 			self._f = None
 
 	def name(self, nameid):
+		'''look up a name record by name ID.'''
 		try:
 			return self._names[nameid]
 		except (KeyError, TypeError):
@@ -133,6 +142,7 @@ class HprofFile(object):
 		raise ClassNotFoundError('java.lang.Class')
 
 	def get_class_info(self, clsid):
+		'''return the hprof.record.ClassLoad record for the provided class object ID.'''
 		# TODO: probably cache this.
 		for r in self.records():
 			if type(r) is ClassLoad and r.class_id == clsid:
@@ -140,6 +150,7 @@ class HprofFile(object):
 		raise ClassNotFoundError('ClassLoad record for class id 0x%x' % clsid)
 
 	def get_primitive_array_class_info(self, primitive_type):
+		'''return the hprof.record.ClassLoad record for the array of the provided primitive type.'''
 		# TODO: probably cache this.
 		expected_name = primitive_type.name + '[]'
 		for r in self.records():
@@ -180,6 +191,7 @@ class HprofFile(object):
 		return self._read_bytes(addr, nbytes).decode('utf8')
 
 	def read_jtype(self, addr):
+		'''Read a byte and return it as an hprof.JavaType value.'''
 		b, = self._read_bytes(addr, 1)
 		try:
 			return _jtlookup[b]
@@ -187,6 +199,7 @@ class HprofFile(object):
 			raise FileFormatError('invalid JavaType: 0x%x' % b)
 
 	def read_jvalue(self, addr, jtype):
+		'''Read a java value of the specified type.'''
 		readers = {
 			JavaType.object:  self.read_id,
 			JavaType.boolean: self.read_boolean,
@@ -205,29 +218,36 @@ class HprofFile(object):
 		return rfun(addr)
 
 	def read_char(self, addr):
+		'''Read a single java char at the specified address.'''
 		return self._read_bytes(addr, 2).decode('utf-16-be')
 
 	def read_byte(self, addr):
+		'''Read a single unsigned byte at the specified address.'''
 		v, = struct.unpack('>B', self._read_bytes(addr, 1))
 		return v
 
 	def read_uint(self, addr):
+		'''Read an unsigned 32-bit integer at the specified address.'''
 		v, = struct.unpack('>I', self._read_bytes(addr, 4))
 		return v
 
 	def read_int(self, addr):
+		'''Read a signed 32-bit integer at the specified address.'''
 		v, = struct.unpack('>i', self._read_bytes(addr, 4))
 		return v
 
 	def read_ushort(self, addr):
+		'''Read an unsigned 16-bit integer at the specified address.'''
 		v, = struct.unpack('>H', self._read_bytes(addr, 2))
 		return v
 
 	def read_short(self, addr):
+		'''Read a signed 16-bit integer at the specified address.'''
 		v, = struct.unpack('>h', self._read_bytes(addr, 2))
 		return v
 
 	def read_boolean(self, addr):
+		'''Read a boolean value at the specified address.'''
 		b, = self._read_bytes(addr, 1)
 		if b == 0:
 			return False
@@ -237,6 +257,7 @@ class HprofFile(object):
 			raise FileFormatError('invalid boolean value 0x%x' % b)
 
 	def read_id(self, addr):
+		'''Read an id (i.e. an object or name reference) at the specified address.'''
 		bytes = self._read_bytes(addr, self.idsize)
 		i = 0
 		for b in bytes:
@@ -244,13 +265,16 @@ class HprofFile(object):
 		return i
 
 	def read_float(self, addr):
+		'''Read a 32-bit float value at the specified address.'''
 		v, = struct.unpack('>f', self._read_bytes(addr, 4))
 		return v
 
 	def read_double(self, addr):
+		'''Read a 64-bit double value at the specified address.'''
 		v, = struct.unpack('>d', self._read_bytes(addr, 8))
 		return v
 
 	def read_long(self, addr):
+		'''Read a signed 64-bit integer at the specified address.'''
 		v, = struct.unpack('>q', self._read_bytes(addr, 8))
 		return v

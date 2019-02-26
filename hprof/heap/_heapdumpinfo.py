@@ -8,14 +8,25 @@ offsets = AutoOffsets(1,
 	'END')
 
 class HeapDumpInfo(HeapRecord):
+	'''Information about the current heap (Android ART-specific).
+
+	Subsequent object records belong to the heap specified here.
+
+	Members:
+	hprof_file -- the HprofFile this recprd belongs to.
+	hprof_addr -- the byte address of this record in hprof_file.
+	'''
+
 	HPROF_DUMP_TAG = 0xfe
 
 	@property
 	def type(self):
+		'''the type of this heap -- an integer.'''
 		return self._hprof_uint(offsets.TYPE)
 
 	@property
 	def name(self):
+		'''the name of this heap.'''
 		nameid = self._hprof_id(offsets.NAME)
 		return self.hprof_file.name(nameid)
 

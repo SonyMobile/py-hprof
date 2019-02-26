@@ -1,19 +1,21 @@
 class Error(Exception):
-	pass
+	''' Base Error from hprof. Rarely thrown. '''
 
 class FileFormatError(Error):
-	pass
+	'''Unexpected or unhandled data.'''
 
 class EofError(Error):
-	pass
+	'''Tried to read outside the hprof file data.'''
 
 class RefError(Error):
-	pass
+	'''A lookup by ID or serial failed.'''
 
 class ClassNotFoundError(Error):
-	pass
+	'''A class lookup failed.'''
 
 class FieldNotFoundError(Error):
+	'''Tried to read a field that was not found.'''
+
 	def __init__(self, ftype, name, base_class_name):
 		self.type = ftype
 		self.name = name

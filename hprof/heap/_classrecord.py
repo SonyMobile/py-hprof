@@ -15,6 +15,16 @@ doff = AutoOffsets(0,
 	'END')
 
 class Class(Allocation):
+	'''A Class object in a dump.
+
+	Class objects contain static attribute values, as well as offsets for instance fields.
+
+	Members:
+	hprof_file -- the HprofFile this object belongs to.
+	hprof_addr -- the byte address of this object in hprof_file.
+	hprof_heap -- the hprof.Heap this object belongs to.
+	'''
+
 	__slots__ = '_hprof_sf_start_offset', '_hprof_if_start_offset'
 	HPROF_DUMP_TAG = 0x20
 
@@ -46,6 +56,7 @@ class Class(Allocation):
 		return offset
 
 	def hprof_static_fields(self):
+		'''yield all the static fields of this class and its super classes.'''
 		count = self._hprof_ushort(self._hprof_sf_start_offset)
 		offset = self._hprof_sf_start_offset + 2
 		for i in range(count):
@@ -70,6 +81,7 @@ class Class(Allocation):
 		return offset
 
 	def hprof_instance_fields(self):
+		'''yield all instance field declarations'''
 		count = self._hprof_ushort(self._hprof_if_start_offset + ioff.COUNT)
 		offset = self._hprof_if_start_offset + ioff.DATA
 		assert type(offset) is int
@@ -106,18 +118,32 @@ class Class(Allocation):
 
 	@property
 	def hprof_super_class_id(self):
+		'''return the ID of the super class object (or zero, if this is java.lang.Object)'''
 		return self._hprof_id(self._hproff.SUPER)
 
 	@property
 	def hprof_class_id(self):
+		'''return the ID of this object's class.
+
+		Since this object is a class, the returned value will be the ID of java.lang.Class.
+		'''
 		return self.hprof_file._get_java_lang_class_id()
 
 	@property
 	def hprof_instance_size(self):
+		'''return the size of instances of this class, as declared by the class record.
+
+		This value may or may not be accurate, and the exact definition may vary with virtual
+		machine (or even hprof dumper) implementations.
+
+		Array classes can not take the array instance's length into consideration. This limitation
+		is shared by all implementations, since the class record just contains a simple integer.
+		'''
 		return self._hprof_uint(self._hproff.OBJSIZE)
 
 	@property
 	def hprof_name(self):
+		'''return the name of this class.'''
 		return self.hprof_file.get_class_info(self.hprof_id).class_name
 
 	@property
@@ -152,12 +178,23 @@ class Class(Allocation):
 			raise
 
 class FieldDecl(HprofSlice):
+	'''A field declaration, containing a name and type.
+
+	Members:
+	hprof_file -- the HprofFile this field belongs to.
+	hprof_addr -- the byte address of this field in hprof_file.
+	'''
 	@property
 	def type(self):
+		'''the type of this field, as an hprof.JavaType value.
+
+		hprof files do not contain the declared types of fields, so all reference-typed fields will
+		have a JavaType.object here.'''
 		return self._hprof_jtype(doff[self.hprof_file.idsize].TYPE)
 
 	@property
 	def name(self):
+		'''the name of this field.'''
 		nameid = self._hprof_id(doff[self.hprof_file.idsize].NAMEID)
 		return self.hprof_file.name(nameid).str
 
@@ -169,12 +206,20 @@ class FieldDecl(HprofSlice):
 		return 'FieldDecl(name=%s, type=%s)' % (self.name, self.type)
 
 class StaticField(HprofSlice):
+	'''A static field.
+
+	Members:
+	hprof_file -- the HprofFile this field belongs to.
+	hprof_addr -- the byte address of this field in hprof_file.
+	'''
 	@property
 	def decl(self):
+		'''the declaration of this field.'''
 		return FieldDecl(self.hprof_file, self.hprof_addr)
 
 	@property
 	def value(self):
+		'''the value of this field.'''
 		return self._hprof_jvalue(doff[self.hprof_file.idsize].END, self.decl.type)
 
 	@property

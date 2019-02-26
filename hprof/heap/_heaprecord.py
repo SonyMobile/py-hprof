@@ -23,9 +23,18 @@ def _get_record_type(tag):
 	return _descendants[tag]
 
 class HeapRecord(HprofSlice):
-	pass
+	'''Common operations for records internal to Dump records.
+
+	Members:
+	hprof_file -- the HprofFile this record belongs to.
+	hprof_addr -- the byte address of this record in hprof_file.
+	'''
 
 def create(hf, addr):
+	'''create a HeapRecord based on the tag and data found at addr.
+
+	You'll probably be better off getting them through hprof.Heap.objects() or hprof.Dump.records().
+	'''
 	tag = hf.read_byte(addr)
 	try:
 		rtype = _get_record_type(tag)
@@ -34,6 +43,16 @@ def create(hf, addr):
 	return rtype(hf, addr)
 
 class Allocation(HeapRecord):
+	'''Common operations for heap objects in a dump. This includes all sorts of heap allocations:
+	normal objects, class objects, and both primitive and object arrays.
+
+	Members:
+	hprof_file -- the HprofFile this object belongs to.
+	hprof_addr -- the byte address of this object in hprof_file.
+	hprof_heap -- the hprof.Heap this object belongs to.
+	'''
+
+
 	__slots__ = 'hprof_heap',
 
 	def __init__(self, hf, addr):
@@ -42,14 +61,17 @@ class Allocation(HeapRecord):
 
 	@property
 	def hprof_id(self):
+		'''this object's ID on the heap.'''
 		return self._hprof_id(self._hproff.ID)
 
 	@property
 	def hprof_class(self):
+		'''this object's class.'''
 		return self.hprof_heap.dump.get_class(self.hprof_class_id)
 
 	@property
 	def hprof_class_id(self):
+		'''the ID of this object's class.'''
 		raise NotImplementedError(type(self)) # pragma: no cover
 
 	def __getattr__(self, name):

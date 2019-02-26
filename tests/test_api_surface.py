@@ -53,7 +53,7 @@ def heapobj(*fields):
 
 class TestApiSurface(TestCase):
 	def setUp(self):
-		self.expected = expanded('hprof', {
+		self.expected = sorted(expanded('hprof', {
 			'open': (),
 			'HprofFile': (
 				'close', 'records', 'dumps', 'name',
@@ -113,8 +113,25 @@ class TestApiSurface(TestCase):
 				'FieldDecl': hprofslice('name', 'type'),
 				'StaticField': hprofslice('decl', 'value'),
 			},
-		})
+		}))
 
 	def test_api_surface(self):
 		self.maxDiff = None
 		self.assertCountEqual(everything('hprof', hprof), self.expected)
+
+	def test_api_documented(self):
+		class Unused(object):
+			__slots__ = 'member'
+		member_descriptor = type(Unused.member)
+		for name in self.expected:
+			thing = eval(name)
+			if type(thing) is member_descriptor:
+				# can't be documented directly; check that it is present in its parent.
+				parent, member = name.rsplit('.', 1)
+				thing = eval(parent)
+				self.assertIsNotNone(thing.__doc__, msg=name + '.__doc__')
+				pattern = '\n[\t ]*%s -- ' % member
+				self.assertRegex(thing.__doc__, pattern, msg='%s not documented in %s' % (member, parent))
+			else:
+				self.assertIsNotNone(thing.__doc__, msg=name + '.__doc__')
+				self.assertNotEqual(thing.__doc__.strip(), '', msg=name + '.__doc__')

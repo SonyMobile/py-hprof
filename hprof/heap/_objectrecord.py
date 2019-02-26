@@ -6,6 +6,14 @@ from .._types import JavaType
 
 
 class Object(Allocation):
+	'''A normal object instance on the heap (i.e. not a Class or an array).
+
+	Members:
+	hprof_file -- the HprofFile this object belongs to.
+	hprof_addr -- the byte address of this object in hprof_file.
+	hprof_heap -- the hprof.Heap this object belongs to.
+	'''
+
 	HPROF_DUMP_TAG = 0x21
 
 	_hprof_offsets = AutoOffsets(1,
@@ -18,6 +26,7 @@ class Object(Allocation):
 
 	@property
 	def hprof_class_id(self):
+		'''the ID of this object's class.'''
 		return self._hprof_id(self._hproff.CLSID)
 
 	@property
