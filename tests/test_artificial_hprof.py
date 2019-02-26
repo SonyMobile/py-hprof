@@ -160,3 +160,40 @@ class TestErrors(TestCase):
 		hf = hprof.open(bytes(data))
 		with self.assertRaisesRegex(hprof.FileFormatError, 'duplicate name id'):
 			hf.name(id1)
+
+	def test_duplicate_class_id_error(self):
+		hb = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 0x12345)
+		hb.name(10, 'ClassA')
+		hb.name(11, 'ClassB')
+		with hb.record(2, 0) as load:
+			load.uint(3)
+			load.id(40)
+			load.uint(0)
+			load.id(10)
+		with hb.record(2, 0) as load:
+			load.uint(4)
+			load.id(40)
+			load.uint(0)
+			load.id(11)
+		addrs, data = hb.build()
+		hf = hprof.open(bytes(data))
+		with self.assertRaisesRegex(hprof.FileFormatError, 'duplicate class object id'):
+			hf.get_class_info(500)
+
+	def test_duplicate_class_name_error(self):
+		hb = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 0x12345)
+		hb.name(10, 'ClassA')
+		with hb.record(2, 0) as load:
+			load.uint(3)
+			load.id(41)
+			load.uint(0)
+			load.id(10)
+		with hb.record(2, 0) as load:
+			load.uint(4)
+			load.id(40)
+			load.uint(0)
+			load.id(10)
+		addrs, data = hb.build()
+		hf = hprof.open(bytes(data))
+		with self.assertRaisesRegex(hprof.FileFormatError, 'duplicate class.*name'):
+			hf.get_class_info(500)
