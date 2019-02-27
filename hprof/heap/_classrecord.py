@@ -130,6 +130,24 @@ class Class(Allocation):
 		'''yield all direct subclasses of this class.'''
 		yield from self.hprof_heap.dump._subclasses(self)
 
+	# TODO: ancestorof and descendantof for interfaces..?
+	def hprof_ancestorof(self, potential_descendant):
+		'''return True if this class is an ancestor of (or the same class as) potential_descendant.'''
+		while potential_descendant is not None:
+			if self == potential_descendant:
+				return True
+			potential_descendant = potential_descendant.hprof_super_class
+		return False
+
+	def hprof_descendantof(self, potential_ancestor):
+		'''return True if this class is a descendant of (or the same class as) potential_ancestor.'''
+		my_ancestor = self
+		while my_ancestor is not None:
+			if my_ancestor == potential_ancestor:
+				return True
+			my_ancestor = my_ancestor.hprof_super_class
+		return False
+
 	@property
 	def hprof_class_id(self):
 		'''return the ID of this object's class.
