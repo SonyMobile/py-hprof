@@ -199,7 +199,7 @@ class HprofFile(object):
 
 	def read_jtype(self, addr):
 		'''Read a byte and return it as an hprof.JavaType value.'''
-		b, = self._read_bytes(addr, 1)
+		b = self.read_byte(addr)
 		try:
 			return _jtlookup[b]
 		except KeyError as e:
@@ -230,8 +230,12 @@ class HprofFile(object):
 
 	def read_byte(self, addr):
 		'''Read a single unsigned byte at the specified address.'''
-		v, = struct.unpack('>B', self._read_bytes(addr, 1))
-		return v
+		if addr < 0:
+			raise EofError('tried to read at address %d' % addr)
+		try:
+			return self._data[addr]
+		except IndexError:
+			raise EofError('tried to read bytes %d:%d, but file size is %d' % (addr, addr+1, len(self._data)))
 
 	def read_uint(self, addr):
 		'''Read an unsigned 32-bit integer at the specified address.'''
