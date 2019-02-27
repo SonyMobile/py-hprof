@@ -14,7 +14,7 @@ public class CarExample {
 			new Car("Lolvo"),
 			new Car("Yotoya"),
 			new Bike("Fånark"),
-			new Car("Bowie"),
+			new Limo(),
 			new Bike("Descent")
 		};
 		bikeSuper = objs[4].getClass();

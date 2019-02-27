@@ -38,3 +38,15 @@ class TestJavaCarExample(TestCase):
 
 	def test_read_null_reference(self):
 		self.assertIsNone(self.carex.nothing)
+
+	def test_get_subclasses(self):
+		objectcls = self.dump.get_class('java.lang.Object')
+		vehiclecls = self.dump.get_class('com.example.cars.Vehicle')
+		bikecls = self.dump.get_class('com.example.cars.Bike')
+		limocls = self.dump.get_class('com.example.cars.Limo')
+		carcls = self.dump.get_class('com.example.cars.Car')
+		self.assertIn(vehiclecls, objectcls.hprof_subclasses())
+		self.assertCountEqual(vehiclecls.hprof_subclasses(), (carcls, bikecls))
+		self.assertCountEqual(bikecls.hprof_subclasses(), ())
+		self.assertCountEqual(carcls.hprof_subclasses(), (limocls,))
+		self.assertCountEqual(limocls.hprof_subclasses(), ())

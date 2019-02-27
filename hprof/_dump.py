@@ -15,12 +15,13 @@ class Dump(object, metaclass=Slotted):
 	hf -- the HprofFile this dump belongs to.
 	'''
 
-	__slots__ = 'hf', '_heaps', '_current_heap'
+	__slots__ = 'hf', '_heaps', '_current_heap', '_subclass_cache'
 
 	def __init__(self, hf):
 		self.hf = hf
 		self._heaps = {}
 		self._current_heap = None
+		self._subclass_cache = {}
 
 	def _add_segment(self, seg):
 		assert seg.hprof_file is self.hf
@@ -32,6 +33,12 @@ class Dump(object, metaclass=Slotted):
 				if any(h.has_id(objid) for h in self._heaps.values()):
 					raise FileFormatError('duplicate object id 0x%x' % objid)
 				self._curheap._add_alloc(objid, r)
+				if type(r) is Class:
+					superid = r.hprof_super_class_id
+					try:
+						self._subclass_cache[superid].append(objid)
+					except KeyError:
+						self._subclass_cache[superid] = [objid]
 
 	def _set_curheap(self, htype, hname):
 		if htype not in self._heaps:
@@ -86,6 +93,14 @@ class Dump(object, metaclass=Slotted):
 			except KeyError:
 				pass
 		raise RefError('Failed to find object with id 0x%x' % objid)
+
+	def _subclasses(self, cls):
+		try:
+			subids = self._subclass_cache[cls.hprof_id]
+		except KeyError:
+			return # no known subclasses
+		for clsid in subids:
+			yield self.get_class(clsid)
 
 class Heap(object, metaclass=Slotted):
 	'''A single heap, usually acquired through hprof.Dump.heaps().

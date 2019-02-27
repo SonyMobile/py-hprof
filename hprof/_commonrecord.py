@@ -10,7 +10,7 @@ class HprofSlice(object, metaclass=Slotted):
 			self._hproff = type(self)._hprof_offsets[self.hprof_file.idsize]
 
 	def __eq__(self, other):
-		return self.hprof_addr == other.hprof_addr and self.hprof_file == other.hprof_file and type(self) is type(other)
+		return type(self) is type(other) and self.hprof_addr == other.hprof_addr and self.hprof_file == other.hprof_file
 
 	def _hprof_utf8(self, offset, nbytes):
 		return self.hprof_file.read_utf8(self.hprof_addr + offset, nbytes)

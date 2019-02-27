@@ -126,6 +126,10 @@ class Class(Allocation):
 		'''return the super class object of this class (or None, if this is java.lang.Object)'''
 		return self.hprof_heap.dump.get_class(self.hprof_super_class_id)
 
+	def hprof_subclasses(self):
+		'''yield all direct subclasses of this class.'''
+		yield from self.hprof_heap.dump._subclasses(self)
+
 	@property
 	def hprof_class_id(self):
 		'''return the ID of this object's class.
