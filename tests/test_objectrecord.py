@@ -76,6 +76,9 @@ class TestObject(TestCase):
 		self.assertEqual(self.p._hprof_len, 19 + 2 * self.idsize)
 
 	def test_object_str(self):
-		# TODO: when we know about classes, it should be part of the str output
-		self.assertEqual(str(self.o), 'Object(class=com.example.Hello, id=0x%x)' % self.id1)
-		self.assertEqual(str(self.p), 'Object(class=com.example.Hello, id=0x%x)' % self.id2)
+		self.assertEqual(str(self.o), 'Hello(id=0x%x)' % self.id1)
+		self.assertEqual(str(self.p), 'Hello(id=0x%x)' % self.id2)
+
+	def test_object_repr(self):
+		self.assertEqual(repr(self.o), 'Object(class=com.example.Hello, id=0x%x)' % self.id1)
+		self.assertEqual(repr(self.p), 'Object(class=com.example.Hello, id=0x%x)' % self.id2)

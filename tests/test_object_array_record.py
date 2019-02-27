@@ -30,11 +30,49 @@ class TestObjArrayRecord(TestCase):
 				obj2.uint(0)
 				obj2.id(1010)
 				obj2.uint(0)
+			with dump.subrecord(32) as cls:
+				cls.id(112)
+				cls.uint(1)
+				cls.id(0)
+				cls.id(0)
+				cls.id(0)
+				cls.id(0)
+				cls.id(0)
+				cls.id(0)
+				cls.uint(4)
+				cls.ushort(0)
+				cls.ushort(0)
+				cls.ushort(0)
+			with dump.subrecord(32) as cls:
+				cls.id(1010)
+				cls.uint(1)
+				cls.id(0)
+				cls.id(0)
+				cls.id(0)
+				cls.id(0)
+				cls.id(0)
+				cls.id(0)
+				cls.uint(4)
+				cls.ushort(0)
+				cls.ushort(0)
+				cls.ushort(0)
+		with hb.record(2, 0) as load:
+			load.uint(3)
+			load.id(112)
+			load.uint(0)
+			load.id(1313)
+		with hb.record(2, 0) as load:
+			load.uint(3)
+			load.id(1010)
+			load.uint(0)
+			load.id(1314)
+		hb.name(1313, 'com.sonymobile.Phone[]')
+		hb.name(1314, 'com.sonymobile.Xperia')
 		addrs, data = hb.build()
 		self.hf = hprof.open(bytes(data))
 		dump, = self.hf.dumps()
 		heap, = dump.heaps()
-		self.obj1, self.a, self.obj2 = sorted(heap.objects(), key=lambda r: r.hprof_addr)
+		self.obj1, self.a, self.obj2, _, _ = sorted(heap.objects(), key=lambda r: r.hprof_addr)
 
 	def tearDown(self):
 		self.a = None
@@ -101,4 +139,7 @@ class TestObjArrayRecord(TestCase):
 		self.assertEqual(self.a._hprof_len, 1 + 8 + self.idsize * 7)
 
 	def test_object_array_str(self):
-		self.assertEqual(str(self.a), 'ObjectArray(id=0x%x, count=5)' % self.aid)
+		self.assertEqual(str(self.a), 'Phone[5] {Xperia(id=0x%x), Xperia(id=0x%x), Xperia(id=0x%x), Xperia(id=0x%x), Xperia(id=0x%x)}' % (self.id1, self.id1, self.id2, self.id1, self.id2))
+
+	def test_object_array_repr(self):
+		self.assertEqual(repr(self.a), 'ObjectArray(class=com.sonymobile.Phone[], id=0x%x, length=5)' % self.aid)

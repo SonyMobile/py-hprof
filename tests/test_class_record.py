@@ -177,7 +177,10 @@ class TestClassRecord(TestCase):
 		self.assertEqual(self.cls._hprof_len, 1 + 35 + self.idsize * 15)
 
 	def test_class_str(self):
-		self.assertEqual(str(self.cls), 'Class(com.example.Spinny)')
+		self.assertEqual(str(self.cls), 'com.example.Spinny')
+
+	def test_class_repr(self):
+		self.assertEqual(repr(self.cls), 'Class(name=com.example.Spinny, id=0x%x)' % self.clsid)
 
 
 @varying_idsize

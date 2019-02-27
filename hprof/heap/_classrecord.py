@@ -179,12 +179,12 @@ class Class(Allocation):
 		return self._hprof_if_start_offset + ioff.DATA + ifield_count * doff[self.hprof_file.idsize].END
 
 	def __str__(self):
-		return 'Class(%s)' % self.hprof_name
+		return self.hprof_name
+
+	def __repr__(self):
+		return 'Class(name=%s, id=0x%x)' % (self.hprof_name, self.hprof_id)
 
 	def __getattr__(self, name):
-		return self[name]
-
-	def __getitem__(self, name):
 		for sf in self.hprof_static_fields():
 			decl = sf.decl
 			if decl.name == name:
@@ -199,7 +199,7 @@ class Class(Allocation):
 			raise FieldNotFoundError('static', name, self.hprof_name)
 		supercls = self.hprof_heap.dump.get_class(super_id)
 		try:
-			return supercls[name]
+			return getattr(supercls, name)
 		except FieldNotFoundError as e:
 			e.add_class(self.hprof_name)
 			raise

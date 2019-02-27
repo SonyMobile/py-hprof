@@ -88,7 +88,11 @@ class TestPrimitiveArrayRecord(TestCase):
 		self.assertEqual(self.a._hprof_len, 10 + self.idsize + self.COUNT * self.ESIZE)
 
 	def test_primitive_array_str(self):
-		self.assertEqual(str(self.a), 'PrimitiveArray(type=%s, id=0x%x, count=%d)' % (self.ENAME, self.aid, self.COUNT))
+		values = ', '.join(str(self._val(i)) for i in range(self.COUNT))
+		self.assertEqual(str(self.a), '%s[%d] {%s}' % (self.ENAME, self.COUNT, values))
+
+	def test_primitive_array_repr(self):
+		self.assertEqual(repr(self.a), 'PrimitiveArray(type=%s, id=0x%x, length=%d)' % (self.ENAME, self.aid, self.COUNT))
 
 
 class TestBooleanArrayRecord(TestPrimitiveArrayRecord):

@@ -84,15 +84,12 @@ class Allocation(HeapRecord):
 		return self.hprof_class.hprof_descendantof(cls)
 
 	def __getattr__(self, name):
-		return self.__getitem__(name)
-
-	def __getitem__(self, name):
 		cls = self.hprof_class
 		try:
 			jtype, offset = cls._hprof_instance_field_lookup(name)
 		except FieldNotFoundError:
 			try:
-				return cls[name]
+				return getattr(cls, name)
 			except FieldNotFoundError as e:
 				e.type = 'static or instance'
 				raise

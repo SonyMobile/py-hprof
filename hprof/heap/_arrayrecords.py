@@ -57,19 +57,19 @@ class PrimitiveArray(Array):
 		return self._hproff.DATA + self.length * self.hprof_elem_type.size(self.hprof_file.idsize)
 
 	def __str__(self):
-		return 'PrimitiveArray(type=%s, id=0x%x, count=%d)' % (self.hprof_elem_type, self.hprof_id, self.length)
+		content = ', '.join(str(item) for item in self)
+		return '%s[%d] {%s}' % (self.hprof_elem_type, self.length, content)
+
+	def __repr__(self):
+		return 'PrimitiveArray(type=%s, id=0x%x, length=%d)' % (self.hprof_elem_type, self.hprof_id, self.length)
 
 	def __getitem__(self, ix):
-		if type(ix) is int:
-			if 0 <= ix < self.length:
-				t = self.hprof_elem_type
-				offset = self._hproff.DATA + ix * t.size(self.hprof_file.idsize)
-				return self._hprof_jvalue(offset, t)
-			else:
-				raise IndexError('tried to read element %d in a size %d array' % (ix, self.length))
+		if 0 <= ix < self.length:
+			t = self.hprof_elem_type
+			offset = self._hproff.DATA + ix * t.size(self.hprof_file.idsize)
+			return self._hprof_jvalue(offset, t)
 		else:
-			# it's a field access; fall back to normal object field handling
-			return super().__getitem__(ix)
+			raise IndexError('tried to read element %d in a size %d array' % (ix, self.length))
 
 class ObjectArray(Array):
 	'''An array of object references.
@@ -98,21 +98,31 @@ class ObjectArray(Array):
 		return self._hproff.DATA + self.length * self.hprof_file.idsize
 
 	def __str__(self):
-		return 'ObjectArray(id=0x%x, count=%d)' % (self.hprof_id, self.length)
+		if self.hprof_heap is None:
+			cname = '<UnknownType>[]'
+			content = ', '.join('id=0x%x' % self._hprof_item_id(i) for i in range(self.length))
+		else:
+			cname = self.hprof_class.hprof_name.rsplit('.', 1)[-1]
+			content = ', '.join(str(item) for item in self)
+		return '%s[%d] {%s}' % (cname[:-2], self.length, content)
+
+	def __repr__(self):
+		if self.hprof_heap is None:
+			return 'ObjectArray(class_id=0x%x, id=0x%x, length=%d)' % (self.hprof_class_id, self.hprof_id, self.length)
+		else:
+			return 'ObjectArray(class=%s, id=0x%x, length=%d)' % (self.hprof_class.hprof_name, self.hprof_id, self.length)
 
 	@property
 	def hprof_class_id(self):
 		'''the class ID of this array.'''
 		return self._hprof_id(self._hproff.CLSID)
 
-	def __getitem__(self, ix):
-		if type(ix) is int:
-			# it's an array read!
-			if 0 <= ix < self.length:
-				v = self._hprof_id(self._hproff.DATA + ix * self.hprof_file.idsize)
-				return self.hprof_heap.dump.get_object(v)
-			else:
-				raise IndexError('tried to read element %d in a size %d array' % (ix, self.length))
+	def _hprof_item_id(self, ix):
+		if 0 <= ix < self.length:
+			return self._hprof_id(self._hproff.DATA + ix * self.hprof_file.idsize)
 		else:
-			# it's a field access; fall back to normal object field handling
-			return super().__getitem__(ix)
+			raise IndexError('tried to read element %d in a size %d array' % (ix, self.length))
+
+	def __getitem__(self, ix):
+		item_id = self._hprof_item_id(ix)
+		return self.hprof_heap.dump.get_object(item_id)
