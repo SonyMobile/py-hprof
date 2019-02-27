@@ -50,3 +50,52 @@ class TestJavaCarExample(TestCase):
 		self.assertCountEqual(bikecls.hprof_subclasses(), ())
 		self.assertCountEqual(carcls.hprof_subclasses(), (limocls,))
 		self.assertCountEqual(limocls.hprof_subclasses(), ())
+
+	def test_find_instances_by_class(self):
+		vehiclecls = self.dump.get_class('com.example.cars.Vehicle')
+		instances = self.dump.find_instances(vehiclecls)
+
+		carcls = self.dump.get_class('com.example.cars.Car')
+		limocls = self.dump.get_class('com.example.cars.Limo')
+		bikecls = self.dump.get_class('com.example.cars.Bike')
+		for i in range(5):
+			obj = next(instances)
+			self.assertIs(type(obj), hprof.heap.Object)
+			self.assertIn(obj.hprof_class, (carcls, bikecls, limocls))
+		with self.assertRaises(StopIteration):
+			next(instances)
+
+	def test_find_instances_by_name(self):
+		instances = self.dump.find_instances('com.example.cars.Vehicle')
+
+		carcls = self.dump.get_class('com.example.cars.Car')
+		limocls = self.dump.get_class('com.example.cars.Limo')
+		bikecls = self.dump.get_class('com.example.cars.Bike')
+		for i in range(5):
+			obj = next(instances)
+			self.assertIs(type(obj), hprof.heap.Object)
+			self.assertIn(obj.hprof_class, (carcls, bikecls, limocls))
+		with self.assertRaises(StopIteration):
+			next(instances)
+
+	def test_get_exact_instances_by_class(self):
+		carcls = self.dump.get_class('com.example.cars.Car')
+		instances = self.dump.find_instances(carcls, False)
+
+		for i in range(2):
+			obj = next(instances)
+			self.assertIs(type(obj), hprof.heap.Object)
+			self.assertEqual(obj.hprof_class, carcls)
+		with self.assertRaises(StopIteration):
+			next(instances)
+
+	def test_get_exact_instances_by_name(self):
+		carcls = self.dump.get_class('com.example.cars.Car')
+		instances = self.dump.find_instances('com.example.cars.Car', False)
+
+		for i in range(2):
+			obj = next(instances)
+			self.assertIs(type(obj), hprof.heap.Object)
+			self.assertEqual(obj.hprof_class, carcls)
+		with self.assertRaises(StopIteration):
+			next(instances)

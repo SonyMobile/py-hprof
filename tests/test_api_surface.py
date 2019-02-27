@@ -66,7 +66,7 @@ class TestApiSurface(TestCase):
 			),
 			'JavaType': ('object', 'boolean', 'char', 'float', 'double', 'byte', 'short', 'int', 'long'),
 
-			'Dump': ('hf', 'get_class', 'get_object', 'heaps'),
+			'Dump': ('hf', 'get_class', 'get_object', 'heaps', 'find_instances'),
 			'Heap': ('dump', 'has_id', 'name', 'type', 'objects'),
 
 			'Error': (),

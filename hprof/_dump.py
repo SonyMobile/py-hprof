@@ -102,6 +102,29 @@ class Dump(object, metaclass=Slotted):
 		for clsid in subids:
 			yield self.get_class(clsid)
 
+	def _descendants(self, out, cls):
+		clsid = cls.hprof_id
+		out.add(clsid)
+		try:
+			subids = self._subclass_cache[clsid]
+		except KeyError:
+			return
+		for subid in self._subclass_cache[clsid]:
+			self._descendants(out, self.get_class(subid))
+
+	def find_instances(self, class_object_or_name, include_descendants=True):
+		'''yield all object instances of the specified class.'''
+		if type(class_object_or_name) is str:
+			class_object_or_name = self.get_class(class_object_or_name)
+		class_ids = set()
+		class_ids.add(class_object_or_name.hprof_id)
+		if include_descendants:
+			self._descendants(class_ids, class_object_or_name)
+		for heap in self.heaps():
+			for obj in heap.objects():
+				if obj.hprof_class_id in class_ids:
+					yield obj
+
 class Heap(object, metaclass=Slotted):
 	'''A single heap, usually acquired through hprof.Dump.heaps().
 
