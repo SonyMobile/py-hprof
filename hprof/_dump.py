@@ -58,6 +58,8 @@ class Dump(object, metaclass=Slotted):
 		'''return the Class object with the given ID'''
 		if type(class_id_or_name) is int:
 			clsid = class_id_or_name
+			if clsid == 0:
+				return None
 		else:
 			clsid = self.hf.get_class_info(class_id_or_name).class_id
 		for h in self._heaps.values():

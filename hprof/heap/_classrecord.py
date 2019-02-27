@@ -122,6 +122,11 @@ class Class(Allocation):
 		return self._hprof_id(self._hproff.SUPER)
 
 	@property
+	def hprof_super_class(self):
+		'''return the super class object of this class (or None, if this is java.lang.Object)'''
+		return self.hprof_heap.dump.get_class(self.hprof_super_class_id)
+
+	@property
 	def hprof_class_id(self):
 		'''return the ID of this object's class.
 
