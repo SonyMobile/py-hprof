@@ -35,3 +35,6 @@ class TestJavaCarExample(TestCase):
 		jobject = vehicle.hprof_super_class
 		self.assertEqual(jobject, self.dump.get_class('java.lang.Object'))
 		self.assertIsNone(jobject.hprof_super_class)
+
+	def test_read_null_reference(self):
+		self.assertIsNone(self.carex.nothing)

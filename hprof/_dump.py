@@ -74,6 +74,8 @@ class Dump(object, metaclass=Slotted):
 
 		This includes all kinds: normal instances, class objects, and primitive and object arrays.
 		'''
+		if objid == 0:
+			return None
 		for h in self._heaps.values():
 			try:
 				return h._objects[objid]
