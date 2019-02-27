@@ -46,7 +46,7 @@ def rootrecord(*fields):
 	return hprofslice('HPROF_DUMP_TAG', 'objid', *fields)
 
 def heap(*fields):
-	return hprofslice('hprof_id', 'hprof_class_id', 'hprof_class', 'hprof_heap', *fields)
+	return hprofslice('hprof_id', 'hprof_class_id', 'hprof_class', 'hprof_heap', 'hprof_instanceof', *fields)
 
 def heapobj(*fields):
 	return heap('HPROF_DUMP_TAG', *fields)

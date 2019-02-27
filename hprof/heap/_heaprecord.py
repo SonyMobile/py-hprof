@@ -74,6 +74,15 @@ class Allocation(HeapRecord):
 		'''the ID of this object's class.'''
 		raise NotImplementedError(type(self)) # pragma: no cover
 
+	def hprof_instanceof(self, cls):
+		'''return True if this object is an instance of cls; similar to Java's instanceof.
+
+		Note: this function returns what the hprof file specifies. For example, a String array
+		should technically be an instance of Object[], but the hprof may declare String[] to be a
+		direct subclass of Object.
+		'''
+		return self.hprof_class.hprof_descendantof(cls)
+
 	def __getattr__(self, name):
 		return self.__getitem__(name)
 
