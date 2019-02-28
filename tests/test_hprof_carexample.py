@@ -2,12 +2,21 @@ from unittest import TestCase
 
 import hprof
 
-class TestJavaCarExample(TestCase):
-	FILE = 'tests/java.hprof'
+def setUpModule():
+	global jfile
+	jfile = hprof.open('tests/java.hprof')
 
+def tearDownModule():
+	global jfile
+	jfile.close()
+	jfile = None
+
+class TestJavaCarExample(TestCase):
 	@classmethod
 	def setUpClass(self):
-		self.hf = hprof.open(self.FILE)
+		self.hf = jfile
+
+	def setUp(self):
 		self.dump, = self.hf.dumps()
 		self.main  = self.dump.get_class('Main')
 		self.carex = self.dump.get_class('com.example.cars.CarExample')

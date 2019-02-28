@@ -2,12 +2,21 @@ from unittest import TestCase
 
 import hprof
 
-class TestJavaShadowExample(TestCase):
-	FILE = 'tests/java.hprof'
+def setUpModule():
+	global jfile
+	jfile = hprof.open('tests/java.hprof')
 
+def tearDownModule():
+	global jfile
+	jfile.close()
+	jfile = None
+
+class TestJavaShadowExample(TestCase):
 	@classmethod
 	def setUpClass(self):
-		self.hf = hprof.open(self.FILE)
+		self.hf = jfile
+
+	def setUp(self):
 		self.dump, = self.hf.dumps()
 
 	def test_read_base(self):
