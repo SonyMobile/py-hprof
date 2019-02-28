@@ -133,6 +133,10 @@ class Class(Allocation):
 	# TODO: ancestorof and descendantof for interfaces..?
 	def hprof_ancestorof(self, potential_descendant):
 		'''return True if this class is an ancestor of (or the same class as) potential_descendant.'''
+		if type(potential_descendant) in (str, int):
+			potential_descendant = self.hprof_heap.dump.get_class(potential_descendant)
+		if type(potential_descendant) is not Class:
+			raise TypeError('not a Class object', potential_descendant)
 		while potential_descendant is not None:
 			if self == potential_descendant:
 				return True
@@ -141,6 +145,10 @@ class Class(Allocation):
 
 	def hprof_descendantof(self, potential_ancestor):
 		'''return True if this class is a descendant of (or the same class as) potential_ancestor.'''
+		if type(potential_ancestor) in (str, int):
+			potential_ancestor = self.hprof_heap.dump.get_class(potential_ancestor)
+		if type(potential_ancestor) is not Class:
+			raise TypeError('not a Class object', potential_ancestor)
 		my_ancestor = self
 		while my_ancestor is not None:
 			if my_ancestor == potential_ancestor:

@@ -165,6 +165,30 @@ class TestJavaCarExample(TestCase):
 		self.assertFalse(limocls.hprof_descendantof(bikecls))
 		self.assertTrue( limocls.hprof_descendantof(limocls))
 
+	def test_is_descendant_str(self):
+		carcls = self.dump.get_class('com.example.cars.Car')
+		self.assertTrue(carcls.hprof_descendantof('java.lang.Object'))
+		self.assertTrue(carcls.hprof_descendantof('com.example.cars.Vehicle'))
+		self.assertTrue(carcls.hprof_descendantof('com.example.cars.Car'))
+		self.assertFalse(carcls.hprof_descendantof('com.example.cars.Limo'))
+		self.assertFalse(carcls.hprof_descendantof('com.example.cars.Bike'))
+		self.assertFalse(carcls.hprof_descendantof('com.example.cars.CarExample'))
+
+	def test_is_descendant_id(self):
+		carcls = self.dump.get_class('com.example.cars.Car')
+		self.assertTrue(carcls.hprof_descendantof(self.dump.get_class('java.lang.Object').hprof_id))
+		self.assertTrue(carcls.hprof_descendantof(self.dump.get_class('com.example.cars.Vehicle').hprof_id))
+		self.assertTrue(carcls.hprof_descendantof(self.dump.get_class('com.example.cars.Car').hprof_id))
+		self.assertFalse(carcls.hprof_descendantof(self.dump.get_class('com.example.cars.Limo').hprof_id))
+		self.assertFalse(carcls.hprof_descendantof(self.dump.get_class('com.example.cars.Bike').hprof_id))
+		self.assertFalse(carcls.hprof_descendantof(self.dump.get_class('com.example.cars.CarExample').hprof_id))
+
+	def test_is_descendant_object(self):
+		limo, = self.dump.find_instances('com.example.cars.Limo')
+		carcls = self.dump.get_class('com.example.cars.Car')
+		with self.assertRaises(TypeError):
+			carcls.hprof_descendantof(limo)
+
 	def test_is_ancestor(self):
 		classcls = self.dump.get_class('java.lang.Class')
 		maincls = self.dump.get_class('Main')
@@ -229,6 +253,30 @@ class TestJavaCarExample(TestCase):
 		self.assertFalse(limocls.hprof_ancestorof(carcls))
 		self.assertFalse(limocls.hprof_ancestorof(bikecls))
 		self.assertTrue( limocls.hprof_ancestorof(limocls))
+
+	def test_is_ancestor_str(self):
+		carcls = self.dump.get_class('com.example.cars.Car')
+		self.assertFalse(carcls.hprof_ancestorof('java.lang.Object'))
+		self.assertFalse(carcls.hprof_ancestorof('com.example.cars.Vehicle'))
+		self.assertTrue(carcls.hprof_ancestorof('com.example.cars.Car'))
+		self.assertTrue(carcls.hprof_ancestorof('com.example.cars.Limo'))
+		self.assertFalse(carcls.hprof_ancestorof('com.example.cars.Bike'))
+		self.assertFalse(carcls.hprof_ancestorof('com.example.cars.CarExample'))
+
+	def test_is_ancestor_id(self):
+		carcls = self.dump.get_class('com.example.cars.Car')
+		self.assertFalse(carcls.hprof_ancestorof(self.dump.get_class('java.lang.Object').hprof_id))
+		self.assertFalse(carcls.hprof_ancestorof(self.dump.get_class('com.example.cars.Vehicle').hprof_id))
+		self.assertTrue(carcls.hprof_ancestorof(self.dump.get_class('com.example.cars.Car').hprof_id))
+		self.assertTrue(carcls.hprof_ancestorof(self.dump.get_class('com.example.cars.Limo').hprof_id))
+		self.assertFalse(carcls.hprof_ancestorof(self.dump.get_class('com.example.cars.Bike').hprof_id))
+		self.assertFalse(carcls.hprof_ancestorof(self.dump.get_class('com.example.cars.CarExample').hprof_id))
+
+	def test_is_ancestor_object(self):
+		limo, = self.dump.find_instances('com.example.cars.Limo')
+		carcls = self.dump.get_class('com.example.cars.Car')
+		with self.assertRaises(TypeError):
+			carcls.hprof_ancestorof(limo)
 
 	def test_instanceof_classes(self):
 		classcls = self.dump.get_class('java.lang.Class')
@@ -344,6 +392,70 @@ class TestJavaCarExample(TestCase):
 		self.assertFalse(array.hprof_instanceof(shortarrarr))
 		self.assertTrue( array.hprof_instanceof(shortarr))
 		self.assertFalse(array.hprof_instanceof(vehiclecls))
+
+	def test_instanceof_str(self):
+		vehiclecls = self.dump.get_class('com.example.cars.Vehicle')
+		car = next(self.dump.find_instances('com.example.cars.Car', False))
+		objarray = car.wheelDimensions
+		shortarray = objarray[0]
+
+		self.assertFalse(vehiclecls.hprof_instanceof('com.example.cars.Vehicle'))
+		self.assertTrue(vehiclecls.hprof_instanceof('java.lang.Class'))
+		self.assertTrue(vehiclecls.hprof_instanceof('java.lang.Object'))
+		self.assertFalse(vehiclecls.hprof_instanceof('short[][]'))
+		self.assertFalse(vehiclecls.hprof_instanceof('short[]'))
+
+		self.assertTrue(car.hprof_instanceof('com.example.cars.Vehicle'))
+		self.assertFalse(car.hprof_instanceof('java.lang.Class'))
+		self.assertTrue(car.hprof_instanceof('java.lang.Object'))
+		self.assertFalse(car.hprof_instanceof('short[][]'))
+		self.assertFalse(car.hprof_instanceof('short[]'))
+
+		self.assertFalse(objarray.hprof_instanceof('com.example.cars.Vehicle'))
+		self.assertFalse(objarray.hprof_instanceof('java.lang.Class'))
+		self.assertTrue(objarray.hprof_instanceof('java.lang.Object'))
+		self.assertTrue(objarray.hprof_instanceof('short[][]'))
+		self.assertFalse(objarray.hprof_instanceof('short[]'))
+
+		self.assertFalse(shortarray.hprof_instanceof('com.example.cars.Vehicle'))
+		self.assertFalse(shortarray.hprof_instanceof('java.lang.Class'))
+		self.assertTrue(shortarray.hprof_instanceof('java.lang.Object'))
+		self.assertFalse(shortarray.hprof_instanceof('short[][]'))
+		self.assertTrue(shortarray.hprof_instanceof('short[]'))
+
+	def test_instanceof_typeerror(self):
+		vehiclecls = self.dump.get_class('com.example.cars.Vehicle')
+		car = next(self.dump.find_instances('com.example.cars.Car', False))
+		objarray = car.wheelDimensions
+		shortarray = objarray[0]
+
+		with self.assertRaises(TypeError):
+			vehiclecls.hprof_instanceof(car)
+		with self.assertRaises(TypeError):
+			vehiclecls.hprof_instanceof(objarray)
+		with self.assertRaises(TypeError):
+			vehiclecls.hprof_instanceof(shortarray)
+
+		with self.assertRaises(TypeError):
+			car.hprof_instanceof(car)
+		with self.assertRaises(TypeError):
+			car.hprof_instanceof(objarray)
+		with self.assertRaises(TypeError):
+			car.hprof_instanceof(shortarray)
+
+		with self.assertRaises(TypeError):
+			objarray.hprof_instanceof(car)
+		with self.assertRaises(TypeError):
+			objarray.hprof_instanceof(objarray)
+		with self.assertRaises(TypeError):
+			objarray.hprof_instanceof(shortarray)
+
+		with self.assertRaises(TypeError):
+			shortarray.hprof_instanceof(car)
+		with self.assertRaises(TypeError):
+			shortarray.hprof_instanceof(objarray)
+		with self.assertRaises(TypeError):
+			shortarray.hprof_instanceof(shortarray)
 
 	def test_repr_str_for_objects(self):
 		limo, = self.dump.find_instances('com.example.cars.Limo')
