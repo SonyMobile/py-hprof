@@ -71,17 +71,26 @@ class PrimitiveArray(Array):
 		else:
 			raise IndexError('tried to read element %d in a size %d array' % (ix, self.length))
 
-	def hprof_decode(self, errors='strict'):
+	def hprof_decode(self, encoding=None, errors='strict'):
 		'''decode a char array into a string; raises TypeError for other array types.
 
+		See python's `codecs` module docs for details on possible encodings and error handlers.
+
 		Params:
-		errors -- decoding error handling scheme; see python's `codecs` module docs for details.
+		encoding -- the character encoding to use; None will auto-pick based on the array type
+		errors -- decoding error handling scheme
 		'''
-		if self.hprof_elem_type != JavaType.char:
-			raise TypeError('not a char array', self)
+		etype = self.hprof_elem_type
+		if etype not in (JavaType.char, JavaType.byte):
+			raise TypeError('not a char or byte array', self)
+
+		if encoding is None:
+			encoding = 'utf-16-be' if etype == JavaType.char else 'utf-8'
+		nbytes = self.length * (2 if etype == JavaType.char else 1)
+
 		start = self.hprof_addr + self._hproff.DATA
-		data = self.hprof_file.read_bytes(start, self.length * 2)
-		return data.decode('utf-16-be', errors)
+		data = self.hprof_file.read_bytes(start, nbytes)
+		return data.decode(encoding, errors)
 
 class ObjectArray(Array):
 	'''An array of object references.

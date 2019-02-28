@@ -94,7 +94,6 @@ class TestPrimitiveArrayRecord(TestCase):
 	def test_primitive_array_repr(self):
 		self.assertEqual(repr(self.a), 'PrimitiveArray(type=%s, id=0x%x, length=%d)' % (self.ENAME, self.aid, self.COUNT))
 
-
 class TestBooleanArrayRecord(TestPrimitiveArrayRecord):
 	COUNT = 790
 	ETYPE = 4
@@ -110,14 +109,23 @@ class TestByteArrayRecord(TestPrimitiveArrayRecord):
 	ETYPE = 8
 	ESIZE = 1
 	ENAME = 'byte'
+
 	def _val(self, i):
-		return (i * 16) % 256
+		if i == 10:
+			return 0xf0
+		elif i == 11:
+			return 0xa3
+		elif i == 12:
+			return 0xb2
+		elif i == 13:
+			return 0xb7
+		return 80 + i
+
 	def _add(self, array, i):
 		array.byte(self._val(i))
 
 	def test_byte_array_decode(self):
-		with self.assertRaisesRegex(TypeError, 'char array'):
-			self.a.hprof_decode()
+		self.assertEqual(self.a.hprof_decode(), 'PQRSTUVWXY𣲷^_`abcdefghijklmnop')
 
 class TestCharArrayRecord(TestPrimitiveArrayRecord):
 	COUNT = 33
@@ -183,6 +191,10 @@ class TestFloatArrayRecord(TestPrimitiveArrayRecord):
 		return f
 	def _add(self, array, i):
 		array.float(self._val(i))
+
+	def test_float_array_decode(self):
+		with self.assertRaisesRegex(TypeError, 'char or byte array'):
+			self.a.hprof_decode()
 
 class TestDoubleArrayRecord(TestPrimitiveArrayRecord):
 	COUNT = 9

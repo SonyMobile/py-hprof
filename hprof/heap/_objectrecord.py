@@ -46,7 +46,7 @@ class Object(Allocation):
 			if dcname == 'char[]':
 				return data.hprof_decode()
 			elif dcname == 'byte[]':
-				return bytes.decode(bytes(data), 'utf-8')
+				return data.hprof_decode()
 			raise Exception('String.value found, but was not a type we can handle')
 		except Exception:
 			raise UnfamiliarStringError('failed to decode value of java.lang.String object')
