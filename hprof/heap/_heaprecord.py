@@ -85,7 +85,7 @@ class Allocation(HeapRecord):
 
 	def __getattr__(self, name):
 		if self.hprof_heap is None:
-			raise AttributeError('this object has no hprof_heap, so its attributes cannot be read')
+			raise AttributeError(name, '(note: this object has no hprof_heap, so its attributes cannot be read)')
 		cls = self.hprof_class
 		try:
 			jtype, offset = cls._hprof_instance_field_lookup(name)

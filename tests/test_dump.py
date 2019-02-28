@@ -14,6 +14,12 @@ class TestDump(TestCase):
 		with hb.record(1, 2) as name:
 			mountainid = name.id(861982141)
 			name.bytes('mountain')
+		hb.name(333, 'SomeClass')
+		with hb.record(2, 0) as load:
+			load.uint(3)
+			load.id(83)
+			load.uint(0)
+			load.id(333)
 		with hb.record(28, 0) as dump:
 			with dump.subrecord(0x21) as obj:
 				obj.id(1)
@@ -347,6 +353,12 @@ class TestDumpDuplicateIds(TestCase):
 	def setUp(self):
 		self.addrs = self.data = self.hf = None
 		self.hb = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 12345)
+		self.hb.name(333, 'SomeClass')
+		with self.hb.record(2, 0) as load:
+			load.uint(3)
+			load.id(83)
+			load.uint(0)
+			load.id(333)
 		with self.hb.record(1, 0) as r:
 			r.id(1)
 			r.bytes('otherheap')

@@ -469,6 +469,19 @@ class TestJavaCarExample(TestCase):
 		self.assertEqual(repr(limo), 'Object(class=com.example.cars.Limo, id=0x%x)' % limo.hprof_id)
 		self.assertEqual(str(limo),  'Limo(id=0x%x)' % limo.hprof_id)
 
+	def test_repr_str_for_string_objects(self):
+		limo, = self.dump.find_instances('com.example.cars.Limo')
+		make = limo.make
+		self.assertEqual(repr(make), 'Object(class=java.lang.String, id=0x%x, value=\'Stretch\')' % make.hprof_id)
+		self.assertEqual(str(make), 'Stretch')
+
+	def test_repr_str_for_string_objects_without_heap(self):
+		limo, = self.dump.find_instances('com.example.cars.Limo')
+		make = limo.make
+		make = hprof.heap.create(make.hprof_file, make.hprof_addr)
+		self.assertEqual(repr(make), 'Object(class=java.lang.String, id=0x%x)' % make.hprof_id)
+		self.assertEqual(str(make),  'String(id=0x%x)' % make.hprof_id)
+
 	def test_repr_str_for_classes(self):
 		limo = self.dump.get_class('com.example.cars.Limo')
 		self.assertEqual(repr(limo), 'Class(name=com.example.cars.Limo, id=0x%x)' % limo.hprof_id)

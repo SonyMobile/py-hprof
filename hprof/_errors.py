@@ -28,3 +28,6 @@ class FieldNotFoundError(Error):
 	def __str__(self):
 		classes = ' -> '.join(reversed(self.hierarchy))
 		return '%s field "%s" in class hierarchy %s' % (self.type, self.name, classes)
+
+class UnfamiliarStringError(Error):
+	'''Encountered a java.lang.String object with an internal format unfamiliar to py-hprof.'''

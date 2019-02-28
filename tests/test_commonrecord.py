@@ -56,6 +56,8 @@ class TestHprofSlice(TestCase):
 
 class TestRecordSubclasses(TestCase):
 	def setUp(self):
+		class MockClassInfo(object):
+			pass
 		class MockHprof(object):
 			idsize = 4
 			def read_bytes(self, addr, nbytes):
@@ -65,6 +67,12 @@ class TestRecordSubclasses(TestCase):
 				return 10
 			def read_ushort(self, addr):
 				return 0
+			def read_id(self, addr):
+				return 3
+			def get_class_info(self, cls):
+				info = MockClassInfo()
+				info.class_name = 'SomeClass'
+				return info
 		fileA = MockHprof()
 		fileB = MockHprof()
 		def recurse_subclasses(cls):

@@ -75,6 +75,7 @@ class TestApiSurface(TestCase):
 			'EofError': (),
 			'FileFormatError': (),
 			'FieldNotFoundError': (),
+			'UnfamiliarStringError': (),
 
 			'record': {
 				'create': (),
