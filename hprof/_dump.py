@@ -15,13 +15,14 @@ class Dump(object, metaclass=Slotted):
 	hf -- the HprofFile this dump belongs to.
 	'''
 
-	__slots__ = 'hf', '_heaps', '_current_heap', '_subclass_cache'
+	__slots__ = 'hf', '_heaps', '_current_heap', '_subclass_cache', '_instance_cache'
 
 	def __init__(self, hf):
 		self.hf = hf
 		self._heaps = {}
 		self._current_heap = None
 		self._subclass_cache = {}
+		self._instance_cache = {}
 
 	def _add_segment(self, seg):
 		assert seg.hprof_file is self.hf
@@ -30,6 +31,10 @@ class Dump(object, metaclass=Slotted):
 				self._set_curheap(r.type, r.name.str)
 			elif isinstance(r, Allocation):
 				objid = r.hprof_id
+				clsid = r.hprof_class_id
+				if clsid not in self._instance_cache:
+					self._instance_cache[clsid] = []
+				self._instance_cache[clsid].append(r)
 				if any(h.has_id(objid) for h in self._heaps.values()):
 					raise FileFormatError('duplicate object id 0x%x' % objid)
 				self._curheap._add_alloc(objid, r)
@@ -120,10 +125,12 @@ class Dump(object, metaclass=Slotted):
 		class_ids.add(class_object_or_name.hprof_id)
 		if include_descendants:
 			self._descendants(class_ids, class_object_or_name)
-		for heap in self.heaps():
-			for obj in heap.objects():
-				if obj.hprof_class_id in class_ids:
-					yield obj
+		for clsid in class_ids:
+			try:
+				instances = self._instance_cache[clsid]
+			except KeyError:
+				continue
+			yield from instances
 
 class Heap(object, metaclass=Slotted):
 	'''A single heap, usually acquired through hprof.Dump.heaps().

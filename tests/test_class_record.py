@@ -247,12 +247,7 @@ class TestMissingJavaLangClass(TestCase):
 				cls.ushort(0) # no instance fields
 		addrs, data = hb.build()
 		self.hf = hprof.open(bytes(data))
-		dump, = self.hf.dumps()
-		heap, = dump.heaps()
-		self.cls, self.Class = sorted(heap.objects(), key=lambda r: r.hprof_addr)
 
 	def test_missing_java_lang_Class(self):
 		with self.assertRaisesRegex(hprof.ClassNotFoundError, 'java.lang.Class'):
-			self.cls.hprof_class
-		with self.assertRaisesRegex(hprof.ClassNotFoundError, 'java.lang.Class'):
-			self.Class.hprof_class
+			next(self.hf.dumps())

@@ -68,6 +68,12 @@ class TestObjArrayRecord(TestCase):
 			load.id(1314)
 		hb.name(1313, 'com.sonymobile.Phone[]')
 		hb.name(1314, 'com.sonymobile.Xperia')
+		hb.name(1315, 'java.lang.Class')
+		with hb.record(2, 0) as load:
+			load.uint(3)
+			load.id(1020)
+			load.uint(0)
+			load.id(1315)
 		addrs, data = hb.build()
 		self.hf = hprof.open(bytes(data))
 		dump, = self.hf.dumps()

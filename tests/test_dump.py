@@ -82,6 +82,12 @@ class TestDump(TestCase):
 				obj.uint(97)
 				obj.id(83)
 				obj.uint(0)
+		hb.name(1234, 'java.lang.Class')
+		with hb.record(2, 0) as load:
+			load.uint(1)
+			load.id(101010)
+			load.uint(0)
+			load.id(1234)
 		addrs, data = hb.build()
 		self.hf = hprof.open(bytes(data))
 

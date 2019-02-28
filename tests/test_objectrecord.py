@@ -42,6 +42,12 @@ class TestObject(TestCase):
 				cls.ushort(0)
 				cls.ushort(0)
 				cls.ushort(0)
+		hb.name(1, 'java.lang.Class')
+		with hb.record(2, 0) as load:
+			load.uint(2)
+			load.id(111)
+			load.uint(0)
+			load.id(1)
 		self.addrs, self.data = hb.build()
 		hf = hprof.open(bytes(self.data))
 		dump, = hf.dumps()
