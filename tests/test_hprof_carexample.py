@@ -466,8 +466,8 @@ class TestJavaCarExample(TestCase):
 		limocls = self.dump.get_class('com.example.cars.Limo')
 		limo, = self.dump.find_instances('com.example.cars.Limo')
 		limo = hprof.heap.create(limo.hprof_file, limo.hprof_addr)
-		self.assertEqual(repr(limo), 'Object(class_id=0x%x, id=0x%x)' % (limocls.hprof_id, limo.hprof_id))
-		self.assertEqual(str(limo),  repr(limo))
+		self.assertEqual(repr(limo), 'Object(class=com.example.cars.Limo, id=0x%x)' % limo.hprof_id)
+		self.assertEqual(str(limo),  'Limo(id=0x%x)' % limo.hprof_id)
 
 	def test_repr_str_for_classes(self):
 		limo = self.dump.get_class('com.example.cars.Limo')
@@ -493,8 +493,8 @@ class TestJavaCarExample(TestCase):
 		objs = carex.objs
 		valuestr = ', '.join('id=0x%x' % item.hprof_id for item in objs) # note: before we discard the heap info.
 		objs = hprof.heap.create(objs.hprof_file, objs.hprof_addr)
-		self.assertEqual(repr(objs), 'ObjectArray(class_id=0x%x, id=0x%x, length=5)' % (object_array_class.hprof_id, objs.hprof_id))
-		self.assertEqual(str(objs),  '<UnknownType>[5] {%s}' % valuestr)
+		self.assertEqual(repr(objs), 'ObjectArray(class=java.lang.Object[], id=0x%x, length=5)' % objs.hprof_id)
+		self.assertEqual(str(objs),  'Object[5] {%s}' % valuestr)
 
 	def test_repr_str_for_primitive_arrays(self):
 		limo, = self.dump.find_instances('com.example.cars.Limo')

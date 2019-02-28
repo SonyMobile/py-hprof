@@ -34,13 +34,13 @@ class Object(Allocation):
 		return self._hproff.DATA + self._hprof_uint(self._hproff.DATASIZE)
 
 	def __str__(self):
-		if self.hprof_heap is None:
-			return repr(self)
-		cname = self.hprof_class.hprof_name.rsplit('.', 1)[-1]
+		cid = self.hprof_class_id
+		cname = self.hprof_file.get_class_info(cid).class_name
+		cname = cname.rsplit('.', 1)[-1]
 		return '%s(id=0x%x)' % (cname, self.hprof_id)
 
 	def __repr__(self):
-		if self.hprof_heap is None:
-			return 'Object(class_id=0x%x, id=0x%x)' % (self.hprof_class_id, self.hprof_id)
-		else:
-			return 'Object(class=%s, id=0x%x)' % (self.hprof_class.hprof_name, self.hprof_id)
+		sid = self.hprof_id
+		cid = self.hprof_class_id
+		cname = self.hprof_file.get_class_info(cid).class_name
+		return 'Object(class=%s, id=0x%x)' % (cname, sid)

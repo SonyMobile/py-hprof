@@ -98,19 +98,19 @@ class ObjectArray(Array):
 		return self._hproff.DATA + self.length * self.hprof_file.idsize
 
 	def __str__(self):
-		if self.hprof_heap is None:
-			cname = '<UnknownType>[]'
-			content = ', '.join('id=0x%x' % self._hprof_item_id(i) for i in range(self.length))
-		else:
-			cname = self.hprof_class.hprof_name.rsplit('.', 1)[-1]
+		cid = self.hprof_class_id
+		cname = self.hprof_file.get_class_info(cid).class_name
+		cname = cname.rsplit('.', 1)[-1]
+		try:
 			content = ', '.join(str(item) for item in self)
+		except Exception:
+			content = ', '.join('id=0x%x' % self._hprof_item_id(i) for i in range(self.length))
 		return '%s[%d] {%s}' % (cname[:-2], self.length, content)
 
 	def __repr__(self):
-		if self.hprof_heap is None:
-			return 'ObjectArray(class_id=0x%x, id=0x%x, length=%d)' % (self.hprof_class_id, self.hprof_id, self.length)
-		else:
-			return 'ObjectArray(class=%s, id=0x%x, length=%d)' % (self.hprof_class.hprof_name, self.hprof_id, self.length)
+		cid = self.hprof_class_id
+		cname = self.hprof_file.get_class_info(cid).class_name
+		return 'ObjectArray(class=%s, id=0x%x, length=%d)' % (cname, self.hprof_id, self.length)
 
 	@property
 	def hprof_class_id(self):
