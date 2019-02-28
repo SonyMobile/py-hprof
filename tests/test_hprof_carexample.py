@@ -521,3 +521,9 @@ class TestJavaCarExample(TestCase):
 		array = hprof.heap.create(array.hprof_file, array.hprof_addr)
 		self.assertEqual(repr(array), 'PrimitiveArray(type=short, id=0x%x, length=2)' % array.hprof_id)
 		self.assertEqual(str(array),  'short[2] {50, 10}')
+
+	def test_all_strings_readable(self):
+		i = 0
+		for i, s in enumerate(self.dump.find_instances('java.lang.String')):
+			self.assertIn(', value=', repr(s), msg='str#%d' % i)
+		self.assertGreater(i, 0)

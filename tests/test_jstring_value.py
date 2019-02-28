@@ -203,11 +203,11 @@ class TestBadStringValue(TestJavaStringValue):
 		pass
 
 	def test_string_object_str(self):
-		self.assertEqual(str(self.string1), 'String(id=0x20)')
+		self.assertEqual(str(self.string1), '')
 		self.assertEqual(str(self.string2), 'String(id=0x21)')
 
 	def test_string_object_repr(self):
-		self.assertEqual(repr(self.string1), 'Object(class=java.lang.String, id=0x20)')
+		self.assertEqual(repr(self.string1), 'Object(class=java.lang.String, id=0x20, value=\'\')')
 		self.assertEqual(repr(self.string2), 'Object(class=java.lang.String, id=0x21)')
 
 	def test_string_object_eq(self):
@@ -215,11 +215,8 @@ class TestBadStringValue(TestJavaStringValue):
 		self.assertEqual(self.string1, self.string1)
 		self.assertEqual(self.string1, created)
 		self.assertEqual(created, self.string1)
-
-		with self.assertRaisesRegex(hprof.UnfamiliarStringError, 'decode'):
-			self.string1 == 'ABC 𣲷 ÅÄÖ \0\1\2 学 åäö'
-		with self.assertRaisesRegex(hprof.UnfamiliarStringError, 'decode'):
-			'ABC 𣲷 ÅÄÖ \0\1\2 学 åäö' == self.string1
+		self.assertEqual(self.string1, '')
+		self.assertEqual('', self.string1)
 
 		with self.assertRaisesRegex(hprof.UnfamiliarStringError, 'decode'):
 			self.string2 == 'ABC 𣲷 ÅÄÖ \0\1\2 学 åäö'
@@ -234,6 +231,10 @@ class TestBadStringValue(TestJavaStringValue):
 			self.string2 == created
 		with self.assertRaises((AttributeError, hprof.UnfamiliarStringError)):
 			created == self.string2
+		with self.assertRaisesRegex(AttributeError, 'hprof_heap'):
+			created == 'abcd'
+		with self.assertRaisesRegex(AttributeError, 'hprof_heap'):
+			'abcd' == created
 
 class TestMissingStringValue(TestJavaStringValue):
 	def add_records(self, hb):

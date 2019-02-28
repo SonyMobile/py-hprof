@@ -38,6 +38,8 @@ class Object(Allocation):
 			data = self.value
 		except FieldNotFoundError:
 			raise UnfamiliarStringError('java.lang.String has an unfamiliar internal structure')
+		if data is None:
+			return '' # assume that a null value means 'empty string'
 		try:
 			dcls = self.hprof_file.get_class_info(data.hprof_class_id)
 			dcname = dcls.class_name
