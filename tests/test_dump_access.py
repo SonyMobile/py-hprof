@@ -20,6 +20,7 @@ class TestDumpAccess(TestCase):
 		self.name_barray   = hb.name(1200009, 'com.example.Buddy[]')
 		self.name_basic    = hb.name(1800010, 'basic')
 		self.name_shortarr = hb.name(1700011, 'short[]')
+		self.name_class    = hb.name(8900012, 'java.lang.Class')
 		with hb.record(2, 0) as load:
 			load.uint(1003) # serial number
 			self.object_clsid = load.id(10101010)
@@ -45,6 +46,11 @@ class TestDumpAccess(TestCase):
 			self.shortarray_clsid = load.id(929292)
 			load.uint(0) # stack trace serial
 			load.id(self.name_shortarr)
+		with hb.record(2, 0) as load:
+			load.uint(1080) # serial number
+			self.class_clsid = load.id(9999)
+			load.uint(0) # stack trace serial
+			load.id(self.name_class)
 		with hb.record(28, 0) as dump:
 			with dump.subrecord(32) as clsShortArray:
 				clsShortArray.id(self.shortarray_clsid)
@@ -206,6 +212,19 @@ class TestDumpAccess(TestCase):
 				clsObject.byte(33)  # value
 				# instance fields:
 				clsObject.ushort(0) # count
+			with dump.subrecord(32) as clsClass:
+				clsClass.id(self.class_clsid)
+				clsClass.uint(0)
+				clsClass.id(self.object_clsid) # super
+				clsClass.id(0)
+				clsClass.id(0)
+				clsClass.id(0)
+				clsClass.id(0)
+				clsClass.id(0)
+				clsClass.uint(8)
+				clsClass.ushort(0)
+				clsClass.ushort(0)
+				clsClass.ushort(0)
 
 		self.addrs, self.data = hb.build()
 		self.hf = hprof.open(bytes(self.data))
@@ -215,7 +234,7 @@ class TestDumpAccess(TestCase):
 			self.ShortArray, self.SubBuddy, self.Buddy, self.main,
 			self.buddy1, self.buddy3, self.buddy2,
 			self.buddyarray, self.queue,
-			self.Main, self.BArray, self.Object,
+			self.Main, self.BArray, self.Object, self.Class,
 		) = sorted(self.heap.objects(), key=lambda r: r.hprof_addr)
 
 	def tearDown(self):
@@ -226,7 +245,7 @@ class TestDumpAccess(TestCase):
 		self.assertEqual(self.main.buddies, self.buddyarray)
 
 	def test_access_main_instance_field_from_class(self):
-		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'static field.*buddies.*Main.*Object'):
+		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'static context'):
 			self.Main.buddies
 
 	def test_access_main_static_field_from_instance(self):
@@ -242,7 +261,7 @@ class TestDumpAccess(TestCase):
 		self.assertEqual(self.buddy3.id, 300)
 
 	def test_access_buddy_instance_field_from_class(self):
-		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'static field.*id.*Buddy.*Object'):
+		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'static context'):
 			self.Buddy.id
 
 
@@ -250,17 +269,17 @@ class TestDumpAccess(TestCase):
 		self.assertEqual(self.buddy2.extra, 6464)
 
 	def test_access_subbuddy_instance_field_from_class(self):
-		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'static field.*extra.*SubBuddy.*Buddy.*Object'):
+		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'static context'):
 			self.SubBuddy.extra
 
 	def test_access_subbuddy_instance_field_from_buddy(self):
-		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'static or instance.*extra.*Buddy.*Object'):
+		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'field.*extra.*Buddy.*Object'):
 			self.buddy1.extra
-		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'static or instance.*extra.*Buddy.*Object'):
+		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'field.*extra.*Buddy.*Object'):
 			self.buddy3.extra
 
 	def test_access_subbuddy_instance_field_from_buddy_class(self):
-		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'static field.*extra.*Buddy.*Object'):
+		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'field.*extra.*Buddy.*Object'):
 			self.Buddy.extra
 
 	def test_access_subbuddy_static_field_from_instance(self):
@@ -270,13 +289,13 @@ class TestDumpAccess(TestCase):
 		self.assertEqual(self.SubBuddy.counter, -20000)
 
 	def test_access_subbuddy_static_field_from_buddy(self):
-		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'static or instance.*counter.*Buddy.*Object'):
+		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'field.*counter.*Buddy.*Object'):
 			self.assertEqual(self.buddy1.counter, -20000)
-		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'static or instance.*counter.*Buddy.*Object'):
+		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'field.*counter.*Buddy.*Object'):
 			self.assertEqual(self.buddy3.counter, -20000)
 
 	def test_access_subbuddy_static_field_from_buddy_class(self):
-		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'static field.*counter.*Buddy.*Object'):
+		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'field.*counter.*Buddy.*Object'):
 			self.assertEqual(self.Buddy.counter, -20000)
 
 
@@ -312,13 +331,13 @@ class TestDumpAccess(TestCase):
 
 
 	def test_access_buddyarray_missing(self):
-		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'static or instance.*missing.*Buddy\[\].*Object'):
+		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'field.*missing.*Buddy\[\].*Object'):
 			self.buddyarray.missing
-		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'static field.*missing.*Buddy\[\].*Object'):
+		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'field.*missing.*Buddy\[\].*Object'):
 			self.BArray.missing
 
 	def test_access_primarray_missing(self):
-		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'static or instance.*missing.*short\[\].*Object'):
+		with self.assertRaisesRegex(hprof.FieldNotFoundError, 'field.*missing.*short\[\].*Object'):
 			self.queue.missing
 
 	# TODO: test class name lookup!

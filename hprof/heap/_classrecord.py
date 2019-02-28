@@ -90,7 +90,8 @@ class Class(Allocation):
 			yield ifield
 			offset += ifield._hprof_len
 
-	def _hprof_instance_field_lookup(self, name):
+	def _hprof_field_lookup(self, name):
+		# instance field?
 		count = self._hprof_ushort(self._hprof_if_start_offset + ioff.COUNT)
 		offset = self._hprof_if_start_offset + ioff.DATA
 		field_offset = 0
@@ -102,19 +103,32 @@ class Class(Allocation):
 			field_name_id = self._hprof_id(offset)
 			field_type = self._hprof_jtype(offset + typeoff)
 			if self.hprof_file.name(field_name_id).str == name:
-				return field_type, field_offset
+				return FieldDecl(self.hprof_file, self.hprof_addr + offset), field_offset
 			offset += decllen
 			field_offset += field_type.size(idsize)
-		super_id = self.hprof_super_class_id
-		if super_id == 0:
-			raise FieldNotFoundError('instance', name, self.hprof_name)
-		supercls = self.hprof_heap.dump.get_class(super_id)
+
+		# static field?
+		count = self._hprof_ushort(self._hprof_sf_start_offset)
+		offset = self._hprof_sf_start_offset + 2
+		for i in range(count):
+			field_name_id = self._hprof_id(offset)
+			field_type = self._hprof_jtype(offset + typeoff)
+			if self.hprof_file.name(field_name_id).str == name:
+				return StaticField(self.hprof_file, self.hprof_addr + offset), None
+			offset += decllen + field_type.size(idsize)
+
+		# okay, check our ancestors
+		supercls = self.hprof_super_class
+		if supercls is None:
+			raise FieldNotFoundError('field `%s`' % name, self.hprof_name)
 		try:
-			field_type, superoffset = supercls._hprof_instance_field_lookup(name)
+			decl, superoffset = supercls._hprof_field_lookup(name)
 		except FieldNotFoundError as e:
-			e.add_class(self.hprof_name)
-			raise e
-		return field_type, field_offset + superoffset
+			e._add_class(self.hprof_name)
+			raise
+		if superoffset is None:
+			return decl, None
+		return decl, field_offset + superoffset # all our instance fields + fieldoffset in parent
 
 	@property
 	def hprof_super_class_id(self):
@@ -193,24 +207,23 @@ class Class(Allocation):
 		return 'Class(name=%s, id=0x%x)' % (self.hprof_name, self.hprof_id)
 
 	def __getattr__(self, name):
-		for sf in self.hprof_static_fields():
-			decl = sf.decl
-			if decl.name == name:
-				t = decl.type
-				v = sf.value
-				if t == JavaType.object:
-					return self.hprof_heap.dump.get_object(v)
-				else:
-					return v
-		super_id = self.hprof_super_class_id
-		if super_id == 0:
-			raise FieldNotFoundError('static', name, self.hprof_name)
-		supercls = self.hprof_heap.dump.get_class(super_id)
+		if self.hprof_heap is None:
+			raise AttributeError(name, '(note: this object has no hprof_heap, so its attributes cannot be read)')
 		try:
-			return getattr(supercls, name)
-		except FieldNotFoundError as e:
-			e.add_class(self.hprof_name)
-			raise
+			field, offset = self._hprof_field_lookup(name) # look up class statics
+		except FieldNotFoundError:
+			try:
+				return super().__getattr__(name) # look up fields on java.lang.Class
+			except FieldNotFoundError as e:
+				e._add_class(self.hprof_name)
+				raise
+		else:
+			if offset is None:
+				v = field.value # read static field through class object
+				if field.type == JavaType.object:
+					return self.hprof_heap.dump.get_object(v)
+				return v
+			raise FieldNotFoundError('cannot access non-static field %s from static context' % name)
 
 class FieldDecl(HprofSlice):
 	'''A field declaration, containing a name and type.
@@ -240,7 +253,7 @@ class FieldDecl(HprofSlice):
 	def __str__(self):
 		return 'FieldDecl(name=%s, type=%s)' % (self.name, self.type)
 
-class StaticField(HprofSlice):
+class StaticField(FieldDecl):
 	'''A static field.
 
 	Members:
@@ -248,26 +261,19 @@ class StaticField(HprofSlice):
 	hprof_addr -- the byte address of this field in hprof_file.
 	'''
 	@property
-	def decl(self):
-		'''the declaration of this field.'''
-		return FieldDecl(self.hprof_file, self.hprof_addr)
-
-	@property
 	def value(self):
 		'''the value of this field.'''
-		return self._hprof_jvalue(doff[self.hprof_file.idsize].END, self.decl.type)
+		return self._hprof_jvalue(doff[self.hprof_file.idsize].END, self.type)
 
 	@property
 	def _hprof_len(self):
-		d = self.decl
-		v = d._hprof_len + d.type.size(self.hprof_file.idsize)
-		return v
+		idsize = self.hprof_file.idsize
+		return doff[idsize].END + self.type.size(idsize)
 
 	def __str__(self):
-		decl = self.decl
 		v = self.value
 		if type(v) is int:
 			vstr = '0x%x' % v
 		else:
 			vstr = repr(v)
-		return 'StaticField(name=%s, type=%s, value=%s)' % (decl.name, decl.type, vstr)
+		return 'StaticField(name=%s, type=%s, value=%s)' % (self.name, self.type, vstr)

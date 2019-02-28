@@ -120,21 +120,12 @@ class TestClassRecord(TestCase):
 		self.assertEqual(a._hprof_len, self.idsize + 2)
 		self.assertEqual(b._hprof_len, self.idsize + 3)
 		self.assertEqual(c._hprof_len, 2 * self.idsize + 1)
-		ad = a.decl
-		bd = b.decl
-		cd = c.decl
-		self.assertEqual(ad.name, 'sHello')
-		self.assertEqual(bd.name, 'sWorld')
-		self.assertEqual(cd.name, 'sTwirled')
-		self.assertEqual(ad.type, hprof.JavaType.boolean)
-		self.assertEqual(bd.type, hprof.JavaType.char)
-		self.assertEqual(cd.type, hprof.JavaType.object)
-		self.assertEqual(str(ad), 'FieldDecl(name=sHello, type=boolean)')
-		self.assertEqual(str(bd), 'FieldDecl(name=sWorld, type=char)')
-		self.assertEqual(str(cd), 'FieldDecl(name=sTwirled, type=object)')
-		self.assertEqual(ad._hprof_len, self.idsize + 1)
-		self.assertEqual(bd._hprof_len, self.idsize + 1)
-		self.assertEqual(cd._hprof_len, self.idsize + 1)
+		self.assertEqual(a.name, 'sHello')
+		self.assertEqual(b.name, 'sWorld')
+		self.assertEqual(c.name, 'sTwirled')
+		self.assertEqual(a.type, hprof.JavaType.boolean)
+		self.assertEqual(b.type, hprof.JavaType.char)
+		self.assertEqual(c.type, hprof.JavaType.object)
 
 	def test_class_instance_fields(self):
 		a, b, c, d = self.cls.hprof_instance_fields()

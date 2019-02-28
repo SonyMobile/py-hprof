@@ -87,16 +87,12 @@ class Allocation(HeapRecord):
 		if self.hprof_heap is None:
 			raise AttributeError(name, '(note: this object has no hprof_heap, so its attributes cannot be read)')
 		cls = self.hprof_class
-		try:
-			jtype, offset = cls._hprof_instance_field_lookup(name)
-		except FieldNotFoundError:
-			try:
-				return getattr(cls, name)
-			except FieldNotFoundError as e:
-				e.type = 'static or instance'
-				raise
-		value = self._hprof_jvalue(self._hproff.DATA + offset, jtype)
+		field, offset = cls._hprof_field_lookup(name)
+		jtype = field.type
+		if offset is None:
+			value = field.value # read static field
+		else:
+			value = self._hprof_jvalue(self._hproff.DATA + offset, jtype) # read instance field
 		if jtype == JavaType.object:
 			return self.hprof_heap.dump.get_object(value)
-		else:
-			return value
+		return value

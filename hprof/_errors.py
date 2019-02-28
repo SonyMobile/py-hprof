@@ -16,18 +16,21 @@ class ClassNotFoundError(Error):
 class FieldNotFoundError(Error):
 	'''Tried to read a field that was not found.'''
 
-	def __init__(self, ftype, name, base_class_name):
-		self.type = ftype
-		self.name = name
-		assert type(base_class_name) is str
-		self.hierarchy = [base_class_name]
+	def __init__(self, msg, base_class_name=None):
+		self._msg = msg
+		if base_class_name is None:
+			self._hierarchy = None
+		else:
+			self._hierarchy = [base_class_name]
 
-	def add_class(self, cname):
-		self.hierarchy.append(cname)
+	def _add_class(self, cname):
+		self._hierarchy.append(cname)
 
 	def __str__(self):
-		classes = ' -> '.join(reversed(self.hierarchy))
-		return '%s field "%s" in class hierarchy %s' % (self.type, self.name, classes)
+		if self._hierarchy:
+			classes = ' -> '.join(reversed(self._hierarchy))
+			return '%s in class hierarchy %s' % (self._msg, classes)
+		return self._msg
 
 class UnfamiliarStringError(Error):
 	'''Encountered a java.lang.String object with an internal format unfamiliar to py-hprof.'''
