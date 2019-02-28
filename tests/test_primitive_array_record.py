@@ -115,25 +115,36 @@ class TestByteArrayRecord(TestPrimitiveArrayRecord):
 	def _add(self, array, i):
 		array.byte(self._val(i))
 
+	def test_byte_array_decode(self):
+		with self.assertRaisesRegex(TypeError, 'char array'):
+			self.a.hprof_decode()
+
 class TestCharArrayRecord(TestPrimitiveArrayRecord):
 	COUNT = 33
 	ETYPE = 5
 	ESIZE = 2
 	ENAME = 'char'
 	def _val(self, i):
-		if i == 0:
+		if i == 3:
 			return '学'
-		elif i == 1:
-			return 'Ꚛ'
+		elif i == 10:
+			return '\ud84f'
+		elif i == 11:
+			return '\udcb7'
 		else:
 			return chr(65 + i)
 	def _add(self, array, i):
-		if i == 0:
+		if i == 3:
 			array.ushort(0x5b66)
-		elif i == 1:
-			array.ushort(0xa69a)
+		elif i == 10:
+			array.bytes('𣲷'.encode('utf-16-be'))
+		elif i == 11:
+			pass # 𣲷 takes two Java chars; add nothing (note how both K an L are gone below)
 		else:
 			array.ushort(65 + i)
+
+	def test_char_array_decode(self):
+		self.assertEqual(self.a.hprof_decode(), 'ABC学EFGHIJ𣲷MNOPQRSTUVWXYZ[\\]^_`a')
 
 class TestShortArrayRecord(TestPrimitiveArrayRecord):
 	idsize = 4

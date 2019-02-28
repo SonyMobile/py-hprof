@@ -226,7 +226,13 @@ class HprofFile(object):
 
 	def read_char(self, addr):
 		'''Read a single java char at the specified address.'''
-		return self._read_bytes(addr, 2).decode('utf-16-be')
+		# since a char may be part of a surrogate pair, b.decode(..) could fail here.
+		# instead, just return the plain code unit values.
+		# for anything that fits in a single 16-bit code unit, there won't be a difference.
+		# for parts of surrogate pairs, you'll get something like '\udc12'; this will be similar to
+		# Java behavior, where trying to print a single char of a surrogate pair just yields '?'.
+		codeunit, = struct.unpack('>H', self._read_bytes(addr, 2))
+		return chr(codeunit)
 
 	def read_byte(self, addr):
 		'''Read a single unsigned byte at the specified address.'''

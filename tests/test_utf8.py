@@ -17,7 +17,7 @@ class TestUtf8(TestCase):
 			r.bytes('P学Q')
 		with builder.record(1, 0x2000000) as r:
 			r.id(0x0506)
-			r.bytes('A\r\nB')
+			r.bytes('A\r𣲷\nB')
 		self.addr, self.data = builder.build()
 		self.f = hprof.open(bytes(self.data))
 		self.recs = self.f.records()
@@ -33,7 +33,7 @@ class TestUtf8(TestCase):
 		records = self.f.records()
 		self.assertEqual(next(records).str, 'Hello world!')
 		self.assertEqual(next(records).str, 'P学Q')
-		self.assertEqual(next(records).str, 'A\r\nB')
+		self.assertEqual(next(records).str, 'A\r𣲷\nB')
 
 	### generic record fields ###
 
@@ -70,9 +70,9 @@ class TestUtf8(TestCase):
 	def test_utf8_len(self):
 		self.assertEqual(next(self.recs)._hprof_len, 21 + self.idsize)
 		self.assertEqual(next(self.recs)._hprof_len, 14 + self.idsize)
-		self.assertEqual(next(self.recs)._hprof_len, 13 + self.idsize)
+		self.assertEqual(next(self.recs)._hprof_len, 17 + self.idsize)
 
 	def test_utf8_str(self):
 		self.assertEqual(str(next(self.recs)), 'Hello world!')
 		self.assertEqual(str(next(self.recs)), 'P学Q')
-		self.assertEqual(str(next(self.recs)), 'A\r\nB')
+		self.assertEqual(str(next(self.recs)), 'A\r𣲷\nB')
