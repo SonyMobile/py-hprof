@@ -8,6 +8,15 @@ from .._types import JavaType
 class Object(Allocation):
 	'''A normal object instance on the heap (i.e. not a Class or an array).
 
+	You can access static and instance fields like you would in java:
+
+	>>> car.MAX_REASONABLE_WHEEL_COUNT
+	8
+	>>> car.make # doctest: +ELLIPSIS
+	Object(class=java.lang.String, id=0x..., value='Lolvo')
+	>>> print(car.make)
+	Lolvo
+
 	Members:
 	hprof_file -- the HprofFile this object belongs to.
 	hprof_addr -- the byte address of this object in hprof_file.

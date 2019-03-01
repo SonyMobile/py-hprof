@@ -27,6 +27,19 @@ class PrimitiveArray(Array):
 	The array can be accessed like a normal python array; `len(arr)`, `arr[ix]`, and `for v in arr`
 	works as expected.
 
+	>>> shortarray # doctest: +ELLIPSIS
+	PrimitiveArray(type=short, id=0x..., length=2)
+	>>> print(shortarray)
+	short[2] {50, 10}
+	>>> [x + 3 for x in shortarray]
+	[53, 13]
+	>>> shortarray[1]
+	10
+	>>> len(shortarray)   # python-style
+	2
+	>>> shortarray.length # java-style
+	2
+
 	Members:
 	hprof_file -- the HprofFile this array belongs to.
 	hprof_addr -- the byte address of this array in hprof_file.
@@ -99,6 +112,24 @@ class ObjectArray(Array):
 	works as expected.
 
 	null values will be returned as python None values.
+
+	>>> vehicles # doctest: +ELLIPSIS
+	ObjectArray(class=java.lang.Object[], id=0x..., length=5)
+	>>> print(vehicles) # doctest: +ELLIPSIS
+	Object[5] {Car(id=0x...), Car...}
+	>>> for v in vehicles:
+	...     print(v.make)
+	Lolvo
+	Yotoya
+	Fånark
+	Stretch
+	Descent
+	>>> vehicles[3] # doctest: +ELLIPSIS
+	Object(class=com.example.cars.Limo, id=0x...)
+	>>> len(vehicles)   # python-style
+	5
+	>>> vehicles.length # java-style
+	5
 
 	Members:
 	hprof_file -- the HprofFile this record belongs to.
