@@ -126,7 +126,8 @@ class ObjectArray(Array):
 			content = ', '.join(str(item) for item in self)
 		except Exception:
 			content = ', '.join('id=0x%x' % self._hprof_item_id(i) for i in range(self.length))
-		return '%s[%d] {%s}' % (cname[:-2], self.length, content)
+		left, right = cname.split('[]', 1)
+		return '%s[%d]%s {%s}' % (left, self.length, right, content)
 
 	def __repr__(self):
 		cid = self.hprof_class_id

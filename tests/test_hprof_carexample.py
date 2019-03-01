@@ -518,6 +518,20 @@ class TestJavaCarExample(TestCase):
 		self.assertEqual(repr(objs), 'ObjectArray(class=java.lang.Object[], id=0x%x, length=5)' % objs.hprof_id)
 		self.assertEqual(str(objs),  'Object[5] {%s}' % valuestr)
 
+	def test_repr_str_for_array_of_arrays(self):
+		limo, = self.dump.find_instances('com.example.cars.Limo')
+		array = limo.wheelDimensions
+		self.assertEqual(repr(array), 'ObjectArray(class=short[][], id=0x%x, length=4)' % array.hprof_id)
+		self.assertEqual(str(array), 'short[4][] {short[2] {50, 10}, short[2] {50, 10}, short[2] {50, 10}, short[2] {50, 10}}')
+
+	def test_repr_str_for_array_of_arrays_without_heap(self):
+		limo, = self.dump.find_instances('com.example.cars.Limo')
+		array = limo.wheelDimensions
+		ids = tuple(internal.hprof_id for internal in array)
+		array = hprof.heap.create(array.hprof_file, array.hprof_addr)
+		self.assertEqual(repr(array), 'ObjectArray(class=short[][], id=0x%x, length=4)' % array.hprof_id)
+		self.assertEqual(str(array), 'short[4][] {id=0x%x, id=0x%x, id=0x%x, id=0x%x}' % ids)
+
 	def test_repr_str_for_primitive_arrays(self):
 		limo, = self.dump.find_instances('com.example.cars.Limo')
 		array = limo.wheelDimensions[0]
