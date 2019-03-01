@@ -57,7 +57,7 @@ class PrimitiveArray(Array):
 		return self._hproff.DATA + self.length * self.hprof_elem_type.size(self.hprof_file.idsize)
 
 	def __str__(self):
-		content = ', '.join(str(item) for item in self)
+		content = ', '.join(repr(item) for item in self)
 		return '%s[%d] {%s}' % (self.hprof_elem_type, self.length, content)
 
 	def __repr__(self):

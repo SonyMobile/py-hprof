@@ -88,11 +88,23 @@ class TestPrimitiveArrayRecord(TestCase):
 		self.assertEqual(self.a._hprof_len, 10 + self.idsize + self.COUNT * self.ESIZE)
 
 	def test_primitive_array_str(self):
-		values = ', '.join(str(self._val(i)) for i in range(self.COUNT))
+		values = ', '.join(repr(self._val(i)) for i in range(self.COUNT))
 		self.assertEqual(str(self.a), '%s[%d] {%s}' % (self.ENAME, self.COUNT, values))
 
 	def test_primitive_array_repr(self):
 		self.assertEqual(repr(self.a), 'PrimitiveArray(type=%s, id=0x%x, length=%d)' % (self.ENAME, self.aid, self.COUNT))
+
+	def test_primitive_array_str_encodeable(self):
+		try:
+			str(self.a).encode('utf-8')
+		except Exception as e:
+			self.fail(e)
+
+	def test_primitive_array_repr_encodeable(self):
+		try:
+			repr(self.a).encode('utf-8')
+		except Exception as e:
+			self.fail(e)
 
 class TestBooleanArrayRecord(TestPrimitiveArrayRecord):
 	COUNT = 790
@@ -127,6 +139,12 @@ class TestByteArrayRecord(TestPrimitiveArrayRecord):
 	def test_byte_array_decode(self):
 		self.assertEqual(self.a.hprof_decode(), 'PQRSTUVWXY𣲷^_`abcdefghijklmnop')
 
+	def test_byte_array_str(self):
+		self.assertEqual(str(self.a), 'byte[33] {80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 240, 163, 178, 183, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112}')
+
+	def test_byte_array_repr(self):
+		self.assertEqual(repr(self.a), 'PrimitiveArray(type=byte, id=0x%x, length=33)' % self.aid)
+
 class TestCharArrayRecord(TestPrimitiveArrayRecord):
 	COUNT = 33
 	ETYPE = 5
@@ -153,6 +171,12 @@ class TestCharArrayRecord(TestPrimitiveArrayRecord):
 
 	def test_char_array_decode(self):
 		self.assertEqual(self.a.hprof_decode(), 'ABC学EFGHIJ𣲷MNOPQRSTUVWXYZ[\\]^_`a')
+
+	def test_char_array_str(self):
+		self.assertEqual(str(self.a), '''char[33] {'A', 'B', 'C', '学', 'E', 'F', 'G', 'H', 'I', 'J', '\\ud84f', '\\udcb7', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\\\', ']', '^', '_', '`', 'a'}''')
+
+	def test_char_array_repr(self):
+		self.assertEqual(repr(self.a), 'PrimitiveArray(type=char, id=0x%x, length=33)' % self.aid)
 
 class TestShortArrayRecord(TestPrimitiveArrayRecord):
 	idsize = 4
