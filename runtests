@@ -1,15 +1,17 @@
 #!/bin/bash
 
-echo
-echo '------------------------------ DOC TESTS -----------------------------'
+set -eu
+
 if [ $# -eq 0 ]; then
+    echo
+    echo '------------------------------ DOC TESTS -----------------------------'
 	python3 -m unittest discover -p doctests.py
 fi
 
 echo
 echo '------------------------------ UNITTESTS -----------------------------'
 mkdir -p coverage
-rm coverage/*,cover
+rm -f coverage/*,cover
 python3-coverage erase
 python3-coverage run -m unittest discover "$@"
 

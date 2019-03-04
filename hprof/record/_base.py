@@ -32,7 +32,7 @@ def create(hf, addr):
 	return rtype(hf, addr)
 
 class Record(HprofSlice):
-	'''Base record of the hprof file.
+	'''Base record type, extended by all other top-level record types.
 
 	Members:
 	hprof_file -- the HprofFile this record belongs to.
@@ -74,7 +74,7 @@ class Unhandled(Record):
 	Thanks to the record format explicitly declaring the length of each record, it is not
 	necessarily a showstopper -- we may be able to ignore it without problems.
 
-	If you want to handle it yourself, the rawbody() method may be useful. But hey, if you're doing
+	If you want to handle it yourself, the rawbody property may be useful. But hey, if you're doing
 	that, maybe you should be contributing to the library instead?
 
 	Members:

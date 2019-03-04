@@ -13,7 +13,7 @@ class HeapDumpInfo(HeapRecord):
 	Subsequent object records belong to the heap specified here.
 
 	Members:
-	hprof_file -- the HprofFile this recprd belongs to.
+	hprof_file -- the HprofFile this record belongs to.
 	hprof_addr -- the byte address of this record in hprof_file.
 	'''
 

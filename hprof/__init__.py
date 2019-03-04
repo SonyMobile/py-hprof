@@ -1,5 +1,7 @@
 '''Conveniently read Java/Android .hprof files.
 
+>>> import hprof
+>>> hf = hprof.open('tests/java.hprof')
 >>> dump, = hf.dumps()
 
 Class lookups by name:
@@ -10,7 +12,8 @@ Class(name=com.example.cars.Car, id=0x...)
 
 Finding all instances of a class, reading object attributes, instanceof:
 
->>> vehicles = sorted(dump.find_instances('com.example.cars.Vehicle'), key=lambda v: str(v.make))
+>>> vehicles = dump.find_instances('com.example.cars.Vehicle')
+>>> vehicles = sorted(vehicles, key=lambda v: str(v.make))
 >>> for v in vehicles:
 ...     print(v.hprof_class, v.make, v.hprof_instanceof(car_cls))
 com.example.cars.Bike Descent False
