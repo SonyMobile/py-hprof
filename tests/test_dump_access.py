@@ -241,6 +241,22 @@ class TestDumpAccess(TestCase):
 		self.hf.close()
 
 
+	def test_heap_classes(self):
+		iterator = self.heap.classes()
+		classes = list(iterator)
+		self.assertEqual(len(classes), 7)
+		with self.assertRaises(StopIteration):
+			next(iterator)
+		self.assertIs(type(classes[0]), hprof.heap.Class)
+		self.assertIs(type(classes[1]), hprof.heap.Class)
+		self.assertIs(type(classes[2]), hprof.heap.Class)
+		self.assertIs(type(classes[3]), hprof.heap.Class)
+		self.assertIs(type(classes[4]), hprof.heap.Class)
+		self.assertIs(type(classes[5]), hprof.heap.Class)
+		self.assertIs(type(classes[6]), hprof.heap.Class)
+		self.assertCountEqual((c.hprof_id for c in classes), (self.shortarray_clsid, self.barray_clsid, self.object_clsid, self.class_clsid, self.buddy_clsid, self.subbuddy_clsid, self.main_clsid))
+
+
 	def test_access_main_instance_field_from_instance(self):
 		self.assertEqual(self.main.buddies, self.buddyarray)
 

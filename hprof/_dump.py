@@ -166,6 +166,10 @@ class Heap(object, metaclass=Slotted):
 		'''Check whether this heap contains the specified ID'''
 		return objid in self._classes or objid in self._objects
 
+	def classes(self):
+		'''yield all classes in this heap.'''
+		yield from self._classes.values()
+
 	def objects(self):
 		'''yield all objects in this heap.
 
