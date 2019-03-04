@@ -51,7 +51,8 @@ class HprofFile(object):
 		self._first_record_addr = base + 12
 		self._dumps = None
 		self._names = {}
-		self._class_info = {}
+		self._class_info_by_id = {}
+		self._class_info_by_name = {}
 		self._caches_built = 0
 
 	def __enter__(self):
@@ -71,7 +72,8 @@ class HprofFile(object):
 		if self._caches_built < GEN_LEVEL_NAMES:
 			self._names.clear()
 		if self._caches_built < GEN_LEVEL_CINFO:
-			self._class_info.clear()
+			self._class_info_by_id.clear()
+			self._class_info_by_name.clear()
 		if self._caches_built < GEN_LEVEL_DUMPS:
 			assert self._dumps == None
 
@@ -90,12 +92,13 @@ class HprofFile(object):
 				cname = r.class_name
 				cid   = r.class_id
 				# TODO: dupes aren't necessarily wrong... but I've never seen any unloads in hprofs.
-				if cname in self._class_info:
-					raise FileFormatError('duplicate class load of name %s' % cname)
-				if cid in self._class_info:
+				if cid in self._class_info_by_id:
 					raise FileFormatError('duplicate class object id 0x%x' % cid)
-				self._class_info[cname] = r
-				self._class_info[cid]   = r
+				self._class_info_by_id[cid]   = r
+				try:
+					self._class_info_by_name[cname] += (r,)
+				except KeyError:
+					self._class_info_by_name[cname] = (r,)
 			elif self._caches_built < GEN_LEVEL_DUMPS <= genlevel and type(r) is HeapDumpSegment:
 				if curdump is None:
 					curdump = Dump(self)
@@ -155,15 +158,21 @@ class HprofFile(object):
 		except KeyError:
 			raise RefError('name', nameid)
 
-	def get_class_info(self, class_id_or_name):
-		'''return the hprof.record.ClassLoad record for the provided class object ID or name.'''
+	def get_class_infos(self, class_name):
+		'''return a tuple of ClassLoad records matching the given name'''
 		try:
-			return self._cache_lookup('_class_info', class_id_or_name, GEN_LEVEL_CINFO)
+			return self._cache_lookup('_class_info_by_name', class_name, GEN_LEVEL_CINFO)
 		except KeyError:
 			pass
-		if type(class_id_or_name) is int:
-			class_id_or_name = hex(class_id_or_name)
-		raise ClassNotFoundError('ClassLoad record for class id %s' % class_id_or_name)
+		raise ClassNotFoundError('ClassLoad record for class name %s' % class_name)
+
+	def get_class_info(self, class_id):
+		'''return the ClassLoad record matching the given class ID'''
+		try:
+			return self._cache_lookup('_class_info_by_id', class_id, GEN_LEVEL_CINFO)
+		except KeyError:
+			pass
+		raise ClassNotFoundError('ClassLoad record for class id 0x%x' % class_id)
 
 	def _read_bytes(self, start, nbytes):
 		if start < 0:

@@ -180,7 +180,7 @@ class TestErrors(TestCase):
 		with self.assertRaisesRegex(hprof.FileFormatError, 'duplicate class object id'):
 			hf.get_class_info(500)
 
-	def test_duplicate_class_name_error(self):
+	def test_duplicate_class_name_okay(self):
 		hb = HprofBuilder(b'JAVA PROFILE 1.0.3\0', self.idsize, 0x12345)
 		hb.name(10, 'ClassA')
 		with hb.record(2, 0) as load:
@@ -193,7 +193,18 @@ class TestErrors(TestCase):
 			load.id(40)
 			load.uint(0)
 			load.id(10)
+		with hb.record(28, 0) as dump:
+			pass
 		addrs, data = hb.build()
 		hf = hprof.open(bytes(data))
-		with self.assertRaisesRegex(hprof.FileFormatError, 'duplicate class.*name'):
-			hf.get_class_info(500)
+		one = hf.get_class_info(40)
+		two = hf.get_class_info(41)
+		self.assertNotEqual(one, two)
+		self.assertEqual(one.class_id, 40)
+		self.assertEqual(two.class_id, 41)
+		self.assertEqual(one.class_name, 'ClassA')
+		self.assertEqual(two.class_name, 'ClassA')
+		self.assertCountEqual(hf.get_class_infos('ClassA'), (one, two))
+		dump, = hf.dumps()
+		with self.assertRaisesRegex(hprof.ClassNotFoundError, 'Multiple'):
+			dump.get_class('ClassA')

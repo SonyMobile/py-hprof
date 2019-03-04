@@ -67,13 +67,23 @@ class Dump(object, metaclass=Slotted):
 		yield from self._heaps.values()
 
 	def get_class(self, class_id_or_name):
-		'''return the Class object with the given ID'''
+		'''return the Class object with the given ID.
+
+		Since the same class may be loaded multiple times (though different loaders), a name may
+		match multiple class objects. Since this is an uncommon case, and handling it would make
+		this function less convenient to use, we will raise ClassNotFoundError in that situation.
+		You can handle it yourself by using IDs found through HprofFile.get_class_infos().
+		'''
+
 		if type(class_id_or_name) is int:
 			clsid = class_id_or_name
 			if clsid == 0:
 				return None
 		else:
-			clsid = self.hf.get_class_info(class_id_or_name).class_id
+			infos = self.hf.get_class_infos(class_id_or_name)
+			if len(infos) != 1:
+				raise ClassNotFoundError('Multiple class loads with name %s' % class_id_or_name)
+			clsid = infos[0].class_id
 		for h in self._heaps.values():
 			try:
 				return h._classes[clsid]

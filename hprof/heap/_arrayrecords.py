@@ -63,7 +63,8 @@ class PrimitiveArray(Array):
 	@property
 	def hprof_class_id(self):
 		'''the class ID of this array.'''
-		return self.hprof_file.get_class_info(self.hprof_elem_type.name + '[]').class_id
+		info, = self.hprof_file.get_class_infos(self.hprof_elem_type.name + '[]')
+		return info.class_id
 
 	@property
 	def _hprof_len(self):
