@@ -39,18 +39,18 @@ def parse(data):
 		failures.append(('bytes-like?', e))
 
 	# can it be mmapped?
-	from mmap import mmap
-	import os
-	try:
-		fno = data.fileno()
-		fsize = os.fstat(fno).st_size
-		with mmap(fno, fsize) as mapped:
-			with memoryview(mapped) as mview:
-				return _parse(mview)
-	except HprofError:
-		raise
-	except Exception as e:
-		failures.append(('mmap?', e))
+	from mmap import mmap, ACCESS_READ
+	from io import BufferedReader
+	if isinstance(data, BufferedReader):
+		import os
+		try:
+			fno = data.fileno()
+			fsize = os.fstat(fno).st_size
+			with mmap(fno, fsize, access=ACCESS_READ) as mapped:
+				with memoryview(mapped) as mview:
+					return _parse(mview)
+		except HprofError:
+			raise
 
 	# can it be read?
 	try:
@@ -137,9 +137,8 @@ def _parse_hprof(bstream):
 		try:
 			parser = record_parsers[rtype]
 		except KeyError as e:
-			parser = lambda data: record.Unhandled(bytes(data))
+			parser = lambda data: record.Unhandled(rtype)
 		r = parser(data)
-		r.tag = rtype
 		hf.records.append(r)
 	return hf
 

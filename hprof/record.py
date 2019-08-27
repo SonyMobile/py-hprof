@@ -1,8 +1,9 @@
 
 class Record(object):
-	__slots__ = ('tag',)
+	__slots__ = ()
 
 class Unhandled(Record):
-	__slots__ = ('bytes')
-	def __init__(self, bytes):
-		self.bytes = bytes
+	__slots__ = ('tag')
+
+	def __init__(self, tag):
+		self.tag = tag
