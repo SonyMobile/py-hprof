@@ -3,7 +3,7 @@ from .error import *
 
 class HprofFile(object):
 	def __init__(self):
-		self.records = []
+		self.unhandled = {} # record tag -> count
 		self.names = {}
 
 def open(path):
@@ -137,8 +137,8 @@ def _parse_hprof(mview):
 		try:
 			parser = record_parsers[rtype]
 		except KeyError as e:
-			parser = lambda data: record.Unhandled(rtype)
-		r = parser(data)
-		hf.records.append(r)
+			hf.unhandled[rtype] = hf.unhandled.get(rtype, 0) + 1
+		else:
+			parser(hf, data)
 	return hf
 

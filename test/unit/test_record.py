@@ -1,15 +1,9 @@
 import hprof
 import unittest
 
-class TestUnhandled(unittest.TestCase):
-
-	def test_tag(self):
-		self.assertEqual(hprof.record.Unhandled(99).tag, 99)
+class TestBase(unittest.TestCase):
 
 	def test_no_extra_attrs(self):
-		u = hprof.record.Unhandled(8)
+		u = hprof.record.Record()
 		with self.assertRaises(AttributeError):
 			u.extra = 7
-		self.assertEqual(u.tag, 8)
-
-

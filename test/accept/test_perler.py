@@ -7,11 +7,9 @@ class TestPerlerParsing(unittest.TestCase):
 		cls.hf = hprof.open('testdata/perler.hprof.bz2')
 
 	def test_first_record(self):
-		first = self.hf.records[0]
-		# TODO: update expected type
-		self.assertIsInstance(first, hprof.record.Unhandled)
-		self.assertEqual(first.tag, 1) # a name record
-		# TODO: check actual content
+		pass
+		# TODO: check that the first record (a name record) has been added
 
-	def test_num_records(self):
-		self.assertEqual(len(self.hf.records), 72630)
+	def test_num_unhandled(self):
+		# TODO: update expected count as more types are handled.
+		self.assertEqual(sum(self.hf.unhandled.values()), 72630)
