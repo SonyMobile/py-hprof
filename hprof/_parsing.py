@@ -1,4 +1,3 @@
-from . import record
 from .error import *
 
 class HprofFile(object):
