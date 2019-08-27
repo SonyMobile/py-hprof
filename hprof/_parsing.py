@@ -118,8 +118,8 @@ def _parse(data):
 	except Exception as e:
 		raise UnhandledError() from e
 
-def _parse_hprof(bstream):
-	reader = PrimitiveReader(bstream)
+def _parse_hprof(mview):
+	reader = PrimitiveReader(mview)
 	hdr = reader.ascii()
 	if not hdr == 'JAVA PROFILE 1.0.1':
 		raise FormatError('unknown header "%s"' % hdr)
