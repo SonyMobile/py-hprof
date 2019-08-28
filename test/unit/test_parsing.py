@@ -237,6 +237,13 @@ class TestPrimitiveReader(unittest.TestCase):
 		self.assertEqual(self.r.bytes(1), b'\xc3')
 		with self.assertRaises(hprof.error.UnexpectedEof):
 			self.r.ascii()
+		self.assertEqual(self.r.bytes(1), b'\x9c')
+
+	def test_ascii_invalid(self):
+		r = hprof._parsing.PrimitiveReader(b'abc\xc3\x9czx\0')
+		with self.assertRaises(hprof.error.FormatError):
+			r.ascii()
+		self.assertEqual(r.bytes(4), b'abc\xc3')
 
 	def test_unsigned_4(self):
 		self.assertEqual(self.r.u(4), 0x68692079)
@@ -248,6 +255,17 @@ class TestPrimitiveReader(unittest.TestCase):
 		self.r.bytes(3)
 		self.assertEqual(self.r.u(4), 0x796f7500)
 		self.assertEqual(self.r.u(4), 0xc39c7a78)
+
+	def test_invalid_utf8_does_not_consume(self):
+		r = hprof._parsing.PrimitiveReader(b'abc\xed\x00\xbddef')
+		with self.assertRaises(hprof.error.FormatError):
+			r.utf8(9)
+		self.assertEqual(r.bytes(3), b'abc')
+
+	def test_utf8_oob(self):
+		with self.assertRaises(hprof.error.UnexpectedEof):
+			self.r.utf8(20)
+		self.assertEqual(self.r.bytes(5), b'hi yo')
 
 
 class TestMutf8(unittest.TestCase):

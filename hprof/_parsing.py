@@ -124,20 +124,31 @@ class PrimitiveReader(object):
 
 	def ascii(self):
 		''' read a zero-terminated ASCII string '''
-		out = []
-		while True:
-			byte = self.bytes(1)
-			if byte == b'\0':
-				return b''.join(out).decode('ascii')
-			out.append(byte)
+		end = self._pos
+		bs = self._bytes
+		N = len(bs)
+		while end < N and bs[end] != 0:
+			end += 1
+		if end == N:
+			raise UnexpectedEof('unterminated ascii string')
+		try:
+			out = str(bs[self._pos : end], 'ascii')
+		except UnicodeError as e:
+			raise FormatError() from e
+		self._pos = end + 1
+		return out
 
 	def utf8(self, nbytes):
 		''' read n bytes, interpret as (m)UTF-8 '''
-		raw = self.bytes(nbytes)
+		raw = self._bytes[self._pos : self._pos + nbytes]
+		if len(raw) != nbytes:
+			raise UnexpectedEof('tried to read %d bytes, got %d' % (nbytes, len(raw)))
 		try:
-			return str(raw, 'utf8', 'hprof-mutf8')
+			out = str(raw, 'utf8', 'hprof-mutf8')
 		except UnicodeError as e:
 			raise FormatError() from e
+		self._pos += nbytes
+		return out
 
 	def u(self, nbytes):
 		''' read an n-byte (big-endian) unsigned number '''
