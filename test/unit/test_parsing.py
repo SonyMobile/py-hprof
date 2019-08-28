@@ -166,9 +166,15 @@ class TestParseHprof(unittest.TestCase):
 				self.assertEqual(len(args), 2)
 				self.assertIs(args[0], hf)
 
-		self.assertEqual(mock_parsers[0x50].call_args_list[0][0][1], b'\x33\x44\x55\x66\x77')
-		self.assertEqual(mock_parsers[0x50].call_args_list[1][0][1], b'\x30\x31')
-		self.assertEqual(mock_parsers[0x01].call_args_list[0][0][1], b'\x45\x46')
+		self.assertIsInstance(mock_parsers[0x50].call_args_list[0][0][1], hprof._parsing.PrimitiveReader)
+		self.assertIsInstance(mock_parsers[0x50].call_args_list[1][0][1], hprof._parsing.PrimitiveReader)
+		self.assertIsInstance(mock_parsers[0x01].call_args_list[0][0][1], hprof._parsing.PrimitiveReader)
+		self.assertEqual(mock_parsers[0x50].call_args_list[0][0][1]._pos, 0)
+		self.assertEqual(mock_parsers[0x50].call_args_list[1][0][1]._pos, 0)
+		self.assertEqual(mock_parsers[0x01].call_args_list[0][0][1]._pos, 0)
+		self.assertEqual(mock_parsers[0x50].call_args_list[0][0][1]._bytes, b'\x33\x44\x55\x66\x77')
+		self.assertEqual(mock_parsers[0x50].call_args_list[1][0][1]._bytes, b'\x30\x31')
+		self.assertEqual(mock_parsers[0x01].call_args_list[0][0][1]._bytes, b'\x45\x46')
 
 
 class TestPrimitiveReader(unittest.TestCase):
@@ -242,3 +248,98 @@ class TestPrimitiveReader(unittest.TestCase):
 		self.r.bytes(3)
 		self.assertEqual(self.r.u(4), 0x796f7500)
 		self.assertEqual(self.r.u(4), 0xc39c7a78)
+
+
+class TestMutf8(unittest.TestCase):
+
+	def decode(self, bytes):
+		r = hprof._parsing.PrimitiveReader(bytes)
+		return r.utf8(len(bytes))
+
+	def test_encoded_null(self):
+		self.assertEqual(self.decode(b'\xc0\x80'), '\0')
+		self.assertEqual(self.decode(b'hello\xc0\x80world'), 'hello\0world')
+
+	def test_plain_null(self):
+		self.assertEqual(self.decode(b'\0'), '\0')
+		self.assertEqual(self.decode(b'hello\0world'), 'hello\0world')
+
+	def test_surrogate_pair(self):
+		# "🜚" after being run through javac: 0xeda0bd 0xedbc9a
+		self.assertEqual(self.decode(b'\xed\xa0\xbd\xed\xbc\x9a'), '🜚')
+		self.assertEqual(self.decode(b'g\xed\xa0\xbd\xed\xbc\x9ald'), 'g🜚ld')
+		self.assertEqual(self.decode(b'\xed\xa0\xbd\xed\xbc\x9b'), '🜛')
+		self.assertEqual(self.decode(b'sil\xed\xa0\xbd\xed\xbc\x9bver'), 'sil🜛ver')
+
+	def test_invalid_surrogate_pair(self):
+		with self.assertRaises(hprof.error.FormatError):
+			self.decode(b'\xed\x00\xbd\xed\xbc\x9a')
+		with self.assertRaises(hprof.error.FormatError):
+			self.decode(b'\xed\xa0\x00\xed\xbc\x9a')
+		with self.assertRaises(hprof.error.FormatError):
+			self.decode(b'\xed\xa0\xbd\x00\xbc\x9a')
+		with self.assertRaises(hprof.error.FormatError):
+			self.decode(b'\xed\xa0\xbd\xed\x00\x9a')
+		with self.assertRaises(hprof.error.FormatError):
+			self.decode(b'\xed\xa0\xbd\xed\xbc\x00')
+
+	def test_truncated_surrogate(self):
+		for i in range(1,6):
+			with self.subTest(i):
+				with self.assertRaises(hprof.error.FormatError):
+					self.decode(b'\xed\xa0\xbd\xed\xbc'[:i])
+				with self.assertRaises(hprof.error.FormatError):
+					self.decode(b'g\xed\xa0\xbd\xed\xbc'[:i+1])
+
+	def test_4byte_utf8(self):
+		# real utf8!
+		self.assertEqual(self.decode(b'\xf0\x9f\x9c\x9a'), '🜚')
+		self.assertEqual(self.decode(b'g\xf0\x9f\x9c\x9ald'), 'g🜚ld')
+		self.assertEqual(self.decode(b'\xf0\x9f\x9c\x9b'), '🜛')
+		self.assertEqual(self.decode(b'sil\xf0\x9f\x9c\x9bver'), 'sil🜛ver')
+
+
+class TestParseNameRecord(unittest.TestCase):
+
+	def setUp(self):
+		self.hf = hprof._parsing.HprofFile()
+		self.hf.idsize = 4
+
+	def callit(self, indata):
+		reader = hprof._parsing.PrimitiveReader(memoryview(indata))
+		hprof._parsing.parse_name_record(self.hf, reader)
+
+	def test_empty_name(self):
+		self.callit(b'\x20\x30\x50\x43')
+		self.assertIn(0x20305043, self.hf.names)
+		self.assertEqual(self.hf.names[0x20305043], '')
+
+	def test_swedish_name(self):
+		self.callit(b'\x11\x15\x10\x55' + 'Hälge ÅÄÖsson'.encode('utf8'))
+		self.assertIn(0x11151055, self.hf.names)
+		self.assertEqual(self.hf.names[0x11151055], 'Hälge ÅÄÖsson')
+
+	def test_japanese_name(self):
+		self.callit(b'\x33\x32\x32\x32' + '山下さん'.encode('utf8'))
+		self.assertIn(0x33323232, self.hf.names)
+		self.assertEqual(self.hf.names[0x33323232], '山下さん')
+
+	def test_4byte_utf8(self):
+		self.callit(b'\x04\x14\x24\x34sil\xf0\x9f\x9c\x9bver')
+		self.assertIn(0x04142434, self.hf.names)
+		self.assertEqual(self.hf.names[0x04142434], 'sil🜛ver')
+
+	def test_collision(self):
+		self.callit(b'\x11\x15\x10\x55abc')
+		with self.assertRaises(hprof.error.FormatError):
+			self.callit(b'\x11\x15\x10\x55def')
+		self.assertIn(0x11151055, self.hf.names)
+		self.assertEqual(self.hf.names[0x11151055], 'abc')
+
+	def test_multiple(self):
+		self.callit(b'\x33\x32\x32\x32' + 'Hälge ÅÄÖsson'.encode('utf8'))
+		self.callit(b'\x11\x15\x10\x55' + '山下さん'.encode('utf8'))
+		self.assertIn(0x11151055, self.hf.names)
+		self.assertIn(0x33323232, self.hf.names)
+		self.assertEqual(self.hf.names[0x11151055], '山下さん')
+		self.assertEqual(self.hf.names[0x33323232], 'Hälge ÅÄÖsson')

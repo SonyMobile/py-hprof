@@ -77,11 +77,42 @@ def parse(data):
 	raise TypeError('cannot handle `data` arg', data, *failures)
 
 
+def hprof_mutf8_error_handler(err):
+	obj = err.object
+	ix = err.start
+	if obj[ix:ix+2] == b'\xc0\x80':
+		# special handling for encoded null, because I'm lazy
+		return '\0', ix + 2
+	elif len(obj) >= ix + 6:
+		# try to decode as a surrogate pair
+		obj = obj[ix:ix+6]
+		if ((obj[0] & 0xf0) == 0xe0
+		and (obj[1] & 0xc0) == 0x80
+		and (obj[2] & 0xc0) == 0x80
+		and (obj[3] & 0xf0) == 0xe0
+		and (obj[4] & 0xc0) == 0x80
+		and (obj[5] & 0xc0) == 0x80):
+			raw = (
+				(obj[0] << 4 & 0xf0) + (obj[1] >> 2 & 0x0f),
+				(obj[1] << 6 & 0xc0) + (obj[2]      & 0x3f),
+				(obj[3] << 4 & 0xf0) + (obj[4] >> 2 & 0x0f),
+				(obj[4] << 6 & 0xc0) + (obj[5]      & 0x3f),
+			)
+			return bytes(raw).decode('utf-16-be'), ix + 6
+	raise err
+import codecs
+codecs.register_error('hprof-mutf8', hprof_mutf8_error_handler)
+del codecs
+
+
 class PrimitiveReader(object):
 	def __init__(self, bytes):
 		self._bytes = bytes
 		self._pos = 0
 
+	@property
+	def remaining(self):
+		return len(self._bytes) - self._pos
 
 	def bytes(self, nbytes):
 		''' read n bytes of data '''
@@ -100,6 +131,14 @@ class PrimitiveReader(object):
 				return b''.join(out).decode('ascii')
 			out.append(byte)
 
+	def utf8(self, nbytes):
+		''' read n bytes, interpret as (m)UTF-8 '''
+		raw = self.bytes(nbytes)
+		try:
+			return str(raw, 'utf8', 'hprof-mutf8')
+		except UnicodeError as e:
+			raise FormatError() from e
+
 	def u(self, nbytes):
 		''' read an n-byte (big-endian) unsigned number '''
 		out = 0
@@ -107,8 +146,19 @@ class PrimitiveReader(object):
 			out = (out << 8) + b
 		return out
 
-record_parsers = {
-}
+
+record_parsers = {}
+
+def parse_name_record(hf, reader):
+	nameid = reader.u(hf.idsize)
+	name = reader.utf8(reader.remaining)
+	if nameid in hf.names:
+		raise FormatError('duplicate name id 0x%x' % nameid)
+	hf.names[nameid] = name
+record_parsers[0x01] = parse_name_record
+
+
+
 
 def _parse(data):
 	try:
@@ -139,6 +189,6 @@ def _parse_hprof(mview):
 		except KeyError as e:
 			hf.unhandled[rtype] = hf.unhandled.get(rtype, 0) + 1
 		else:
-			parser(hf, data)
+			parser(hf, PrimitiveReader(data))
 	return hf
 
