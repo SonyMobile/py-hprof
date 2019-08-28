@@ -66,6 +66,13 @@ class TestPublicParseErrors(unittest.TestCase):
 						with self.assertRaises(errtype, msg='boo'):
 							hprof.parse(indata)
 
+	def test_keep_mview_gz(self):
+		import gzip
+		with gzip.open('testdata/helloworld.txt.gz', 'rb') as f:
+			with patch('hprof._parsing._parse', side_effect=lambda mview: mview[1:]):
+				with self.assertRaises(BufferError):
+					hprof.parse(f)
+
 
 class TestPrivateParse(unittest.TestCase):
 

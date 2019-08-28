@@ -42,16 +42,14 @@ def parse(data):
 	from io import BufferedReader
 	if isinstance(data, BufferedReader):
 		import os
-		try:
-			fno = data.fileno()
-			fsize = os.fstat(fno).st_size
-			with mmap(fno, fsize, access=ACCESS_READ) as mapped:
-				with memoryview(mapped) as mview:
-					return _parse(mview)
-		except HprofError:
-			raise
+		fno = data.fileno()
+		fsize = os.fstat(fno).st_size
+		with mmap(fno, fsize, access=ACCESS_READ) as mapped:
+			with memoryview(mapped) as mview:
+				return _parse(mview)
 
 	# can it be read?
+	out = None
 	try:
 		from tempfile import TemporaryFile
 		with TemporaryFile() as f:
@@ -66,14 +64,17 @@ def parse(data):
 			f.flush()
 			with mmap(f.fileno(), fsize) as mapped:
 				with memoryview(mapped) as mview:
-					return _parse(mview)
+					out = _parse(mview)
+					return out
 	except HprofError:
 		raise
 	except Exception as e:
-		failures.append(('tmpfile?', e))
+		if out is None:
+			failures.append(('tmpfile?', e))
+		else:
+			raise
 
-	raise TypeError('cannot handle `data` arg', data, failures)
-
+	raise TypeError('cannot handle `data` arg', data, *failures)
 
 
 class PrimitiveReader(object):
