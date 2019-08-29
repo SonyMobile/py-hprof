@@ -9,7 +9,7 @@ runner = unittest.TextTestRunner()
 
 prof = Profile()
 prof.enable()
-runner.run(tests)
+testresults = runner.run(tests)
 prof.disable()
 
 stats = Stats(prof)
@@ -67,3 +67,6 @@ for func in stats.fcn_list:
 	nprinted += 1
 	if nprinted >= 20:
 		break
+
+if not testresults.wasSuccessful():
+	sys.exit(1)
