@@ -163,6 +163,14 @@ class PrimitiveReader(object):
 		self._pos += nbytes
 		return out
 
+	def i(self, nbytes):
+		''' read an n-byte (big-endian) two-complement number '''
+		out = self.u(nbytes)
+		mask = 0x80 << 8 * nbytes - 8
+		if out & mask:
+			return out - (0x1 << 8*nbytes)
+		return out
+
 
 record_parsers = {}
 

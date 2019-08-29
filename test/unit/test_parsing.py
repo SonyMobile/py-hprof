@@ -256,6 +256,16 @@ class TestPrimitiveReader(unittest.TestCase):
 		self.assertEqual(self.r.u(4), 0x796f7500)
 		self.assertEqual(self.r.u(4), 0xc39c7a78)
 
+	def test_signed_3(self):
+		self.r.bytes(4)
+		self.assertEqual(self.r.i(3), 0x6f7500)
+		self.assertEqual(self.r.i(3), 0xc39c7a - 0x1000000)
+
+	def test_signed_unaligned(self):
+		self.r.bytes(3)
+		self.assertEqual(self.r.i(4), 0x796f7500)
+		self.assertEqual(self.r.i(4), 0xc39c7a78 - 0x100000000)
+
 	def test_invalid_utf8_does_not_consume(self):
 		r = hprof._parsing.PrimitiveReader(b'abc\xed\x00\xbddef')
 		with self.assertRaises(hprof.error.FormatError):
