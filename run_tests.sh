@@ -18,7 +18,7 @@ python3-coverage report -m --fail-under=100 || fail 'INCOMPLETE COVERAGE'
 echo
 echo
 echo 'Running ACCEPTANCE tests...'
-python3 -m unittest discover test.accept || fail 'ACCEPTANCE TEST FAILURES'
+python3 _run_acceptance.py || fail 'ACCEPTANCE TEST FAILURES'
 
 tput setaf 2
 echo
