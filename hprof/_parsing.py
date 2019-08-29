@@ -4,6 +4,10 @@ class HprofFile(object):
 	def __init__(self):
 		self.unhandled = {} # record tag -> count
 		self.names = {0: None}
+		self.stackframes = {}
+
+class StackFrame(object):
+	__slots__ = ('method', 'signature', 'sourcefile', 'class', 'line')
 
 def open(path):
 	if path.endswith('.bz2'):
@@ -182,7 +186,18 @@ def parse_name_record(hf, reader):
 	hf.names[nameid] = name
 record_parsers[0x01] = parse_name_record
 
-
+def parse_stack_frame_record(hf, reader):
+	frame = StackFrame()
+	fid = reader.u(hf.idsize)
+	frame.method     = hf.names[reader.u(hf.idsize)]
+	frame.signature  = hf.names[reader.u(hf.idsize)]
+	frame.sourcefile = hf.names[reader.u(hf.idsize)]
+	reader.u(4) # TODO: reference to the class
+	frame.line       = reader.i(4)
+	if fid in hf.stackframes:
+		raise FormatError('duplicate stack frame id 0x%x' % fid)
+	hf.stackframes[fid] = frame
+record_parsers[0x04] = parse_stack_frame_record
 
 
 def _parse(data):

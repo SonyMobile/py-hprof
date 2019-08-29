@@ -20,4 +20,4 @@ class TestPerlerParsing(unittest.TestCase):
 
 	def test_num_unhandled(self):
 		# TODO: update expected count as more types are handled.
-		self.assertEqual(sum(self.hf.unhandled.values()), 4304)
+		self.assertEqual(sum(self.hf.unhandled.values()), 4222)
