@@ -251,6 +251,12 @@ class TestPrimitiveReader(unittest.TestCase):
 		with self.assertRaises(hprof.error.UnexpectedEof):
 			self.r.u(4)
 
+	def test_unsigned_5(self):
+		self.assertEqual(self.r.u(5), 0x686920796f)
+		self.assertEqual(self.r.u(5), 0x7500c39c7a)
+		with self.assertRaises(hprof.error.UnexpectedEof):
+			self.r.u(5)
+
 	def test_unsigned_unaligned(self):
 		self.r.bytes(3)
 		self.assertEqual(self.r.u(4), 0x796f7500)
