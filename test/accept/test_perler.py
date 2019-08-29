@@ -16,7 +16,7 @@ class TestPerlerParsing(unittest.TestCase):
 				self.assertEqual(self.hf.names[nameid], expected)
 
 	def test_name_record_count(self):
-		self.assertEqual(len(self.hf.names), 68326)
+		self.assertEqual(len(self.hf.names), 68327)
 
 	def test_num_unhandled(self):
 		# TODO: update expected count as more types are handled.

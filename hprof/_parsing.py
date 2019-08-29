@@ -3,7 +3,7 @@ from .error import *
 class HprofFile(object):
 	def __init__(self):
 		self.unhandled = {} # record tag -> count
-		self.names = {}
+		self.names = {0: None}
 
 def open(path):
 	if path.endswith('.bz2'):
