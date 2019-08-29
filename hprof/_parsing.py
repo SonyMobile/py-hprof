@@ -153,8 +153,14 @@ class PrimitiveReader(object):
 	def u(self, nbytes):
 		''' read an n-byte (big-endian) unsigned number '''
 		out = 0
-		for b in self.bytes(nbytes):
-			out = (out << 8) + b
+		bs = self._bytes
+		try:
+			for ix in range(self._pos, self._pos + nbytes):
+				out = (out << 8) + bs[ix]
+		except IndexError:
+			fmt = 'tried to read %d-byte unsigned; only %d bytes available'
+			raise UnexpectedEof(fmt % (nbytes, self.remaining))
+		self._pos += nbytes
 		return out
 
 
