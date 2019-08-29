@@ -30,7 +30,7 @@ def parse(data):
 	try:
 		with memoryview(data) as mview:
 			return _parse(mview)
-	except HprofError:
+	except (HprofError, BufferError):
 		# _parse failed
 		raise
 	except Exception as e:
@@ -49,7 +49,6 @@ def parse(data):
 				return _parse(mview)
 
 	# can it be read?
-	out = None
 	try:
 		from tempfile import TemporaryFile
 		with TemporaryFile() as f:
@@ -64,15 +63,16 @@ def parse(data):
 			f.flush()
 			with mmap(f.fileno(), fsize) as mapped:
 				with memoryview(mapped) as mview:
-					out = _parse(mview)
-					return out
-	except HprofError:
+					return _parse(mview)
+	except BufferError as e:
 		raise
 	except Exception as e:
-		if out is None:
-			failures.append(('tmpfile?', e))
-		else:
-			raise
+		prev = e
+		while prev is not None:
+			if isinstance(prev, HprofError):
+				raise e
+			prev = prev.__context__
+		failures.append(('tmpfile?', e))
 
 	raise TypeError('cannot handle `data` arg', data, *failures)
 
