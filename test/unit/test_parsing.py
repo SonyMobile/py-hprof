@@ -406,6 +406,7 @@ class TestParseStackTraceRecords(unittest.TestCase):
 		self.addframe(dehex('02030405 55555555 0000dead 80104030 12345678 00000051'))
 		self.assertIn(0x02030405, self.hf.stackframes)
 		frame = self.hf.stackframes[0x02030405]
+		self.assertIsInstance(frame, hprof.callstack.Frame)
 		self.assertEqual(frame.method, 'five')
 		self.assertEqual(frame.signature, '()V')
 		self.assertEqual(frame.sourcefile, 'hello')
@@ -416,6 +417,7 @@ class TestParseStackTraceRecords(unittest.TestCase):
 		self.addframe(dehex('02030405 55555555 0000dead 80104030 12345678 fffffffe'))
 		self.assertIn(0x02030405, self.hf.stackframes)
 		frame = self.hf.stackframes[0x02030405]
+		self.assertIsInstance(frame, hprof.callstack.Frame)
 		self.assertEqual(frame.method, 'five')
 		self.assertEqual(frame.signature, '()V')
 		self.assertEqual(frame.sourcefile, 'hello')
@@ -434,12 +436,14 @@ class TestParseStackTraceRecords(unittest.TestCase):
 		self.assertIn(0x03030407, self.hf.stackframes)
 
 		frame = self.hf.stackframes[0x03030404]
+		self.assertIsInstance(frame, hprof.callstack.Frame)
 		self.assertEqual(frame.method, 'hello')
 		self.assertEqual(frame.signature, '(Ljava/lang/String;)I')
 		self.assertEqual(frame.sourcefile, 'moreThanSixteen')
 		self.assertEqual(frame.line, -1)
 
 		frame = self.hf.stackframes[0x03030407]
+		self.assertIsInstance(frame, hprof.callstack.Frame)
 		self.assertEqual(frame.method, 'sixteen')
 		self.assertEqual(frame.signature, 'five')
 		self.assertEqual(frame.sourcefile, 'dec')
