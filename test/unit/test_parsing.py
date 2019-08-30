@@ -343,7 +343,7 @@ class TestParseNameRecord(unittest.TestCase):
 
 	def callit(self, indata):
 		reader = hprof._parsing.PrimitiveReader(memoryview(indata))
-		hprof._parsing.parse_name_record(self.hf, reader)
+		hprof._parsing.record_parsers[0x01](self.hf, reader)
 
 	def test_empty_name(self):
 		self.callit(b'\x20\x30\x50\x43')
