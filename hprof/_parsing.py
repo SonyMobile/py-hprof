@@ -245,5 +245,9 @@ def _parse_hprof(mview):
 			hf.unhandled[rtype] = hf.unhandled.get(rtype, 0) + 1
 		else:
 			parser(hf, PrimitiveReader(data))
+	_resolve_references(hf)
 	return hf
 
+def _resolve_references(hf):
+	''' Some objects can have forward references. In those cases, we've saved
+	a serial or id -- now is the time to replace them with real references.'''

@@ -137,10 +137,13 @@ class TestParseHprof(unittest.TestCase):
 
 	def test_one_record(self):
 		indata = b'JAVA PROFILE 1.0.1\0\0\0\0\4\0\1\2\3\4\5\6\7\x50\0\0\0\0\0\0\0\2\x33\x44'
-		with patch('hprof._parsing.record_parsers', {}):
+		with patch('hprof._parsing.record_parsers', {}), patch('hprof._parsing._resolve_references') as resolve:
 			hf = hprof._parsing._parse_hprof(indata)
 		self.assertEqual(hf.idsize, 4)
 		self.assertEqual(hf.unhandled, {0x50: 1})
+		self.assertEqual(resolve.call_count, 1)
+		self.assertCountEqual(resolve.call_args[0], (hf,))
+		self.assertFalse(resolve.call_args[1])
 
 	def test_four_records(self):
 		indata = b'JAVA PROFILE 1.0.1\0\5\0\0\5\0\1\2\3\4\5\6\7'
@@ -152,13 +155,16 @@ class TestParseHprof(unittest.TestCase):
 			0x50: unittest.mock.MagicMock(),
 			0x01: unittest.mock.MagicMock(),
 		}
-		with patch('hprof._parsing.record_parsers', mock_parsers):
+		with patch('hprof._parsing.record_parsers', mock_parsers), patch('hprof._parsing._resolve_references') as resolve:
 			hf = hprof._parsing._parse_hprof(indata)
 		self.assertEqual(hf.idsize, 0x5000005)
 
 		self.assertEqual(mock_parsers[0x50].call_count, 2)
 		self.assertEqual(mock_parsers[0x01].call_count, 1)
 		self.assertEqual(hf.unhandled, {0x02: 1})
+		self.assertEqual(resolve.call_count, 1)
+		self.assertCountEqual(resolve.call_args[0], (hf,))
+		self.assertFalse(resolve.call_args[1])
 
 		for mock in mock_parsers.values():
 			for args, kwargs in mock.call_args_list:
