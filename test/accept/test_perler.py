@@ -23,21 +23,21 @@ class TestPerlerParsing(unittest.TestCase):
 		self.assertEqual(self.hf.stackframes[0x01].method, 'sleep')
 		self.assertEqual(self.hf.stackframes[0x01].signature, '(J)V')
 		self.assertEqual(self.hf.stackframes[0x01].sourcefile, 'Thread.java')
-		self.assertEqual(self.hf.stackframes[0x01].classload, 0x1002) # TODO: check ClassLoad
+		self.assertIs(   self.hf.stackframes[0x01].class_name, self.hf.classloads[0x1002].class_name)
 		self.assertEqual(self.hf.stackframes[0x01].line, -3)
 
 		#00000000 0000000b 00007ff7 55fd6b90 00007ff7 4c3a1fd0 00000000 00000000 00000113 ffffffff
 		self.assertEqual(self.hf.stackframes[0x0b].method, 'next')
 		self.assertEqual(self.hf.stackframes[0x0b].signature, '()Lse/dolkow/imagefiltering/ThreadedCacher$Task;')
 		self.assertIs(   self.hf.stackframes[0x0b].sourcefile, None)
-		self.assertEqual(self.hf.stackframes[0x0b].classload, 0x113) # TODO: check ClassLoad
+		self.assertIs(   self.hf.stackframes[0x0b].class_name, self.hf.classloads[0x113].class_name)
 		self.assertEqual(self.hf.stackframes[0x0b].line, -1)
 
 		#00000000 0000001a 00007ff7 55fd1d70 00007ff7 55fd3330 00007ff7 55fd53e0 00001043 000001f6
 		self.assertEqual(self.hf.stackframes[0x1a].method, 'wait')
 		self.assertEqual(self.hf.stackframes[0x1a].signature, '()V')
 		self.assertEqual(self.hf.stackframes[0x1a].sourcefile, 'Object.java')
-		self.assertEqual(self.hf.stackframes[0x1a].classload, 0x1043) # TODO: check ClassLoad
+		self.assertIs(   self.hf.stackframes[0x1a].class_name, self.hf.classloads[0x1043].class_name)
 		self.assertEqual(self.hf.stackframes[0x1a].line, 0x1f6)
 
 	def test_frame_record_count(self):

@@ -234,7 +234,7 @@ def parse_stack_frame_record(hf, reader):
 	frame.method     = hf.names[reader.u(hf.idsize)]
 	frame.signature  = hf.names[reader.u(hf.idsize)]
 	frame.sourcefile = hf.names[reader.u(hf.idsize)]
-	frame.classload  = reader.u(4) # TODO: reference to the ClassLoad instance
+	frame.class_name = hf.classloads[reader.u(4)].class_name
 	frame.line       = reader.i(4)
 	if fid in hf.stackframes:
 		raise FormatError('duplicate stack frame id 0x%x' % fid)

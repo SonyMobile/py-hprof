@@ -17,6 +17,10 @@ class TestParseStackTraceRecords(unittest.TestCase):
 		assert len(self.hf.names) == 8, repr(self.hf.names) # no dupes.
 		self.dummythread = 'I am definitely a thread'
 		self.hf.threads[0x10000000] = self.dummythread
+		self.hf.classloads[0x12345678] = hprof._parsing.ClassLoad()
+		self.hf.classloads[0x12345678].class_name = 'java.lang.String'
+		self.hf.classloads[0x22345678] = hprof._parsing.ClassLoad()
+		self.hf.classloads[0x22345678].class_name = 'com.example.pkg.SomeClass'
 
 	def addframe(self, indata):
 		reader = hprof._parsing.PrimitiveReader(memoryview(indata))
@@ -37,7 +41,7 @@ class TestParseStackTraceRecords(unittest.TestCase):
 		self.assertEqual(frame.method, 'five')
 		self.assertEqual(frame.signature, '()V')
 		self.assertEqual(frame.sourcefile, 'hello')
-		self.assertEqual(frame.classload, 0x12345678) # TODO: ClassLoad instance
+		self.assertEqual(frame.class_name, 'java.lang.String')
 		self.assertEqual(frame.line, 0x51)
 
 	def test_negative_line(self):
@@ -48,10 +52,10 @@ class TestParseStackTraceRecords(unittest.TestCase):
 		self.assertIn(fid, self.hf.stackframes)
 		frame = self.hf.stackframes[fid]
 		self.assertIsInstance(frame, hprof.callstack.Frame)
+		self.assertEqual(frame.class_name, 'java.lang.String')
 		self.assertEqual(frame.method, 'five')
 		self.assertEqual(frame.signature, '()V')
 		self.assertEqual(frame.sourcefile, 'hello')
-		self.assertEqual(frame.classload, 0x12345678) # TODO: ClassLoad instance
 		self.assertEqual(frame.line, -2)
 
 	def test_duplicate_id(self):
@@ -84,6 +88,7 @@ class TestParseStackTraceRecords(unittest.TestCase):
 
 		frame = self.hf.stackframes[fid1]
 		self.assertIsInstance(frame, hprof.callstack.Frame)
+		self.assertEqual(frame.class_name, 'java.lang.String')
 		self.assertEqual(frame.method, 'hello')
 		self.assertEqual(frame.signature, '(Ljava/lang/String;)I')
 		self.assertEqual(frame.sourcefile, 'moreThanSixteen')
@@ -91,6 +96,7 @@ class TestParseStackTraceRecords(unittest.TestCase):
 
 		frame = self.hf.stackframes[fid2]
 		self.assertIsInstance(frame, hprof.callstack.Frame)
+		self.assertEqual(frame.class_name, 'com.example.pkg.SomeClass')
 		self.assertEqual(frame.method, 'sixteen')
 		self.assertEqual(frame.signature, 'five')
 		self.assertEqual(frame.sourcefile, 'dec')
