@@ -1,6 +1,10 @@
+import struct
+import codecs
+
 from .error import *
 from . import callstack
 from . import heap
+from . import jtype
 
 class HprofFile(object):
 	def __init__(self):
@@ -127,9 +131,7 @@ def hprof_mutf8_error_handler(err):
 			)
 			return bytes(raw).decode('utf-16-be'), ix + 6
 	raise err
-import codecs
 codecs.register_error('hprof-mutf8', hprof_mutf8_error_handler)
-del codecs
 
 
 class PrimitiveReader(object):
@@ -201,6 +203,36 @@ class PrimitiveReader(object):
 		if out & mask:
 			return out - (0x1 << 8*nbytes)
 		return out
+
+	def jtype(self):
+		typeval = self.u(1)
+		try:
+			return jtype(typeval)
+		except ValueError as e:
+			raise FormatError() from e
+
+	def jval(self, t):
+		if t is jtype.object:
+			return self.id()
+		elif t is jtype.boolean:
+			return self.u(1) != 0
+		elif t is jtype.char:
+			return codecs.decode(self.bytes(2), 'utf-16-be', 'surrogatepass')
+		elif t is jtype.float:
+			v, = struct.unpack('>f', self.bytes(4))
+			return v
+		elif t is jtype.double:
+			v, = struct.unpack('>d', self.bytes(8))
+			return v
+		elif t is jtype.byte:
+			return self.i(1)
+		elif t is jtype.short:
+			return self.i(2)
+		elif t is jtype.int:
+			return self.i(4)
+		elif t is jtype.long:
+			return self.i(8)
+		raise ValueError('unhandled jval type', t)
 
 
 record_parsers = {}
