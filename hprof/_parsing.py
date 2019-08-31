@@ -6,6 +6,8 @@ class HprofFile(object):
 		self.unhandled = {} # record tag -> count
 		self.names = {0: None}
 		self.stackframes = {}
+		self.threads = {0: None}
+		self.stacktraces = {}
 
 def open(path):
 	if path.endswith('.bz2'):
@@ -190,13 +192,28 @@ def parse_stack_frame_record(hf, reader):
 	frame.method     = hf.names[reader.u(hf.idsize)]
 	frame.signature  = hf.names[reader.u(hf.idsize)]
 	frame.sourcefile = hf.names[reader.u(hf.idsize)]
-	reader.u(4) # TODO: reference to the class
+	frame.classload  = reader.u(4) # TODO: reference to the ClassLoad instance
 	frame.line       = reader.i(4)
 	if fid in hf.stackframes:
 		raise FormatError('duplicate stack frame id 0x%x' % fid)
 	hf.stackframes[fid] = frame
 record_parsers[0x04] = parse_stack_frame_record
 
+def parse_stack_trace_record(hf, reader):
+	trace = callstack.Trace()
+	serial = reader.u(4)
+	thread = reader.u(4)
+	if thread not in hf.threads:
+		hf.threads[thread] = 'dummy thread' # TODO: use a real thread instance
+	trace.thread = hf.threads[thread]
+	nframes = reader.u(4)
+	for ix in range(nframes):
+		fid = reader.u(hf.idsize)
+		trace.append(hf.stackframes[fid])
+	if serial in hf.stacktraces:
+		raise FormatError('duplicate stack trace serial 0x%x' % serial)
+	hf.stacktraces[serial] = trace
+record_parsers[0x05] = parse_stack_trace_record
 
 def _parse(data):
 	try:
