@@ -133,13 +133,12 @@ class TestParseHprof(unittest.TestCase):
 			with self.subTest(n):
 				indata[22] = n # different idsize
 				hf = hprof._parsing._parse_hprof(indata)
-				self.assertEqual(hf.idsize, n)
+				self.assertCountEqual(hf.unhandled, ())
 
 	def test_one_record(self):
 		indata = b'JAVA PROFILE 1.0.1\0\0\0\0\4\0\1\2\3\4\5\6\7\x50\0\0\0\0\0\0\0\2\x33\x44'
 		with patch('hprof._parsing.record_parsers', {}), patch('hprof._parsing._resolve_references') as resolve:
 			hf = hprof._parsing._parse_hprof(indata)
-		self.assertEqual(hf.idsize, 4)
 		self.assertEqual(hf.unhandled, {0x50: 1})
 		self.assertEqual(resolve.call_count, 1)
 		self.assertCountEqual(resolve.call_args[0], (hf,))
@@ -157,7 +156,6 @@ class TestParseHprof(unittest.TestCase):
 		}
 		with patch('hprof._parsing.record_parsers', mock_parsers), patch('hprof._parsing._resolve_references') as resolve:
 			hf = hprof._parsing._parse_hprof(indata)
-		self.assertEqual(hf.idsize, 0x5000005)
 
 		self.assertEqual(mock_parsers[0x50].call_count, 2)
 		self.assertEqual(mock_parsers[0x01].call_count, 1)
@@ -181,3 +179,6 @@ class TestParseHprof(unittest.TestCase):
 		self.assertEqual(mock_parsers[0x50].call_args_list[0][0][1]._bytes, b'\x33\x44\x55\x66\x77')
 		self.assertEqual(mock_parsers[0x50].call_args_list[1][0][1]._bytes, b'\x30\x31')
 		self.assertEqual(mock_parsers[0x01].call_args_list[0][0][1]._bytes, b'\x45\x46')
+		self.assertEqual(mock_parsers[0x50].call_args_list[0][0][1]._idsize, 0x5000005)
+		self.assertEqual(mock_parsers[0x50].call_args_list[1][0][1]._idsize, 0x5000005)
+		self.assertEqual(mock_parsers[0x01].call_args_list[0][0][1]._idsize, 0x5000005)

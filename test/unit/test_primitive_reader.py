@@ -4,7 +4,7 @@ import hprof
 class TestPrimitiveReader(unittest.TestCase):
 
 	def setUp(self):
-		self.r = hprof._parsing.PrimitiveReader(b'hi you\0\xc3\x9czx')
+		self.r = hprof._parsing.PrimitiveReader(b'hi you\0\xc3\x9czx', 4)
 
 	def test_bytes(self):
 		self.assertEqual(self.r.bytes(4), b'hi y')
@@ -64,7 +64,7 @@ class TestPrimitiveReader(unittest.TestCase):
 		self.assertEqual(self.r.bytes(1), b'\x9c')
 
 	def test_ascii_invalid(self):
-		r = hprof._parsing.PrimitiveReader(b'abc\xc3\x9czx\0')
+		r = hprof._parsing.PrimitiveReader(b'abc\xc3\x9czx\0', 4)
 		with self.assertRaises(hprof.error.FormatError):
 			r.ascii()
 		self.assertEqual(r.bytes(4), b'abc\xc3')
@@ -97,7 +97,7 @@ class TestPrimitiveReader(unittest.TestCase):
 		self.assertEqual(self.r.i(4), 0xc39c7a78 - 0x100000000)
 
 	def test_invalid_utf8_does_not_consume(self):
-		r = hprof._parsing.PrimitiveReader(b'abc\xed\x00\xbddef')
+		r = hprof._parsing.PrimitiveReader(b'abc\xed\x00\xbddef', 4)
 		with self.assertRaises(hprof.error.FormatError):
 			r.utf8(9)
 		self.assertEqual(r.bytes(3), b'abc')
@@ -107,11 +107,38 @@ class TestPrimitiveReader(unittest.TestCase):
 			self.r.utf8(20)
 		self.assertEqual(self.r.bytes(5), b'hi yo')
 
+	def test_id_size3(self):
+		self.r._idsize = 3
+		self.assertEqual(self.r.id(), 0x686920)
+		self.assertEqual(self.r.id(), 0x796f75)
+		self.assertEqual(self.r.id(), 0x00c39c)
+		with self.assertRaises(hprof.error.UnexpectedEof):
+			self.r.id()
+
+	def test_id_size4(self):
+		self.r._idsize = 4
+		self.assertEqual(self.r.id(), 0x68692079)
+		self.assertEqual(self.r.id(), 0x6f7500c3)
+		with self.assertRaises(hprof.error.UnexpectedEof):
+			self.r.id()
+
+	def test_id_size_5(self):
+		self.r._idsize = 5
+		self.assertEqual(self.r.id(), 0x686920796f)
+		self.assertEqual(self.r.id(), 0x7500c39c7a)
+		with self.assertRaises(hprof.error.UnexpectedEof):
+			self.r.id()
+
+	def test_id_size_11(self):
+		self.r._idsize = 11
+		self.assertEqual(self.r.id(), 0x686920796f7500c39c7a78)
+		with self.assertRaises(hprof.error.UnexpectedEof):
+			self.r.id()
 
 class TestMutf8(unittest.TestCase):
 
 	def decode(self, bytes):
-		r = hprof._parsing.PrimitiveReader(bytes)
+		r = hprof._parsing.PrimitiveReader(bytes, 4)
 		return r.utf8(len(bytes))
 
 	def test_encoded_null(self):

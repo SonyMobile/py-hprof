@@ -8,7 +8,7 @@ class TestParseHeapRecord(unittest.TestCase):
 	def test_empty(self):
 		hf = hprof._parsing.HprofFile()
 		self.assertEqual(len(hf.heaps), 0)
-		reader = hprof._parsing.PrimitiveReader(b'')
+		reader = hprof._parsing.PrimitiveReader(b'', 4)
 		hprof._parsing.record_parsers[0x0c](hf, reader)
 		self.assertEqual(len(hf.heaps), 1)
 		heap, = hf.heaps

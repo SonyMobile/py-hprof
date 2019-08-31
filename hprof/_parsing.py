@@ -133,9 +133,10 @@ del codecs
 
 
 class PrimitiveReader(object):
-	def __init__(self, bytes):
+	def __init__(self, bytes, idsize):
 		self._bytes = bytes
 		self._pos = 0
+		self._idsize = idsize
 
 	@property
 	def remaining(self):
@@ -190,6 +191,9 @@ class PrimitiveReader(object):
 		self._pos += nbytes
 		return out
 
+	def id(self):
+		return self.u(self._idsize)
+
 	def i(self, nbytes):
 		''' read an n-byte (big-endian) two-complement number '''
 		out = self.u(nbytes)
@@ -202,7 +206,7 @@ class PrimitiveReader(object):
 record_parsers = {}
 
 def parse_name_record(hf, reader):
-	nameid = reader.u(hf.idsize)
+	nameid = reader.id()
 	name = reader.utf8(reader.remaining)
 	if nameid in hf.names:
 		raise FormatError('duplicate name id 0x%x' % nameid)
@@ -211,11 +215,11 @@ record_parsers[0x01] = parse_name_record
 
 def parse_class_load_record(hf, reader):
 	serial = reader.u(4)
-	clsid  = reader.u(hf.idsize)
+	clsid  = reader.id()
 	load = ClassLoad()
 	load.class_id = clsid
 	load.stacktrace = reader.u(4) # resolve later
-	load.class_name = hf.names[reader.u(hf.idsize)]
+	load.class_name = hf.names[reader.id()]
 	if serial in hf.classloads:
 		raise FormatError('duplicate class load serial 0x%x' % serial, hf.classloads[serial], load)
 	if clsid in hf.classloads_by_id:
@@ -232,10 +236,10 @@ record_parsers[0x02] = parse_class_load_record
 
 def parse_stack_frame_record(hf, reader):
 	frame = callstack.Frame()
-	fid = reader.u(hf.idsize)
-	frame.method     = hf.names[reader.u(hf.idsize)]
-	frame.signature  = hf.names[reader.u(hf.idsize)]
-	frame.sourcefile = hf.names[reader.u(hf.idsize)]
+	fid = reader.id()
+	frame.method     = hf.names[reader.id()]
+	frame.signature  = hf.names[reader.id()]
+	frame.sourcefile = hf.names[reader.id()]
 	frame.class_name = hf.classloads[reader.u(4)].class_name
 	frame.line       = reader.i(4)
 	if fid in hf.stackframes:
@@ -252,7 +256,7 @@ def parse_stack_trace_record(hf, reader):
 	trace.thread = hf.threads[thread]
 	nframes = reader.u(4)
 	for ix in range(nframes):
-		fid = reader.u(hf.idsize)
+		fid = reader.id()
 		trace.append(hf.stackframes[fid])
 	if serial in hf.stacktraces:
 		raise FormatError('duplicate stack trace serial 0x%x' % serial)
@@ -276,12 +280,12 @@ def _parse(data):
 		raise UnhandledError() from e
 
 def _parse_hprof(mview):
-	reader = PrimitiveReader(mview)
+	reader = PrimitiveReader(mview, None)
 	hdr = reader.ascii()
 	if not hdr == 'JAVA PROFILE 1.0.1':
 		raise FormatError('unknown header "%s"' % hdr)
 	hf = HprofFile()
-	hf.idsize = reader.idsize = reader.u(4)
+	idsize = reader._idsize = reader.u(4)
 	reader.u(8) # timestamp; ignore.
 	while True:
 		try:
@@ -296,7 +300,7 @@ def _parse_hprof(mview):
 		except KeyError as e:
 			hf.unhandled[rtype] = hf.unhandled.get(rtype, 0) + 1
 		else:
-			parser(hf, PrimitiveReader(data))
+			parser(hf, PrimitiveReader(data, idsize))
 	_resolve_references(hf)
 	return hf
 

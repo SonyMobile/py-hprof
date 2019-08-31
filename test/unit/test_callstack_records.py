@@ -23,11 +23,11 @@ class TestParseStackTraceRecords(unittest.TestCase):
 		self.hf.classloads[0x22345678].class_name = 'com.example.pkg.SomeClass'
 
 	def addframe(self, indata):
-		reader = hprof._parsing.PrimitiveReader(memoryview(indata))
+		reader = hprof._parsing.PrimitiveReader(memoryview(indata), self.idsize)
 		hprof._parsing.record_parsers[0x04](self.hf, reader)
 
 	def addstack(self, indata):
-		reader = hprof._parsing.PrimitiveReader(memoryview(indata))
+		reader = hprof._parsing.PrimitiveReader(memoryview(indata), self.idsize)
 		hprof._parsing.record_parsers[0x05](self.hf, reader)
 
 	def test_frame_only(self):

@@ -7,7 +7,7 @@ from .util import varyingid
 class TestParseNameRecord(unittest.TestCase):
 
 	def callit(self, indata):
-		reader = hprof._parsing.PrimitiveReader(memoryview(indata))
+		reader = hprof._parsing.PrimitiveReader(memoryview(indata), self.idsize)
 		hprof._parsing.record_parsers[0x01](self.hf, reader)
 
 	def test_empty_name(self):
