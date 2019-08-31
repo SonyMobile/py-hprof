@@ -66,6 +66,25 @@ class TestPerlerParsing(unittest.TestCase):
 	def test_trace_record_count(self):
 		self.assertEqual(len(self.hf.stacktraces), 23)
 
+	def test_class_load_values(self):
+		#00000001 00000000 cbc32588 00000001 00007ff6 d80d8a50
+		self.assertEqual(self.hf.classloads[1].class_id, 0xcbc32588)
+		self.assertEqual(self.hf.classloads[1].class_name, self.hf.names[0x7ff6d80d8a50])
+		self.assertEqual(self.hf.classloads[1].stacktrace, self.hf.stacktraces[1])
+
+		#00000404 00000000 cb172d80 00000001 00007ff7 10219230
+		self.assertEqual(self.hf.classloads[0x404].class_id, 0xcb172d80)
+		self.assertEqual(self.hf.classloads[0x404].class_name, self.hf.names[0x7ff710219230])
+		self.assertEqual(self.hf.classloads[0x404].stacktrace, self.hf.stacktraces[1])
+
+		#00001066 00000000 cb1e28e0 00000001 00007ff7 10148740
+		self.assertEqual(self.hf.classloads[0x1066].class_id, 0xcb1e28e0)
+		self.assertEqual(self.hf.classloads[0x1066].class_name, self.hf.names[0x7ff710148740])
+		self.assertEqual(self.hf.classloads[0x1066].stacktrace, self.hf.stacktraces[1])
+
+	def test_class_load_count(self):
+		self.assertEqual(len(self.hf.classloads), 4198)
+
 	def test_num_unhandled(self):
 		# TODO: update expected count as more types are handled.
-		self.assertEqual(sum(self.hf.unhandled.values()), 4199)
+		self.assertEqual(sum(self.hf.unhandled.values()), 1)

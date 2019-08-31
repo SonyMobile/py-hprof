@@ -8,6 +8,27 @@ class HprofFile(object):
 		self.stackframes = {}
 		self.threads = {0: None}
 		self.stacktraces = {}
+		self.classloads = {} # by serial
+		self.classloads_by_id = {}
+
+
+class ClassLoad(object):
+	__slots__ = ('class_id', 'class_name', 'stacktrace')
+
+	def __str__(self):
+		return 'ClassLoad<clsid=0x%x name=%s trace=%s>' % (self.class_id, self.class_name, repr(self.stacktrace))
+
+	def __repr__(self):
+		return str(self)
+
+	def __eq__(self, other):
+		try:
+			return (self.class_id == other.class_id
+			    and self.class_name is other.class_name
+			    and self.stacktrace is other.stacktrace)
+		except AttributeError:
+			return False
+
 
 def open(path):
 	if path.endswith('.bz2'):
@@ -186,6 +207,27 @@ def parse_name_record(hf, reader):
 	hf.names[nameid] = name
 record_parsers[0x01] = parse_name_record
 
+def parse_class_load_record(hf, reader):
+	serial = reader.u(4)
+	clsid  = reader.u(hf.idsize)
+	load = ClassLoad()
+	load.class_id = clsid
+	load.stacktrace = reader.u(4) # resolve later
+	load.class_name = hf.names[reader.u(hf.idsize)]
+	if serial in hf.classloads:
+		raise FormatError('duplicate class load serial 0x%x' % serial, hf.classloads[serial], load)
+	if clsid in hf.classloads_by_id:
+		other = hf.classloads_by_id[clsid]
+		if load == other:
+			# XXX: This is apparently something that can happen. I don't know what it means.
+			#      If they're identical, let's just join them for now.
+			load = other
+		else:
+			raise FormatError('duplicate class load id 0x%x' % clsid, other, load)
+	hf.classloads[serial] = load
+	hf.classloads_by_id[clsid] = load
+record_parsers[0x02] = parse_class_load_record
+
 def parse_stack_frame_record(hf, reader):
 	frame = callstack.Frame()
 	fid = reader.u(hf.idsize)
@@ -251,3 +293,10 @@ def _parse_hprof(mview):
 def _resolve_references(hf):
 	''' Some objects can have forward references. In those cases, we've saved
 	a serial or id -- now is the time to replace them with real references.'''
+	for load in hf.classloads.values():
+		try:
+			if type(load.stacktrace) is int:
+				load.stacktrace = hf.stacktraces[load.stacktrace]
+		except KeyError as e:
+			msg = 'ClassLoad of %s refers to stacktrace 0x%x, which cannot be found'
+			raise FormatError(msg % (load.class_name, load.stacktrace)) from e
