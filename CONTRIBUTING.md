@@ -41,3 +41,5 @@ Add an `Issue: #XYZ` tag at the end to indicate which issue the commit is relate
 You may add other tags at the end of your commit message. Please use tags like `Suggested-by`, `Analyzed-by`, `Co-authored-by`, `Tested-by` or others to credit anyone you feel contributed to the patch. It's not hard, and it makes people feel appreciated!
 
 Run `git config commit.template git_commit_msg_template` to start with a convenient template on commit.
+
+Including the `Soundtrack` tag is strongly encouraged. It can be what you listened to when writing the commit message, while writing the patch, or just something you've been digging a lot lately.
