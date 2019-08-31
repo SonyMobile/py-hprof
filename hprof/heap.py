@@ -1,2 +1,5 @@
 class Heap(object):
-	pass
+	__slots__ = ('objects')
+
+	def __init__(self):
+		self.objects = {}
