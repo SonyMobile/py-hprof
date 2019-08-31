@@ -7,8 +7,6 @@ from .util import varyingid
 class TestParseStackTraceRecords(unittest.TestCase):
 
 	def setUp(self):
-		self.hf = hprof._parsing.HprofFile()
-		self.hf.idsize = self.idsize
 		self.hf.names[self.id(0x82104030)] = 'hello'
 		self.hf.names[self.id(0x55555555)] = 'five'
 		self.hf.names[self.id(0x08070605)] = 'dec'

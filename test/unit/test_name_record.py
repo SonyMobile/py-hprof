@@ -1,48 +1,54 @@
 import unittest
 import hprof
 
-class TestParseNameRecord(unittest.TestCase):
+from .util import varyingid
 
-	def setUp(self):
-		self.hf = hprof._parsing.HprofFile()
-		self.hf.idsize = 4
+@varyingid
+class TestParseNameRecord(unittest.TestCase):
 
 	def callit(self, indata):
 		reader = hprof._parsing.PrimitiveReader(memoryview(indata))
 		hprof._parsing.record_parsers[0x01](self.hf, reader)
 
 	def test_empty_name(self):
-		self.callit(b'\x20\x30\x50\x43')
-		self.assertIn(0x20305043, self.hf.names)
-		self.assertEqual(self.hf.names[0x20305043], '')
+		self.callit(self.build().id(0x20305043))
+		nid = self.id(0x20305043)
+		self.assertIn(nid, self.hf.names)
+		self.assertEqual(self.hf.names[nid], '')
 
 	def test_swedish_name(self):
-		self.callit(b'\x11\x15\x10\x55' + 'Hälge ÅÄÖsson'.encode('utf8'))
-		self.assertIn(0x11151055, self.hf.names)
-		self.assertEqual(self.hf.names[0x11151055], 'Hälge ÅÄÖsson')
+		self.callit(self.build().id(0x11151055).utf8('Hälge ÅÄÖsson'))
+		nid = self.id(0x11151055)
+		self.assertIn(nid, self.hf.names)
+		self.assertEqual(self.hf.names[nid], 'Hälge ÅÄÖsson')
 
 	def test_japanese_name(self):
-		self.callit(b'\x33\x32\x32\x32' + '山下さん'.encode('utf8'))
-		self.assertIn(0x33323232, self.hf.names)
-		self.assertEqual(self.hf.names[0x33323232], '山下さん')
+		self.callit(self.build().id(0x33323232).utf8('山下さん'))
+		nid = self.id(0x33323232)
+		self.assertIn(nid, self.hf.names)
+		self.assertEqual(self.hf.names[nid], '山下さん')
 
 	def test_4byte_utf8(self):
-		self.callit(b'\x04\x14\x24\x34sil\xf0\x9f\x9c\x9bver')
-		self.assertIn(0x04142434, self.hf.names)
-		self.assertEqual(self.hf.names[0x04142434], 'sil🜛ver')
+		self.callit(self.build().id(0x04142434).add(b'sil\xf0\x9f\x9c\x9bver'))
+		nid = self.id(0x04142434)
+		self.assertIn(nid, self.hf.names)
+		self.assertEqual(self.hf.names[nid], 'sil🜛ver')
 
 	def test_collision(self):
-		self.callit(b'\x11\x15\x10\x55abc')
+		self.callit(self.build().id(0x11151055).utf8('abc'))
 		with self.assertRaises(hprof.error.FormatError):
-			self.callit(b'\x11\x15\x10\x55def')
-		self.assertIn(0x11151055, self.hf.names)
-		self.assertEqual(self.hf.names[0x11151055], 'abc')
+			self.callit(self.build().id(0x11151055).utf8('def'))
+		nid = self.id(0x11151055)
+		self.assertIn(nid, self.hf.names)
+		self.assertEqual(self.hf.names[nid], 'abc')
 
 	def test_multiple(self):
-		self.callit(b'\x33\x32\x32\x32' + 'Hälge ÅÄÖsson'.encode('utf8'))
-		self.callit(b'\x11\x15\x10\x55' + '山下さん'.encode('utf8'))
-		self.assertIn(0x11151055, self.hf.names)
-		self.assertIn(0x33323232, self.hf.names)
-		self.assertEqual(self.hf.names[0x11151055], '山下さん')
-		self.assertEqual(self.hf.names[0x33323232], 'Hälge ÅÄÖsson')
+		self.callit(self.build().id(0x33323232).utf8('Hälge ÅÄÖsson'))
+		self.callit(self.build().id(0x11151055).utf8('山下さん'))
+		hälge = self.id(0x33323232)
+		yamashita = self.id(0x11151055)
+		self.assertIn(yamashita, self.hf.names)
+		self.assertIn(hälge, self.hf.names)
+		self.assertEqual(self.hf.names[yamashita], '山下さん')
+		self.assertEqual(self.hf.names[hälge], 'Hälge ÅÄÖsson')
 

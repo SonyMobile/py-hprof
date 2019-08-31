@@ -1,7 +1,3 @@
-import unittest
-
-from struct import pack
-
 def fold(val, bytes):
 	if val < 0:
 		raise ValueError('%d is less than zero' % val)
@@ -21,7 +17,11 @@ def varyingid(cls):
 				with self.subTest(idsize=idsize):
 					self.idsize = idsize
 					self.setUp()
+					self.assertEqual(self.idsize, idsize)
+					self.assertEqual(self.hf.idsize, idsize)
 					fn(self, *args, **kwargs)
+					self.assertEqual(self.idsize, idsize)
+					self.assertEqual(self.hf.idsize, idsize)
 		return idsize_loop
 	for name in cls.__dict__:
 		if name.startswith('test_'):
@@ -30,7 +30,15 @@ def varyingid(cls):
 				wrapped = wrap(fn)
 				wrapped.__name__ = fn.__name__
 				setattr(cls, name, wrapped)
-	cls.idsize = 4 # just need something for the initial setUp call
+	def wrap_setup(fn):
+		def idsize_setup(self):
+			if hasattr(self, 'idsize'):
+				import hprof
+				self.hf = hprof._parsing.HprofFile()
+				self.hf.idsize = self.idsize
+				fn(self)
+		return idsize_setup
+	cls.setUp = wrap_setup(cls.setUp)
 
 	def build(self):
 		return Builder(self.idsize)
@@ -65,3 +73,11 @@ class Builder(bytearray):
 
 	def id(self, val):
 		return self.u(val, self.idsize)
+
+	def utf8(self, s):
+		self.extend(s.encode('utf8'))
+		return self
+
+	def add(self, bytelike):
+		self.extend(bytelike)
+		return self
