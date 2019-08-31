@@ -1,5 +1,6 @@
 from .error import *
 from . import callstack
+from . import heap
 
 class HprofFile(object):
 	def __init__(self):
@@ -10,6 +11,7 @@ class HprofFile(object):
 		self.stacktraces = {}
 		self.classloads = {} # by serial
 		self.classloads_by_id = {}
+		self.heaps = []
 
 
 class ClassLoad(object):
@@ -256,6 +258,11 @@ def parse_stack_trace_record(hf, reader):
 		raise FormatError('duplicate stack trace serial 0x%x' % serial)
 	hf.stacktraces[serial] = trace
 record_parsers[0x05] = parse_stack_trace_record
+
+def parse_heap_record(hf, reader):
+	out = heap.Heap()
+	hf.heaps.append(out)
+record_parsers[0x0c] = parse_heap_record
 
 def _parse(data):
 	try:

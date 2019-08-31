@@ -85,6 +85,10 @@ class TestPerlerParsing(unittest.TestCase):
 	def test_class_load_count(self):
 		self.assertEqual(len(self.hf.classloads), 4198)
 
+	def test_heap_count(self):
+		self.assertEqual(len(self.hf.heaps), 1)
+
 	def test_num_unhandled(self):
-		# TODO: update expected count as more types are handled.
-		self.assertEqual(sum(self.hf.unhandled.values()), 1)
+		self.assertEqual(sum(self.hf.unhandled.values()), 0)
+
+	# TODO: test heap accesses
