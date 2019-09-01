@@ -1,3 +1,6 @@
+import unittest
+import hprof._heap_parsing
+
 def fold(val, bytes):
 	if val < 0:
 		raise ValueError('%d is less than zero' % val)
@@ -65,8 +68,17 @@ class Builder(bytearray):
 		mask = (1 << 8 * bytes) - 1
 		return self.u(val & mask, bytes)
 
+	def u1(self, val):
+		return self.u(val, 1)
+
+	def u2(self, val):
+		return self.u(val, 2)
+
 	def u4(self, val):
 		return self.u(val, 4)
+
+	def u8(self, val):
+		return self.u(val, 8)
 
 	def i4(self, val):
 		return self.i(val, 4)
@@ -81,3 +93,16 @@ class Builder(bytearray):
 	def add(self, bytelike):
 		self.extend(bytelike)
 		return self
+
+
+class HeapRecordTest(unittest.TestCase):
+	def setUp(self):
+		self.heap = hprof.heap.Heap()
+
+	def doit(self, rtype, data):
+		expected_pos = len(data)
+		data.extend(b'sentinel')
+		reader = hprof._parsing.PrimitiveReader(memoryview(data), self.hf.idsize)
+		parser = hprof._heap_parsing.record_parsers[rtype]
+		parser(self.heap, reader)
+		self.assertEqual(reader._pos, expected_pos, 'parser read more or less than expected')
