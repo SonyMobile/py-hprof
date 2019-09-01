@@ -36,31 +36,33 @@ class ClassLoad(object):
 			return False
 
 
-def open(path):
+def open(path, progress_callback=None):
+	if progress_callback:
+		progress_callback('opening', None, None)
 	if path.endswith('.bz2'):
 		import bz2
 		with bz2.open(path, 'rb') as f:
-			return parse(f)
+			return parse(f, progress_callback)
 	elif path.endswith('.gz'):
 		import gzip
 		with gzip.open(path, 'rb') as f:
-			return parse(f)
+			return parse(f, progress_callback)
 	elif path.endswith('.xz'):
 		import lzma
 		with lzma.open(path, 'rb') as f:
-			return parse(f)
+			return parse(f, progress_callback)
 	else:
 		import builtins
 		with builtins.open(path, 'rb') as f:
-			return parse(f)
+			return parse(f, progress_callback)
 
-def parse(data):
+def parse(data, progress_callback=None):
 	failures = []
 
 	# is it a bytes-like?
 	try:
 		with memoryview(data) as mview:
-			return _parse(mview)
+			return _parse(mview, progress_callback)
 	except (HprofError, BufferError):
 		# _parse failed
 		raise
@@ -71,30 +73,37 @@ def parse(data):
 	# can it be mmapped?
 	from mmap import mmap, ACCESS_READ
 	from io import BufferedReader
+	import os
 	if isinstance(data, BufferedReader):
-		import os
 		fno = data.fileno()
 		fsize = os.fstat(fno).st_size
 		with mmap(fno, fsize, access=ACCESS_READ) as mapped:
 			with memoryview(mapped) as mview:
-				return _parse(mview)
+				return _parse(mview, progress_callback)
 
 	# can it be read?
 	try:
 		from tempfile import TemporaryFile
+		from io import FileIO
+		underlying_file = FileIO(data.fileno(), closefd=False)
+		insize = os.fstat(underlying_file.fileno()).st_size
 		with TemporaryFile() as f:
-			buf = bytearray(8192)
+			buf = bytearray(256 * 1024)
 			fsize = 0
 			while True:
+				if progress_callback:
+					progress_callback('extracting', min(underlying_file.tell(), insize-1), insize)
 				nread = data.readinto(buf)
 				if not nread:
 					break
 				fsize += nread
 				f.write(buf[:nread])
 			f.flush()
+			if progress_callback:
+				progress_callback('extracting', insize, insize)
 			with mmap(f.fileno(), fsize) as mapped:
 				with memoryview(mapped) as mview:
-					return _parse(mview)
+					return _parse(mview, progress_callback)
 	except BufferError as e:
 		raise
 	except Exception as e:
@@ -336,7 +345,7 @@ jtype.long.size    = 8
 
 record_parsers = {}
 
-def parse_name_record(hf, reader):
+def parse_name_record(hf, reader, progresscb):
 	nameid = reader.id()
 	name = reader.utf8(reader.remaining)
 	if nameid in hf.names:
@@ -344,7 +353,7 @@ def parse_name_record(hf, reader):
 	hf.names[nameid] = name
 record_parsers[0x01] = parse_name_record
 
-def parse_class_load_record(hf, reader):
+def parse_class_load_record(hf, reader, progresscb):
 	serial = reader.u4()
 	clsid  = reader.id()
 	load = ClassLoad()
@@ -365,7 +374,7 @@ def parse_class_load_record(hf, reader):
 	hf.classloads_by_id[clsid] = load
 record_parsers[0x02] = parse_class_load_record
 
-def parse_stack_frame_record(hf, reader):
+def parse_stack_frame_record(hf, reader, progresscb):
 	frame = callstack.Frame()
 	fid = reader.id()
 	frame.method     = hf.names[reader.id()]
@@ -378,7 +387,7 @@ def parse_stack_frame_record(hf, reader):
 	hf.stackframes[fid] = frame
 record_parsers[0x04] = parse_stack_frame_record
 
-def parse_stack_trace_record(hf, reader):
+def parse_stack_trace_record(hf, reader, progresscb):
 	trace = callstack.Trace()
 	serial = reader.u4()
 	thread = reader.u4()
@@ -394,7 +403,7 @@ def parse_stack_trace_record(hf, reader):
 	hf.stacktraces[serial] = trace
 record_parsers[0x05] = parse_stack_trace_record
 
-def parse_heap_record(hf, reader):
+def parse_heap_record(hf, reader, progresscb):
 	from . import _heap_parsing
 	out = heap.Heap()
 	_heap_parsing.parse_heap(out, reader)
@@ -402,27 +411,33 @@ def parse_heap_record(hf, reader):
 	hf.heaps.append(out)
 record_parsers[0x0c] = parse_heap_record
 
-def _parse(data):
+def _parse(data, progresscb):
 	try:
-		return _parse_hprof(data)
+		return _parse_hprof(data, progresscb)
 	except HprofError:
 		raise
 	except Exception as e:
 		raise UnhandledError() from e
 
-def _parse_hprof(mview):
+def _parse_hprof(mview, progresscb):
 	reader = PrimitiveReader(mview, None)
+	if progresscb:
+		progresscb('parsing', 0, len(mview))
 	hdr = reader.ascii()
 	if not hdr == 'JAVA PROFILE 1.0.1':
 		raise FormatError('unknown header "%s"' % hdr)
 	hf = HprofFile()
 	idsize = reader._idsize = reader.u4()
 	reader.u8() # timestamp; ignore.
+	lastreport = -1<<32
 	while True:
 		try:
 			rtype = reader.u1()
 		except UnexpectedEof:
 			break # not unexpected.
+		if progresscb and reader._pos - lastreport >= 1<<20:
+			lastreport = reader._pos
+			progresscb('parsing', reader._pos, len(mview))
 		micros = reader.u4()
 		datasize = reader.u4()
 		data = reader.bytes(datasize)
@@ -431,7 +446,10 @@ def _parse_hprof(mview):
 		except KeyError as e:
 			hf.unhandled[rtype] = hf.unhandled.get(rtype, 0) + 1
 		else:
-			parser(hf, PrimitiveReader(data, idsize))
+			parser(hf, PrimitiveReader(data, idsize), progresscb)
+	if progresscb:
+		progresscb('parsing', len(mview), len(mview))
+		progresscb('resolving', None, None)
 	_resolve_references(hf)
 	return hf
 

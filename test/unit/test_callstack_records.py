@@ -24,11 +24,11 @@ class TestParseStackTraceRecords(unittest.TestCase):
 
 	def addframe(self, indata):
 		reader = hprof._parsing.PrimitiveReader(memoryview(indata), self.idsize)
-		hprof._parsing.record_parsers[0x04](self.hf, reader)
+		hprof._parsing.record_parsers[0x04](self.hf, reader, None)
 
 	def addstack(self, indata):
 		reader = hprof._parsing.PrimitiveReader(memoryview(indata), self.idsize)
-		hprof._parsing.record_parsers[0x05](self.hf, reader)
+		hprof._parsing.record_parsers[0x05](self.hf, reader, None)
 
 	def test_frame_only(self):
 		self.addframe(self.build()

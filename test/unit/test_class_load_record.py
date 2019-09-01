@@ -17,7 +17,7 @@ class TestParseClassLoadRecord(unittest.TestCase):
 	def addload(self, serial, objid, stackserial, nameid):
 		indata = self.build().u4(serial).id(objid).u4(stackserial).id(nameid)
 		reader = hprof._parsing.PrimitiveReader(memoryview(indata), self.idsize)
-		hprof._parsing.record_parsers[0x02](self.hf, reader)
+		hprof._parsing.record_parsers[0x02](self.hf, reader, None)
 
 	def test_lonely(self):
 		self.addload(0x1, 0x2, 0x3, 0xdeadd00d)

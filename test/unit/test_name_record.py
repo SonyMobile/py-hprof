@@ -8,7 +8,7 @@ class TestParseNameRecord(unittest.TestCase):
 
 	def callit(self, indata):
 		reader = hprof._parsing.PrimitiveReader(memoryview(indata), self.idsize)
-		hprof._parsing.record_parsers[0x01](self.hf, reader)
+		hprof._parsing.record_parsers[0x01](self.hf, reader, None)
 
 	def test_empty_name(self):
 		self.callit(self.build().id(0x20305043))

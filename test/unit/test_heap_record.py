@@ -9,7 +9,7 @@ class TestParseHeapRecord(unittest.TestCase):
 		hf = hprof._parsing.HprofFile()
 		self.assertEqual(len(hf.heaps), 0)
 		reader = hprof._parsing.PrimitiveReader(b'', None)
-		hprof._parsing.record_parsers[0x0c](hf, reader)
+		hprof._parsing.record_parsers[0x0c](hf, reader, None)
 		self.assertEqual(len(hf.heaps), 1)
 		heap, = hf.heaps
 		self.assertEqual(len(heap.objects), 0)
@@ -20,7 +20,7 @@ class TestParseHeapRecord(unittest.TestCase):
 		hf = hprof._parsing.HprofFile()
 		reader = 'I am a reader'
 		with patch('hprof._heap_parsing.parse_heap', side_effect=check_first) as ph, patch('hprof._heap_parsing.resolve_heap_references') as rhr:
-			hprof._parsing.record_parsers[0x0c](hf, reader)
+			hprof._parsing.record_parsers[0x0c](hf, reader, None)
 		self.assertEqual(len(hf.heaps), 1)
 		heap = hf.heaps[0]
 		self.assertIsInstance(heap, hprof.heap.Heap)
