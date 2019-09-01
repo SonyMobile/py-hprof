@@ -20,6 +20,8 @@ print('PROFILE:')
 import sys
 import os.path
 
+show_callers = 'callers' in sys.argv
+
 def splitpath(p):
 	out = []
 	while True:
@@ -64,6 +66,11 @@ for func in stats.fcn_list:
 	fmt = '%15s %7.3f %7.3f %7.3f %7.3f %s'
 	arg = (callstr, internal, internal/nrecursive, total, total/ncalls, descr)
 	print(fmt % arg)
+	if show_callers:
+		for caller, cstats in sorted(callers.items(), key=lambda p: -p[1][0]):
+			path, line, name = caller
+			ncalls, nrecursive, internal, total = cstats
+			print('%51s %8d %7.3f %s' % ('->', ncalls, total, name))
 	nprinted += 1
 	if nprinted >= 20:
 		break
