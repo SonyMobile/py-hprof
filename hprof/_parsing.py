@@ -180,51 +180,129 @@ class PrimitiveReader(object):
 		self._pos += nbytes
 		return out
 
-	def u(self, nbytes):
-		''' read an n-byte (big-endian) unsigned number '''
+	def id(self):
 		out = 0
 		bs = self._bytes
+		nbytes = self._idsize
 		try:
 			for ix in range(self._pos, self._pos + nbytes):
 				out = (out << 8) + bs[ix]
 		except IndexError:
-			fmt = 'tried to read %d-byte unsigned; only %d bytes available'
+			fmt = 'tried to read %d-byte id; only %d bytes available'
 			raise UnexpectedEof(fmt % (nbytes, self.remaining))
 		self._pos += nbytes
 		return out
 
-	def id(self):
-		return self.u(self._idsize)
+	def u1(self):
+		try:
+			out = self._bytes[self._pos]
+		except IndexError as e:
+			raise UnexpectedEof() from e
+		self._pos += 1
+		return out
 
-	def i(self, nbytes):
-		''' read an n-byte (big-endian) two-complement number '''
-		out = self.u(nbytes)
-		mask = 0x80 << 8 * nbytes - 8
-		if out & mask:
-			return out - (0x1 << 8*nbytes)
+	def u2(self):
+		bs = self._bytes
+		pos = self._pos
+		try:
+			out = ((bs[pos + 0] << 8)
+			     + (bs[pos + 1]))
+		except IndexError as e:
+			raise UnexpectedEof() from e
+		self._pos += 2
+		return out
+
+	def u4(self):
+		bs = self._bytes
+		pos = self._pos
+		try:
+			out = ((bs[pos + 0] << 24)
+			     + (bs[pos + 1] << 16)
+			     + (bs[pos + 2] <<  8)
+			     + (bs[pos + 3]))
+		except IndexError as e:
+			raise UnexpectedEof() from e
+		self._pos += 4
+		return out
+
+	def u8(self):
+		bs = self._bytes
+		pos = self._pos
+		try:
+			out = ((bs[pos + 0] << 56)
+			     + (bs[pos + 1] << 48)
+			     + (bs[pos + 2] << 40)
+			     + (bs[pos + 3] << 32)
+			     + (bs[pos + 4] << 24)
+			     + (bs[pos + 5] << 16)
+			     + (bs[pos + 6] <<  8)
+			     + (bs[pos + 7]))
+		except IndexError as e:
+			raise UnexpectedEof() from e
+		self._pos += 8
 		return out
 
 	def i1(self):
-		return self.i(1)
+		try:
+			out = (self._bytes[self._pos] ^ 0x80) - 0x80
+		except IndexError as e:
+			raise UnexpectedEof() from e
+		self._pos += 1
+		return out
 
 	def i2(self):
-		return self.i(2)
+		bs = self._bytes
+		pos = self._pos
+		try:
+			out = ((bs[pos + 0] << 8)
+			     + (bs[pos + 1]))
+		except IndexError as e:
+			raise UnexpectedEof() from e
+		out = (out ^ 0x8000) - 0x8000
+		self._pos += 2
+		return out
 
 	def i4(self):
-		return self.i(4)
+		bs = self._bytes
+		pos = self._pos
+		try:
+			out = ((bs[pos + 0] << 24)
+			     + (bs[pos + 1] << 16)
+			     + (bs[pos + 2] <<  8)
+			     + (bs[pos + 3]))
+		except IndexError as e:
+			raise UnexpectedEof() from e
+		out = (out ^ 0x80000000) - 0x80000000
+		self._pos += 4
+		return out
 
 	def i8(self):
-		return self.i(8)
+		bs = self._bytes
+		pos = self._pos
+		try:
+			out = ((bs[pos + 0] << 56)
+			     + (bs[pos + 1] << 48)
+			     + (bs[pos + 2] << 40)
+			     + (bs[pos + 3] << 32)
+			     + (bs[pos + 4] << 24)
+			     + (bs[pos + 5] << 16)
+			     + (bs[pos + 6] <<  8)
+			     + (bs[pos + 7]))
+		except IndexError as e:
+			raise UnexpectedEof() from e
+		out = (out ^ 0x8000000000000000) - 0x8000000000000000
+		self._pos += 8
+		return out
 
 	def jtype(self):
-		typeval = self.u(1)
+		typeval = self.u1()
 		try:
 			return jtype(typeval)
 		except ValueError as e:
 			raise FormatError() from e
 
 	def jboolean(self):
-		return self.u(1) != 0
+		return self.u1() != 0
 
 	def jchar(self):
 		return codecs.decode(self.bytes(2), 'utf-16-be', 'surrogatepass')
@@ -259,11 +337,11 @@ def parse_name_record(hf, reader):
 record_parsers[0x01] = parse_name_record
 
 def parse_class_load_record(hf, reader):
-	serial = reader.u(4)
+	serial = reader.u4()
 	clsid  = reader.id()
 	load = ClassLoad()
 	load.class_id = clsid
-	load.stacktrace = reader.u(4) # resolve later
+	load.stacktrace = reader.u4() # resolve later
 	load.class_name = hf.names[reader.id()]
 	if serial in hf.classloads:
 		raise FormatError('duplicate class load serial 0x%x' % serial, hf.classloads[serial], load)
@@ -285,8 +363,8 @@ def parse_stack_frame_record(hf, reader):
 	frame.method     = hf.names[reader.id()]
 	frame.signature  = hf.names[reader.id()]
 	frame.sourcefile = hf.names[reader.id()]
-	frame.class_name = hf.classloads[reader.u(4)].class_name
-	frame.line       = reader.i(4)
+	frame.class_name = hf.classloads[reader.u4()].class_name
+	frame.line       = reader.i4()
 	if fid in hf.stackframes:
 		raise FormatError('duplicate stack frame id 0x%x' % fid)
 	hf.stackframes[fid] = frame
@@ -294,12 +372,12 @@ record_parsers[0x04] = parse_stack_frame_record
 
 def parse_stack_trace_record(hf, reader):
 	trace = callstack.Trace()
-	serial = reader.u(4)
-	thread = reader.u(4)
+	serial = reader.u4()
+	thread = reader.u4()
 	if thread not in hf.threads:
 		hf.threads[thread] = 'dummy thread' # TODO: use a real thread instance
 	trace.thread = hf.threads[thread]
-	nframes = reader.u(4)
+	nframes = reader.u4()
 	for ix in range(nframes):
 		fid = reader.id()
 		trace.append(hf.stackframes[fid])
@@ -330,15 +408,15 @@ def _parse_hprof(mview):
 	if not hdr == 'JAVA PROFILE 1.0.1':
 		raise FormatError('unknown header "%s"' % hdr)
 	hf = HprofFile()
-	idsize = reader._idsize = reader.u(4)
-	reader.u(8) # timestamp; ignore.
+	idsize = reader._idsize = reader.u4()
+	reader.u8() # timestamp; ignore.
 	while True:
 		try:
-			rtype = reader.u(1)
+			rtype = reader.u1()
 		except UnexpectedEof:
 			break # not unexpected.
-		micros = reader.u(4)
-		datasize = reader.u(4)
+		micros = reader.u4()
+		datasize = reader.u4()
 		data = reader.bytes(datasize)
 		try:
 			parser = record_parsers[rtype]

@@ -9,38 +9,38 @@ record_parsers = {}
 # TODO: useful stuff in these.
 record_parsers[0xff] = lambda h, r: (r.id())
 record_parsers[0x01] = lambda h, r: (r.id(), r.id())
-record_parsers[0x02] = lambda h, r: (r.id(), r.u(4), r.u(4))
-record_parsers[0x03] = lambda h, r: (r.id(), r.u(4), r.u(4))
-record_parsers[0x04] = lambda h, r: (r.id(), r.u(4))
+record_parsers[0x02] = lambda h, r: (r.id(), r.u4(), r.u4())
+record_parsers[0x03] = lambda h, r: (r.id(), r.u4(), r.u4())
+record_parsers[0x04] = lambda h, r: (r.id(), r.u4())
 record_parsers[0x05] = lambda h, r: (r.id())
-record_parsers[0x06] = lambda h, r: (r.id(), r.u(4))
+record_parsers[0x06] = lambda h, r: (r.id(), r.u4())
 record_parsers[0x07] = lambda h, r: (r.id())
-record_parsers[0x08] = lambda h, r: (r.id(), r.u(4), r.u(4))
+record_parsers[0x08] = lambda h, r: (r.id(), r.u4(), r.u4())
 
 def parse_class(heap, reader):
 	reader.id()
-	reader.u(4)
+	reader.u4()
 	reader.id()
 	reader.id()
 	reader.id()
 	reader.id()
 	reader.id()
 	reader.id()
-	reader.u(4)
+	reader.u4()
 
-	nconstants = reader.u(2)
+	nconstants = reader.u2()
 	for i in range(nconstants):
-		reader.u(2)
+		reader.u2()
 		t = reader.jtype()
 		t.read(reader)
 
-	nstatic = reader.u(2)
+	nstatic = reader.u2()
 	for i in range(nstatic):
 		reader.id()
 		t = reader.jtype()
 		t.read(reader)
 
-	ninstance = reader.u(2)
+	ninstance = reader.u2()
 	for i in range(ninstance):
 		reader.id()
 		reader.jtype()
@@ -48,16 +48,16 @@ record_parsers[0x20] = parse_class
 
 def parse_instance(heap, reader):
 	reader.id()
-	reader.u(4)
+	reader.u4()
 	reader.id()
-	remaining = reader.u(4)
+	remaining = reader.u4()
 	reader.bytes(remaining)
 record_parsers[0x21] = parse_instance
 
 def parse_object_array(heap, reader):
 	reader.id()
-	reader.u(4)
-	length = reader.u(4)
+	reader.u4()
+	length = reader.u4()
 	reader.id()
 	for i in range(length):
 		reader.id()
@@ -65,8 +65,8 @@ record_parsers[0x22] = parse_object_array
 
 def parse_primitive_array(heap, reader):
 	reader.id()
-	reader.u(4)
-	length = reader.u(4)
+	reader.u4()
+	length = reader.u4()
 	t = reader.jtype()
 	for i in range(length):
 		t.read(reader)
@@ -75,7 +75,7 @@ record_parsers[0x23] = parse_primitive_array
 def parse_heap(heap, reader):
 	while True:
 		try:
-			rtype = reader.u(1)
+			rtype = reader.u1()
 		except UnexpectedEof:
 			break # nope, it's a normal eof
 		try:

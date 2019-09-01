@@ -69,32 +69,85 @@ class TestPrimitiveReader(unittest.TestCase):
 			r.ascii()
 		self.assertEqual(r.bytes(4), b'abc\xc3')
 
-	def test_unsigned_4(self):
-		self.assertEqual(self.r.u(4), 0x68692079)
-		self.assertEqual(self.r.u(4), 0x6f7500c3)
+	def test_unsigned_1(self):
+		self.assertEqual(self.r.u1(), 0x68)
+		self.assertEqual(self.r.u1(), 0x69)
+		self.assertEqual(self.r.u1(), 0x20)
+		self.assertEqual(self.r.u1(), 0x79)
+		self.assertEqual(self.r.u1(), 0x6f)
+		self.assertEqual(self.r.u1(), 0x75)
+		self.assertEqual(self.r.u1(), 0x00)
+		self.assertEqual(self.r.u1(), 0xc3)
+		self.assertEqual(self.r.u1(), 0x9c)
+		self.assertEqual(self.r.u1(), 0x7a)
+		self.assertEqual(self.r.u1(), 0x78)
 		with self.assertRaises(hprof.error.UnexpectedEof):
-			self.r.u(4)
+			self.r.u1()
 
-	def test_unsigned_5(self):
-		self.assertEqual(self.r.u(5), 0x686920796f)
-		self.assertEqual(self.r.u(5), 0x7500c39c7a)
+	def test_unsigned_2(self):
+		self.assertEqual(self.r.u2(), 0x6869)
+		self.assertEqual(self.r.u2(), 0x2079)
+		self.assertEqual(self.r.u2(), 0x6f75)
+		self.assertEqual(self.r.u2(), 0x00c3)
+		self.assertEqual(self.r.u2(), 0x9c7a)
 		with self.assertRaises(hprof.error.UnexpectedEof):
-			self.r.u(5)
+			self.r.u2()
+
+	def test_unsigned_4(self):
+		self.assertEqual(self.r.u4(), 0x68692079)
+		self.assertEqual(self.r.u4(), 0x6f7500c3)
+		with self.assertRaises(hprof.error.UnexpectedEof):
+			self.r.u4()
+
+	def test_unsigned_8(self):
+		self.assertEqual(self.r.u8(), 0x686920796f7500c3)
+		with self.assertRaises(hprof.error.UnexpectedEof):
+			self.r.u8()
 
 	def test_unsigned_unaligned(self):
 		self.r.bytes(3)
-		self.assertEqual(self.r.u(4), 0x796f7500)
-		self.assertEqual(self.r.u(4), 0xc39c7a78)
+		self.assertEqual(self.r.u4(), 0x796f7500)
+		self.assertEqual(self.r.u4(), 0xc39c7a78)
 
-	def test_signed_3(self):
-		self.r.bytes(4)
-		self.assertEqual(self.r.i(3), 0x6f7500)
-		self.assertEqual(self.r.i(3), 0xc39c7a - 0x1000000)
+	def test_signed_1(self):
+		self.assertEqual(self.r.i1(), 0x68)
+		self.assertEqual(self.r.i1(), 0x69)
+		self.assertEqual(self.r.i1(), 0x20)
+		self.assertEqual(self.r.i1(), 0x79)
+		self.assertEqual(self.r.i1(), 0x6f)
+		self.assertEqual(self.r.i1(), 0x75)
+		self.assertEqual(self.r.i1(), 0x00)
+		self.assertEqual(self.r.i1(), 0xc3 - 0x100)
+		self.assertEqual(self.r.i1(), 0x9c - 0x100)
+		self.assertEqual(self.r.i1(), 0x7a)
+		self.assertEqual(self.r.i1(), 0x78)
+		with self.assertRaises(hprof.error.UnexpectedEof):
+			self.r.i1()
+
+	def test_signed_2(self):
+		self.assertEqual(self.r.i2(), 0x6869)
+		self.assertEqual(self.r.i2(), 0x2079)
+		self.assertEqual(self.r.i2(), 0x6f75)
+		self.assertEqual(self.r.i2(), 0x00c3)
+		self.assertEqual(self.r.i2(), 0x9c7a - 0x10000)
+		with self.assertRaises(hprof.error.UnexpectedEof):
+			self.r.i2()
+
+	def test_signed_4(self):
+		self.assertEqual(self.r.i4(), 0x68692079)
+		self.assertEqual(self.r.i4(), 0x6f7500c3)
+		with self.assertRaises(hprof.error.UnexpectedEof):
+			self.r.i4()
+
+	def test_signed_8(self):
+		self.assertEqual(self.r.i8(), 0x686920796f7500c3)
+		with self.assertRaises(hprof.error.UnexpectedEof):
+			self.r.i8()
 
 	def test_signed_unaligned(self):
 		self.r.bytes(3)
-		self.assertEqual(self.r.i(4), 0x796f7500)
-		self.assertEqual(self.r.i(4), 0xc39c7a78 - 0x100000000)
+		self.assertEqual(self.r.i4(), 0x796f7500)
+		self.assertEqual(self.r.i4(), 0xc39c7a78 - 0x100000000)
 
 	def test_invalid_utf8_does_not_consume(self):
 		r = hprof._parsing.PrimitiveReader(b'abc\xed\x00\xbddef', 4)

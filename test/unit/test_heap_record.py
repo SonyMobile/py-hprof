@@ -38,7 +38,7 @@ class TestParseHeapRecord(unittest.TestCase):
 
 	def test_heap_parser(self):
 		dummies = {}
-		dummies[1] = MagicMock(side_effect=lambda h,r: r.u(r.u(1)))
+		dummies[1] = MagicMock(side_effect=lambda h,r: r.bytes(r.u1()))
 		dummies[2] = MagicMock()
 		heap = hprof.heap.Heap()
 		reader = hprof._parsing.PrimitiveReader(b'\2\2\2\1\3\6\6\6\2\1\2\4\3', None)
