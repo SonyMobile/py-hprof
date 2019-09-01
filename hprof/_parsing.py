@@ -204,6 +204,18 @@ class PrimitiveReader(object):
 			return out - (0x1 << 8*nbytes)
 		return out
 
+	def i1(self):
+		return self.i(1)
+
+	def i2(self):
+		return self.i(2)
+
+	def i4(self):
+		return self.i(4)
+
+	def i8(self):
+		return self.i(8)
+
 	def jtype(self):
 		typeval = self.u(1)
 		try:
@@ -211,28 +223,29 @@ class PrimitiveReader(object):
 		except ValueError as e:
 			raise FormatError() from e
 
-	def jval(self, t):
-		if t is jtype.object:
-			return self.id()
-		elif t is jtype.boolean:
-			return self.u(1) != 0
-		elif t is jtype.char:
-			return codecs.decode(self.bytes(2), 'utf-16-be', 'surrogatepass')
-		elif t is jtype.float:
-			v, = struct.unpack('>f', self.bytes(4))
-			return v
-		elif t is jtype.double:
-			v, = struct.unpack('>d', self.bytes(8))
-			return v
-		elif t is jtype.byte:
-			return self.i(1)
-		elif t is jtype.short:
-			return self.i(2)
-		elif t is jtype.int:
-			return self.i(4)
-		elif t is jtype.long:
-			return self.i(8)
-		raise ValueError('unhandled jval type', t)
+	def jboolean(self):
+		return self.u(1) != 0
+
+	def jchar(self):
+		return codecs.decode(self.bytes(2), 'utf-16-be', 'surrogatepass')
+
+	def jfloat(self):
+		v, = struct.unpack('>f', self.bytes(4))
+		return v
+
+	def jdouble(self):
+		v, = struct.unpack('>d', self.bytes(8))
+		return v
+
+jtype.object.read  = PrimitiveReader.id
+jtype.boolean.read = PrimitiveReader.jboolean
+jtype.char.read    = PrimitiveReader.jchar
+jtype.float.read   = PrimitiveReader.jfloat
+jtype.double.read  = PrimitiveReader.jdouble
+jtype.byte.read    = PrimitiveReader.i1
+jtype.short.read   = PrimitiveReader.i2
+jtype.int.read     = PrimitiveReader.i4
+jtype.long.read    = PrimitiveReader.i8
 
 
 record_parsers = {}

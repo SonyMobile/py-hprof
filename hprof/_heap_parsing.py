@@ -2,6 +2,8 @@ import hprof.heap
 
 from .error import *
 
+from . import jtype
+
 record_parsers = {}
 
 # TODO: useful stuff in these.
@@ -30,13 +32,13 @@ def parse_class(heap, reader):
 	for i in range(nconstants):
 		reader.u(2)
 		t = reader.jtype()
-		reader.jval(t)
+		t.read(reader)
 
 	nstatic = reader.u(2)
 	for i in range(nstatic):
 		reader.id()
 		t = reader.jtype()
-		reader.jval(t)
+		t.read(reader)
 
 	ninstance = reader.u(2)
 	for i in range(ninstance):
@@ -67,7 +69,7 @@ def parse_primitive_array(heap, reader):
 	length = reader.u(4)
 	t = reader.jtype()
 	for i in range(length):
-		reader.jval(t)
+		t.read(reader)
 record_parsers[0x23] = parse_primitive_array
 
 def parse_heap(heap, reader):
