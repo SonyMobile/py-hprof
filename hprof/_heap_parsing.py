@@ -71,12 +71,16 @@ def parse_primitive_array(heap, reader):
 	reader.bytes(length * t.size)
 record_parsers[0x23] = parse_primitive_array
 
-def parse_heap(heap, reader):
+def parse_heap(heap, reader, progresscb):
+	lastreport = 0
 	while True:
 		try:
 			rtype = reader.u1()
 		except UnexpectedEof:
 			break # nope, it's a normal eof
+		if progresscb and reader._pos - lastreport >= 1 << 20:
+			lastreport = reader._pos
+			progresscb(lastreport)
 		try:
 			parser = record_parsers[rtype]
 		except KeyError as e:

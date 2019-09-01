@@ -210,9 +210,13 @@ class TestParseHprof(unittest.TestCase):
 
 	def test_one_record_no_progress(self):
 		indata = b'JAVA PROFILE 1.0.1\0\0\0\0\4\0\1\2\3\4\5\6\7\x50\0\0\0\0\0\0\0\2\x33\x44'
-		with patch('hprof._parsing.record_parsers', {}), patch('hprof._parsing._resolve_references') as resolve:
+		mock_parsers = { 0x50: unittest.mock.MagicMock() }
+		with patch('hprof._parsing.record_parsers', mock_parsers), patch('hprof._parsing._resolve_references') as resolve:
 			hf = hprof._parsing._parse_hprof(indata, None)
-		self.assertEqual(hf.unhandled, {0x50: 1})
+		self.assertEqual(mock_parsers[0x50].call_count, 1)
+		self.assertIs(mock_parsers[0x50].call_args[0][0], hf)
+		self.assertIsInstance(mock_parsers[0x50].call_args[0][1], hprof._parsing.PrimitiveReader)
+		self.assertIsNone(mock_parsers[0x50].call_args[0][2])
 		self.assertEqual(resolve.call_count, 1)
 		self.assertCountEqual(resolve.call_args[0], (hf,))
 		self.assertFalse(resolve.call_args[1])
@@ -224,8 +228,8 @@ class TestParseHprof(unittest.TestCase):
 		indata += b'\x50\0\0\0\0\0\0\0\2\x30\x31'
 		indata += b'\x02\0\0\0\0\0\0\0\3\x33\x44\x32'
 		mock_parsers = {
-			0x50: unittest.mock.MagicMock(),
-			0x01: unittest.mock.MagicMock(),
+			0x50: unittest.mock.MagicMock(side_effect=lambda h,r,p: p(50000)),
+			0x01: unittest.mock.MagicMock(side_effect=lambda h,r,p: p( 1000)),
 		}
 		progress = MagicMock()
 		with patch('hprof._parsing.record_parsers', mock_parsers), patch('hprof._parsing._resolve_references') as resolve:
@@ -233,27 +237,35 @@ class TestParseHprof(unittest.TestCase):
 
 		self.assertEqual(mock_parsers[0x50].call_count, 2)
 		self.assertEqual(mock_parsers[0x01].call_count, 1)
+
 		self.assertEqual(hf.unhandled, {0x02: 1})
 		self.assertEqual(resolve.call_count, 1)
 		self.assertCountEqual(resolve.call_args[0], (hf,))
 		self.assertFalse(resolve.call_args[1])
 
-		self.assertEqual(progress.call_count, 4)
+		self.assertEqual(progress.call_count, 7)
 		self.assertEqual(progress.call_args_list[0][0], ('parsing', 0, 79))
 		self.assertEqual(progress.call_args_list[0][1], {})
 		self.assertEqual(progress.call_args_list[1][0], ('parsing', 32, 79))
 		self.assertEqual(progress.call_args_list[1][1], {})
-		self.assertEqual(progress.call_args_list[2][0], ('parsing', 79, 79))
+		self.assertEqual(progress.call_args_list[2][0], ('parsing', 50032, 79))
 		self.assertEqual(progress.call_args_list[2][1], {})
-		self.assertEqual(progress.call_args_list[3][0], ('resolving', None, None))
+		self.assertEqual(progress.call_args_list[3][0], ('parsing',  1046, 79))
 		self.assertEqual(progress.call_args_list[3][1], {})
+		self.assertEqual(progress.call_args_list[4][0], ('parsing', 50057, 79))
+		self.assertEqual(progress.call_args_list[4][1], {})
+		self.assertEqual(progress.call_args_list[5][0], ('parsing', 79, 79))
+		self.assertEqual(progress.call_args_list[5][1], {})
+		self.assertEqual(progress.call_args_list[6][0], ('resolving', None, None))
+		self.assertEqual(progress.call_args_list[6][1], {})
 
 		for mock in mock_parsers.values():
 			for args, kwargs in mock.call_args_list:
 				self.assertFalse(kwargs)
 				self.assertEqual(len(args), 3)
 				self.assertIs(args[0], hf)
-				self.assertIs(args[2], progress)
+				self.assertIsInstance(args[1], hprof._parsing.PrimitiveReader)
+				self.assertIsNot(args[2], progress)
 
 		self.assertIsInstance(mock_parsers[0x50].call_args_list[0][0][1], hprof._parsing.PrimitiveReader)
 		self.assertIsInstance(mock_parsers[0x50].call_args_list[1][0][1], hprof._parsing.PrimitiveReader)

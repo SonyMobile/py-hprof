@@ -406,7 +406,7 @@ record_parsers[0x05] = parse_stack_trace_record
 def parse_heap_record(hf, reader, progresscb):
 	from . import _heap_parsing
 	out = heap.Heap()
-	_heap_parsing.parse_heap(out, reader)
+	_heap_parsing.parse_heap(out, reader, progresscb)
 	_heap_parsing.resolve_heap_references(out)
 	hf.heaps.append(out)
 record_parsers[0x0c] = parse_heap_record
@@ -430,14 +430,20 @@ def _parse_hprof(mview, progresscb):
 	idsize = reader._idsize = reader.u4()
 	reader.u8() # timestamp; ignore.
 	lastreport = -1<<32
+	def innerprogress(pos):
+		progresscb('parsing', innerprogress.base + pos, len(mview))
+	if not progresscb:
+		innerprogress = None
 	while True:
 		try:
 			rtype = reader.u1()
 		except UnexpectedEof:
 			break # not unexpected.
-		if progresscb and reader._pos - lastreport >= 1<<20:
-			lastreport = reader._pos
-			progresscb('parsing', reader._pos, len(mview))
+		if progresscb:
+			innerprogress.base = reader._pos
+			if reader._pos - lastreport >= 1<<20:
+				lastreport = reader._pos
+				progresscb('parsing', reader._pos, len(mview))
 		micros = reader.u4()
 		datasize = reader.u4()
 		data = reader.bytes(datasize)
@@ -446,7 +452,7 @@ def _parse_hprof(mview, progresscb):
 		except KeyError as e:
 			hf.unhandled[rtype] = hf.unhandled.get(rtype, 0) + 1
 		else:
-			parser(hf, PrimitiveReader(data, idsize), progresscb)
+			parser(hf, PrimitiveReader(data, idsize), innerprogress)
 	if progresscb:
 		progresscb('parsing', len(mview), len(mview))
 		progresscb('resolving', None, None)
