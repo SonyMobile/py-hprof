@@ -317,13 +317,21 @@ class PrimitiveReader(object):
 
 jtype.object.read  = PrimitiveReader.id
 jtype.boolean.read = PrimitiveReader.jboolean
+jtype.boolean.size = 1
 jtype.char.read    = PrimitiveReader.jchar
+jtype.char.size    = 2
 jtype.float.read   = PrimitiveReader.jfloat
+jtype.float.size   = 4
 jtype.double.read  = PrimitiveReader.jdouble
+jtype.double.size  = 8
 jtype.byte.read    = PrimitiveReader.i1
+jtype.byte.size    = 1
 jtype.short.read   = PrimitiveReader.i2
+jtype.short.size   = 2
 jtype.int.read     = PrimitiveReader.i4
+jtype.int.size     = 4
 jtype.long.read    = PrimitiveReader.i8
+jtype.long.size    = 8
 
 
 record_parsers = {}

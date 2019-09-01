@@ -189,6 +189,8 @@ class TestPrimitiveReader(unittest.TestCase):
 			self.r.id()
 
 	def test_jobject(self):
+		with self.assertRaises(AttributeError):
+			hprof.jtype.object.size # object/id is special. :(
 		for idsize, expected in ((3, 0x030405), (4, 0x03040506), (5, 0x0304050607)):
 			for t in (bytes, memoryview):
 				with self.subTest(t, idsize=idsize):
@@ -197,6 +199,7 @@ class TestPrimitiveReader(unittest.TestCase):
 					self.assertEqual(hprof.jtype.object.read(r), expected)
 
 	def test_jboolean(self):
+		self.assertEqual(hprof.jtype.boolean.size, 1)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\4\1\0\2\0\3\4\xff'), None)
@@ -212,6 +215,7 @@ class TestPrimitiveReader(unittest.TestCase):
 					hprof.jtype.boolean.read(r)
 
 	def test_jchar(self):
+		self.assertEqual(hprof.jtype.char.size, 2)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\5\0\x20\0\x61\xd8\x3d\xdf\x1b\xee'), None)
@@ -224,6 +228,7 @@ class TestPrimitiveReader(unittest.TestCase):
 					hprof.jtype.char.read(r)
 
 	def test_jfloat(self):
+		self.assertEqual(hprof.jtype.float.size, 4)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\6\x3f\x80\x00\x00\x7f\x80\x00\x00\x41\xc0\x00\x40\xee'), None)
@@ -235,6 +240,7 @@ class TestPrimitiveReader(unittest.TestCase):
 					hprof.jtype.float.read(r)
 
 	def test_jdouble(self):
+		self.assertEqual(hprof.jtype.double.size, 8)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\7\x3f\xf0\x00\x00\x00\x00\x00\x00\xee'), None)
@@ -244,6 +250,7 @@ class TestPrimitiveReader(unittest.TestCase):
 					hprof.jtype.double.read(r)
 
 	def test_jbyte(self):
+		self.assertEqual(hprof.jtype.byte.size, 1)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\x08\0\x20\0\x61\xd8\x3d\xdf\x1b\xee'), None)
@@ -261,6 +268,7 @@ class TestPrimitiveReader(unittest.TestCase):
 					hprof.jtype.byte.read(r)
 
 	def test_jshort(self):
+		self.assertEqual(hprof.jtype.short.size, 2)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\x09\0\x20\0\x61\xd8\x3d\xdf\x1b\x0e'), None)
@@ -273,6 +281,7 @@ class TestPrimitiveReader(unittest.TestCase):
 					hprof.jtype.short.read(r)
 
 	def test_jint(self):
+		self.assertEqual(hprof.jtype.int.size, 4)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\x0a\0\x20\0\x61\xd8\x3d\xdf\x1b\xee'), None)
@@ -283,6 +292,7 @@ class TestPrimitiveReader(unittest.TestCase):
 					hprof.jtype.int.read(r)
 
 	def test_jlong(self):
+		self.assertEqual(hprof.jtype.long.size, 8)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\x0b\x80\x20\0\x61\xd8\x3d\xdf\x1b\xee'), None)

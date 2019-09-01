@@ -68,9 +68,7 @@ def parse_primitive_array(heap, reader):
 	reader.u4()
 	length = reader.u4()
 	t = reader.jtype()
-	read = t.read
-	for i in range(length):
-		read(reader)
+	reader.bytes(length * t.size)
 record_parsers[0x23] = parse_primitive_array
 
 def parse_heap(heap, reader):
