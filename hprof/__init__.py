@@ -17,3 +17,5 @@ class JavaType(_enum.Enum):
 jtype = JavaType # alternate name
 
 from ._parsing import open, parse
+
+from .heap import cast
