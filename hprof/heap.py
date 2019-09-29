@@ -58,15 +58,21 @@ def cast(obj, desired=None):
 	return Ref(obj, desired)
 
 
-class JavaPackage(object):
-	def __init__(self, name):
-		self.name = name
+class JavaClassContainer(str):
+	pass
 
-	def __str__(self):
-		return self.name
+class JavaPackage(JavaClassContainer):
+	''' a Java package, containing JavaClassName objects '''
+	def __repr__(self):
+		return "<JavaPackage '%s'>" % self
+
+
+class JavaClassName(JavaClassContainer):
+	''' a Java class name that can be used to look up JavaClass objects.
+	    May contain nested JavaClassName objects. '''
 
 	def __repr__(self):
-		return "<JavaPackage '%s'>" % self.name
+		return "<JavaClassName '%s'>" % self
 
 
 class JavaObject(object):
@@ -94,6 +100,10 @@ def _javaclass_init(self, objid):
 class JavaClass(type):
 	__slots__ = ()
 	def __new__(meta, name, supercls, instance_attrs):
+		assert '.' not in name
+		assert '/' not in name
+		assert '$' not in name
+		assert ';' not in name
 		if supercls is None:
 			supercls = JavaObject
 		return super().__new__(meta, name, (supercls,), {
@@ -102,7 +112,6 @@ class JavaClass(type):
 		})
 
 	def __init__(meta, name, supercls, instance_attrs):
-		assert '.' not in name
 		super().__init__(name, None, None)
 
 	def __str__(self):
@@ -122,35 +131,36 @@ class JavaClass(type):
 				return True
 		return super().__instancecheck__(instance)
 
-def _get_or_create_pkg(container, path):
-	assert path != ''
-	assert '/' not in path
-	assert ';' not in path
-	for p in path.split('.'):
+def _get_or_create_container(container, parts, ctype):
+	for p in parts:
+		assert p
+		assert '.' not in p
+		assert ';' not in p
+		assert '/' not in p
+		assert '$' not in p
 		if hasattr(container, p):
 			container = getattr(container, p)
-			assert isinstance(container, JavaPackage)
+			assert isinstance(container, ctype)
 		else:
-			if isinstance(container, JavaPackage) or isinstance(container, JavaClass):
-				next = JavaPackage(str(container) + '.' + p)
+			if isinstance(container, JavaClassContainer):
+				next = ctype(str(container) + '.' + p)
 			else:
-				next = JavaPackage(p)
+				next = ctype(p)
 			setattr(container, p, next)
 			container = next
 	return container
 
-def _add_class(container, name, supercls, slots):
-	assert '/' not in name
+def _create_class(container, name, supercls, slots):
+	assert name
+	assert '.' not in name
 	assert ';' not in name
-	parts = name.rsplit('.', 1)
-	if len(parts) == 2:
-		container = _get_or_create_pkg(container, parts[0])
-		name = parts[1]
-	if hasattr(container, name):
-		raise ValueError('%r.%s already exists' % (container, name))
+	name = name.split('/')
+	container = _get_or_create_container(container, name[:-1], JavaPackage)
+	classname = _get_or_create_container(container, name[-1:], JavaClassName)
+	name = name[-1]
 	cls = JavaClass(name, supercls, slots)
-	if type(container) is JavaPackage:
-		cls.__module__ = str(container)
+	if isinstance(container, JavaClassContainer):
+		cls.__module__ = container
 	else:
 		cls.__module__ = None
-	setattr(container, name, cls)
+	return cls
