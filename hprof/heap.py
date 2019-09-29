@@ -156,6 +156,8 @@ def _create_class(container, name, supercls, slots):
 	assert ';' not in name
 	name = name.split('/')
 	container = _get_or_create_container(container, name[:-1], JavaPackage)
+	name = name[-1].split('$')
+	container = _get_or_create_container(container, name[:-1], JavaClassName)
 	classname = _get_or_create_container(container, name[-1:], JavaClassName)
 	name = name[-1]
 	cls = JavaClass(name, supercls, slots)

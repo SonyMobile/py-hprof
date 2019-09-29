@@ -8,6 +8,7 @@ class TestJavaClass(unittest.TestCase):
 		self.obj = heap._create_class(self, 'java/lang/Object', None, ('shadow',))
 		self.cls = heap._create_class(self, 'java/lang/Class', self.obj, ('secret',))
 		self.lst = heap._create_class(self, 'java/util/List', self.obj, ('next',))
+		self.inr = heap._create_class(self, 'java/util/List$Inner', self.obj, ())
 		self.shd = heap._create_class(self, 'Shadower', self.lst, ('shadow','unique'))
 
 	def test_duplicate_class(self):
@@ -23,20 +24,29 @@ class TestJavaClass(unittest.TestCase):
 
 		self.assertFalse(issubclass(self.obj, self.cls))
 		self.assertFalse(issubclass(self.obj, self.lst))
+		self.assertFalse(issubclass(self.obj, self.inr))
 		self.assertFalse(issubclass(self.obj, self.shd))
 		self.assertTrue( issubclass(self.cls, self.obj))
 		self.assertFalse(issubclass(self.cls, self.lst))
+		self.assertFalse(issubclass(self.cls, self.inr))
 		self.assertFalse(issubclass(self.cls, self.shd))
 		self.assertTrue( issubclass(self.lst, self.obj))
 		self.assertFalse(issubclass(self.lst, self.cls))
+		self.assertFalse(issubclass(self.lst, self.inr))
 		self.assertFalse(issubclass(self.lst, self.shd))
+		self.assertTrue( issubclass(self.inr, self.obj))
+		self.assertFalse(issubclass(self.inr, self.cls))
+		self.assertFalse(issubclass(self.inr, self.lst))
+		self.assertFalse(issubclass(self.inr, self.shd))
 		self.assertTrue( issubclass(self.shd, self.obj))
 		self.assertFalse(issubclass(self.shd, self.cls))
 		self.assertTrue( issubclass(self.shd, self.lst))
+		self.assertFalse(issubclass(self.shd, self.inr))
 
 		self.assertIsInstance(self.obj, heap.JavaClass)
 		self.assertIsInstance(self.cls, heap.JavaClass)
 		self.assertIsInstance(self.lst, heap.JavaClass)
+		self.assertIsInstance(self.inr, heap.JavaClass)
 		self.assertIsInstance(self.shd, heap.JavaClass)
 
 	def test_package_eq(self):
@@ -55,39 +65,46 @@ class TestJavaClass(unittest.TestCase):
 		self.assertEqual(repr(self.java.util), "<JavaPackage 'java.util'>")
 
 	def test_class_name_eq(self):
-		self.assertEqual(self.java.lang.Object, 'java.lang.Object')
-		self.assertEqual(self.java.lang.Class,  'java.lang.Class')
-		self.assertEqual(self.java.util.List,   'java.util.List')
-		self.assertEqual(self.Shadower,         'Shadower')
+		self.assertEqual(self.java.lang.Object,     'java.lang.Object')
+		self.assertEqual(self.java.lang.Class,      'java.lang.Class')
+		self.assertEqual(self.java.util.List,       'java.util.List')
+		self.assertEqual(self.java.util.List.Inner, 'java.util.List.Inner')
+		self.assertEqual(self.Shadower,             'Shadower')
 
 	def test_class_name_hash(self):
-		self.assertEqual(hash(self.java.lang.Object), hash('java.lang.Object'))
-		self.assertEqual(hash(self.java.lang.Class),  hash('java.lang.Class'))
-		self.assertEqual(hash(self.java.util.List),   hash('java.util.List'))
-		self.assertEqual(hash(self.Shadower),         hash('Shadower'))
+		self.assertEqual(hash(self.java.lang.Object),     hash('java.lang.Object'))
+		self.assertEqual(hash(self.java.lang.Class),      hash('java.lang.Class'))
+		self.assertEqual(hash(self.java.util.List),       hash('java.util.List'))
+		self.assertEqual(hash(self.java.util.List.Inner), hash('java.util.List.Inner'))
+		self.assertEqual(hash(self.Shadower),             hash('Shadower'))
 
 	def test_class_str(self):
 		self.assertEqual(str(self.obj), "java.lang.Object")
 		self.assertEqual(str(self.cls), "java.lang.Class")
 		self.assertEqual(str(self.lst), "java.util.List")
+		self.assertEqual(str(self.inr), "java.util.List.Inner")
 		self.assertEqual(str(self.shd), "Shadower")
 
 	def test_class_name_str(self):
-		self.assertEqual(str(self.java.lang.Object), 'java.lang.Object')
-		self.assertEqual(str(self.java.lang.Class),  'java.lang.Class')
-		self.assertEqual(str(self.java.util.List),   'java.util.List')
-		self.assertEqual(str(self.Shadower),         'Shadower')
+		self.assertEqual(str(self.java.lang.Object),     'java.lang.Object')
+		self.assertEqual(str(self.java.lang.Class),      'java.lang.Class')
+		self.assertEqual(str(self.java.util.List),       'java.util.List')
+		self.assertEqual(str(self.java.util.List.Inner), 'java.util.List.Inner')
+		self.assertEqual(str(self.Shadower),             'Shadower')
 
 	def test_class_repr(self):
 		self.assertEqual(repr(self.obj), "<JavaClass 'java.lang.Object'>")
 		self.assertEqual(repr(self.cls), "<JavaClass 'java.lang.Class'>")
 		self.assertEqual(repr(self.lst), "<JavaClass 'java.util.List'>")
+		self.assertEqual(repr(self.inr), "<JavaClass 'java.util.List.Inner'>")
 		self.assertEqual(repr(self.shd), "<JavaClass 'Shadower'>")
 
 	def test_class_name_repr(self):
-		self.assertEqual(repr(self.java.lang.Object), "<JavaClassName 'java.lang.Object'>")
-		self.assertEqual(repr(self.java.lang.Class),  "<JavaClassName 'java.lang.Class'>")
-		self.assertEqual(repr(self.Shadower),         "<JavaClassName 'Shadower'>")
+		self.assertEqual(repr(self.java.lang.Object),     "<JavaClassName 'java.lang.Object'>")
+		self.assertEqual(repr(self.java.lang.Class),      "<JavaClassName 'java.lang.Class'>")
+		self.assertEqual(repr(self.java.util.List),       "<JavaClassName 'java.util.List'>")
+		self.assertEqual(repr(self.java.util.List.Inner), "<JavaClassName 'java.util.List.Inner'>")
+		self.assertEqual(repr(self.Shadower),             "<JavaClassName 'Shadower'>")
 
 	def test_object_instance(self):
 		o = self.obj(0xf00d)
