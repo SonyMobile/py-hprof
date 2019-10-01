@@ -33,15 +33,12 @@ class Ref(object):
 	def __getattribute__(self, name):
 		t = Ref._target.__get__(self)
 		r = Ref._reftype.__get__(self)
-		return getattr(r, name).__get__(t)
+		return t.__getattr__(name, r)
 
 	def __dir__(self):
-		out = ()
+		t = Ref._target.__get__(self)
 		r = Ref._reftype.__get__(self)
-		while r is not JavaObject:
-			out += r.__slots__
-			r, = r.__bases__
-		return tuple(set(out))
+		return t.__dir__(r)
 
 	def __repr__(self):
 		t = Ref._target.__get__(self)
@@ -80,25 +77,46 @@ class JavaObject(object):
 		'_hprof_id',       # object id
 	)
 
+	def __init__(self, objid):
+		JavaObject._hprof_id.__set__(self, objid)
+
 	def __repr__(self):
 		objid = JavaObject._hprof_id.__get__(self)
 		return '<%s 0x%x>' % (type(self), objid)
 
-	def __dir__(self):
-		out = ()
-		t = type(self)
+	def __dir__(self, reftype=None):
+		out = set()
+		if reftype is None:
+			t = type(self)
+		else:
+			t = reftype
 		while t is not JavaObject:
-			out += t.__slots__
+			out.update(t._hprof_ifields.keys())
+			out.update(t._hprof_sfields.keys())
 			t, = t.__bases__
-		return tuple(set(out))
+		return tuple(out)
 
-
-def _javaclass_init(self, objid):
-	JavaObject._hprof_id.__set__(self, objid)
+	def __getattr__(self, name, reftype=None):
+		if reftype is None:
+			t = type(self)
+		else:
+			t = reftype
+		while t is not JavaObject:
+			if name in t._hprof_ifields:
+				ix = t._hprof_ifields[name]
+				vals = t._hprof_ifieldvals.__get__(self)
+				return vals[ix]
+			elif name in t._hprof_sfields:
+				return t._hprof_sfields[name]
+			t, = t.__bases__
+		# TODO: implement getattr(x, 'super') to return a Ref?
+		# TODO: ...and x.SuperClass too?
+		raise AttributeError('type %r has no attribute %r' % (type(self), name))
 
 
 class JavaClass(type):
 	__slots__ = ()
+
 	def __new__(meta, name, supercls, instance_attrs):
 		assert '.' not in name
 		assert '/' not in name
@@ -106,10 +124,14 @@ class JavaClass(type):
 		assert ';' not in name
 		if supercls is None:
 			supercls = JavaObject
-		return super().__new__(meta, name, (supercls,), {
-			'__init__': _javaclass_init,
-			'__slots__': instance_attrs,
+		cls = super().__new__(meta, name, (supercls,), {
+			'__slots__': ('_hprof_ifieldvals',),
 		})
+		cls._hprof_sfields = dict()
+		cls._hprof_ifields = dict()
+		for ix, field in enumerate(instance_attrs):
+			cls._hprof_ifields[field] = ix
+		return cls
 
 	def __init__(meta, name, supercls, instance_attrs):
 		super().__init__(name, None, None)
@@ -130,6 +152,14 @@ class JavaClass(type):
 			if str(cls) in ('java.lang.Object', 'java.lang.Class'):
 				return True
 		return super().__instancecheck__(instance)
+
+	def __getattr__(self, name):
+		t = self
+		while t is not JavaObject:
+			if name in t._hprof_sfields:
+				return t._hprof_sfields[name]
+			t, = t.__bases__
+		raise AttributeError('type %r has no static attribute %r' % (self, name))
 
 def _get_or_create_container(container, parts, ctype):
 	for p in parts:
@@ -162,7 +192,7 @@ def _create_class(container, name, supercls, slots):
 	name = name[-1]
 	cls = JavaClass(name, supercls, slots)
 	if isinstance(container, JavaClassContainer):
-		cls.__module__ = container
+		type.__setattr__(cls, '__module__', container)
 	else:
-		cls.__module__ = None
+		type.__setattr__(cls, '__module__', None)
 	return cls

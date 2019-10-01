@@ -8,7 +8,7 @@ class TestJavaClass(unittest.TestCase):
 		self.obj = heap._create_class(self, 'java/lang/Object', None, ('shadow',))
 		self.cls = heap._create_class(self, 'java/lang/Class', self.obj, ('secret',))
 		self.lst = heap._create_class(self, 'java/util/List', self.obj, ('next',))
-		self.inr = heap._create_class(self, 'java/util/List$Inner', self.obj, ())
+		self.inr = heap._create_class(self, 'java/util/List$Inner', self.obj, ('this$0',))
 		self.shd = heap._create_class(self, 'Shadower', self.lst, ('shadow','unique'))
 
 	def test_duplicate_class(self):
@@ -110,7 +110,7 @@ class TestJavaClass(unittest.TestCase):
 		o = self.obj(0xf00d)
 		with self.assertRaises(AttributeError):
 			o.blah = 3
-		o.shadow = 3
+		self.obj._hprof_ifieldvals.__set__(o, (3,))
 		self.assertEqual(o.shadow, 3)
 		self.assertIsInstance(o, heap.JavaObject)
 		self.assertIsInstance(o, self.obj)
@@ -124,8 +124,8 @@ class TestJavaClass(unittest.TestCase):
 		c = self.cls(0xdead)
 		with self.assertRaises(AttributeError):
 			c.next = 3
-		c.shadow = 72
-		c.secret = 78
+		self.obj._hprof_ifieldvals.__set__(c, (72,))
+		self.cls._hprof_ifieldvals.__set__(c, (78,))
 		self.assertEqual(c.shadow, 72)
 		self.assertEqual(c.secret, 78)
 		self.assertIsInstance(c, heap.JavaObject)
@@ -136,30 +136,55 @@ class TestJavaClass(unittest.TestCase):
 		self.assertEqual(repr(c), str(c))
 		self.assertCountEqual(dir(c), ('shadow', 'secret'))
 
+	def test_inner_instance(self):
+		i = self.inr(0x1)
+		with self.assertRaises(AttributeError):
+			i.missing
+		self.obj._hprof_ifieldvals.__set__(i, (101,))
+		self.inr._hprof_ifieldvals.__set__(i, (102,))
+		self.assertEqual(i.shadow, 101)
+		self.assertEqual(getattr(i, 'this$0'), 102)
+		self.assertIsInstance(i, heap.JavaObject)
+		self.assertIsInstance(i, self.obj)
+		self.assertIsInstance(i, self.inr)
+		self.assertNotIsInstance(i, self.lst)
+		self.assertEqual(str(i), '<java.util.List.Inner 0x1>')
+		self.assertEqual(repr(i), str(i))
+		self.assertCountEqual(dir(i), ('shadow', 'this$0'))
+
 	def test_static_vars(self):
 		c = self.cls(11)
 		l = self.lst(22)
-		self.obj.sGlobalLock = 10
+		self.obj._hprof_sfields['sGlobalLock'] = 10
 		self.assertEqual(self.obj.sGlobalLock, 10)
 		self.assertEqual(self.cls.sGlobalLock, 10)
 		self.assertEqual(self.lst.sGlobalLock, 10)
 		self.assertEqual(c.sGlobalLock, 10)
 		self.assertEqual(l.sGlobalLock, 10)
-		self.lst.sGlobalLock = 20 # shadow the one in Object
+		self.lst._hprof_sfields['sGlobalLock'] = 20 # shadow the one in Object
 		self.assertEqual(self.obj.sGlobalLock, 10)
 		self.assertEqual(self.cls.sGlobalLock, 10)
 		self.assertEqual(self.lst.sGlobalLock, 20)
 		self.assertEqual(c.sGlobalLock, 10)
 		self.assertEqual(l.sGlobalLock, 20)
+		with self.assertRaises(AttributeError):
+			self.obj.sMissing
+		with self.assertRaises(AttributeError):
+			self.cls.sMissing
+		with self.assertRaises(AttributeError):
+			self.lst.sMissing
+		with self.assertRaises(AttributeError):
+			self.c.sMissing
+		with self.assertRaises(AttributeError):
+			self.l.sMissing
 
 	def test_refs(self):
 		extraclass = heap._create_class(self, 'Extra', self.shd, ('shadow',))
 		e = extraclass(0xbadf00d)
-		self.obj.shadow.__set__(e, 1111)
-		self.shd.shadow.__set__(e, 2223)
-		e.shadow = 10
-		e.unique = 33
-		e.next = 708
+		self.obj._hprof_ifieldvals.__set__(e, (1111,))
+		self.lst._hprof_ifieldvals.__set__(e, (708,))
+		self.shd._hprof_ifieldvals.__set__(e, (2223, 33))
+		extraclass._hprof_ifieldvals.__set__(e, (10,))
 
 		self.assertEqual(e.shadow, 10)
 		self.assertEqual(e.unique, 33)
