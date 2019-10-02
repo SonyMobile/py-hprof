@@ -119,8 +119,8 @@ class JavaClass(type):
 
 	def __new__(meta, name, supercls, instance_attrs):
 		assert '.' not in name
-		assert '/' not in name
-		assert '$' not in name
+		assert '/' not in name or name.find('/') >= name.find('$$')
+		assert '$' not in name or name.find('$') >= name.find('$$')
 		assert ';' not in name
 		if supercls is None:
 			supercls = JavaObject
@@ -166,8 +166,8 @@ def _get_or_create_container(container, parts, ctype):
 		assert p
 		assert '.' not in p
 		assert ';' not in p
-		assert '/' not in p
-		assert '$' not in p
+		assert '/' not in p or p.find('/') >= p.find('$$')
+		assert '$' not in p or p.find('$') >= p.find('$$')
 		if hasattr(container, p):
 			container = getattr(container, p)
 			assert isinstance(container, ctype)
@@ -184,9 +184,21 @@ def _create_class(container, name, supercls, slots):
 	assert name
 	assert '.' not in name
 	assert ';' not in name
+
+	# special handling for lambda names (jvm-specific name generation?)
+	# in short: everything after $$ is part of the class name.
+	dollars = name.find('$$')
+	if dollars >= 0:
+		extra = name[dollars:]
+		name  = name[:dollars]
+	else:
+		extra = ''
+
 	name = name.split('/')
 	container = _get_or_create_container(container, name[:-1], JavaPackage)
 	name = name[-1].split('$')
+	if extra:
+		name[-1] += extra
 	container = _get_or_create_container(container, name[:-1], JavaClassName)
 	classname = _get_or_create_container(container, name[-1:], JavaClassName)
 	name = name[-1]

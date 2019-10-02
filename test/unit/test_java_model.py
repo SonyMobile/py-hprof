@@ -152,6 +152,29 @@ class TestJavaClass(unittest.TestCase):
 		self.assertEqual(repr(i), str(i))
 		self.assertCountEqual(dir(i), ('shadow', 'this$0'))
 
+
+	def test_double_dollar(self):
+		lambdacls = heap._create_class(self, 'com/example/Vehicle$$Lambda$1/455659002', self.obj, ('closure_x', 'closure_y'))
+		self.assertEqual(str(lambdacls), 'com.example.Vehicle$$Lambda$1/455659002')
+		lambdaobj = lambdacls(33)
+		self.obj._hprof_ifieldvals.__set__(lambdaobj, (11,))
+		lambdacls._hprof_ifieldvals.__set__(lambdaobj, (10, 20))
+		with self.assertRaises(AttributeError):
+			lambdaobj.missing
+		with self.assertRaises(AttributeError):
+			lambdaobj.missing = 3
+		with self.assertRaises(AttributeError):
+			lambdaobj.closure_x = 3
+		self.assertEqual(lambdaobj.shadow, 11)
+		self.assertEqual(lambdaobj.closure_x, 10)
+		self.assertEqual(lambdaobj.closure_y, 20)
+		self.assertIsInstance(lambdaobj, heap.JavaObject)
+		self.assertIsInstance(lambdaobj, self.obj)
+		self.assertIsInstance(lambdaobj, lambdacls)
+		self.assertEqual(str(lambdaobj), '<com.example.Vehicle$$Lambda$1/455659002 0x21>')
+		self.assertEqual(repr(lambdaobj), str(lambdaobj))
+		self.assertCountEqual(dir(lambdaobj), ('shadow', 'closure_x', 'closure_y'))
+
 	def test_static_vars(self):
 		c = self.cls(11)
 		l = self.lst(22)
