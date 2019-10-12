@@ -113,6 +113,15 @@ class JavaObject(object):
 		# TODO: ...and x.SuperClass too?
 		raise AttributeError('type %r has no attribute %r' % (type(self), name))
 
+	def __len__(self):
+		if not isinstance(type(self), JavaArrayClass):
+			raise TypeError('%r object has no len()' % type(self))
+		return len(self._hprof_array_data)
+
+	def __getitem__(self, ix):
+		if not isinstance(type(self), JavaArrayClass):
+			raise TypeError('%r is not an array type' % type(self))
+		return self._hprof_array_data[ix]
 
 class JavaClass(type):
 	__slots__ = ()
@@ -124,8 +133,12 @@ class JavaClass(type):
 		assert ';' not in name
 		if supercls is None:
 			supercls = JavaObject
+		if meta is JavaArrayClass and not isinstance(supercls, JavaArrayClass):
+			slots = ('_hprof_ifieldvals', '_hprof_array_data')
+		else:
+			slots = ('_hprof_ifieldvals')
 		cls = super().__new__(meta, name, (supercls,), {
-			'__slots__': ('_hprof_ifieldvals',),
+			'__slots__': slots,
 		})
 		cls._hprof_sfields = dict()
 		cls._hprof_ifields = dict()
@@ -160,6 +173,11 @@ class JavaClass(type):
 				return t._hprof_sfields[name]
 			t, = t.__bases__
 		raise AttributeError('type %r has no static attribute %r' % (self, name))
+
+
+class JavaArrayClass(JavaClass):
+	__slots__ = ()
+
 
 def _get_or_create_container(container, parts, ctype):
 	for p in parts:
@@ -203,6 +221,45 @@ def _create_class(container, name, supercls, slots):
 	classname = _get_or_create_container(container, name[-1:], JavaClassName)
 	name = name[-1]
 	cls = JavaClass(name, supercls, slots)
+	if isinstance(container, JavaClassContainer):
+		type.__setattr__(cls, '__module__', container)
+	else:
+		type.__setattr__(cls, '__module__', None)
+	return cls
+
+def _create_array_class(container, name, supercls, slots):
+	assert name.startswith('[')
+
+	nests = 0
+	while name[nests] == '[':
+		nests += 1
+
+	assert name[nests] == 'L'
+	assert name.endswith(';')
+
+	name = name[nests+1:-1]
+	assert '.' not in name
+	assert ';' not in name
+
+	# special handling for lambda names (jvm-specific name generation?)
+	# in short: everything after $$ is part of the class name.
+	dollars = name.find('$$')
+	if dollars >= 0:
+		extra = name[dollars:]
+		name  = name[:dollars]
+	else:
+		extra = ''
+
+	name = name.split('/')
+	container = _get_or_create_container(container, name[:-1], JavaPackage)
+	name = name[-1].split('$')
+	if extra:
+		name[-1] += extra
+	name[-1] += nests * '[]'
+	container = _get_or_create_container(container, name[:-1], JavaClassName)
+	classname = _get_or_create_container(container, name[-1:], JavaClassName)
+	name = name[-1]
+	cls = JavaArrayClass(name, supercls, slots)
 	if isinstance(container, JavaClassContainer):
 		type.__setattr__(cls, '__module__', container)
 	else:

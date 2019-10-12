@@ -119,6 +119,10 @@ class TestJavaClass(unittest.TestCase):
 		self.assertEqual(str(o), '<java.lang.Object 0xf00d>')
 		self.assertEqual(repr(o), str(o))
 		self.assertCountEqual(dir(o), ('shadow',))
+		with self.assertRaisesRegex(TypeError, 'has no len'):
+			len(o)
+		with self.assertRaisesRegex(TypeError, 'not an array type'):
+			o[3]
 
 	def test_class_instance(self):
 		c = self.cls(0xdead)
@@ -174,6 +178,106 @@ class TestJavaClass(unittest.TestCase):
 		self.assertEqual(str(lambdaobj), '<com.example.Vehicle$$Lambda$1/455659002 0x21>')
 		self.assertEqual(repr(lambdaobj), str(lambdaobj))
 		self.assertCountEqual(dir(lambdaobj), ('shadow', 'closure_x', 'closure_y'))
+
+	def test_obj_array(self):
+		# the base array class...
+		oacls = heap._create_array_class(self, '[Ljava/lang/Object;', self.obj, ('extrastuff',))
+		self.assertEqual(str(oacls), 'java.lang.Object[]')
+		self.assertEqual(repr(oacls), "<JavaClass 'java.lang.Object[]'>")
+		self.assertTrue(isinstance(oacls, heap.JavaClass))
+		self.assertTrue(isinstance(oacls, heap.JavaArrayClass))
+		self.assertTrue(issubclass(oacls, heap.JavaObject))
+		self.assertTrue(issubclass(oacls, self.obj))
+
+		oarr = oacls(73)
+		oarr._hprof_ifieldvals = (49,)
+		oarr._hprof_array_data = (10, 55, 33)
+		self.assertEqual(len(oarr), 3)
+		self.assertEqual(oarr[0], 10)
+		self.assertEqual(oarr[1], 55)
+		self.assertEqual(oarr[2], 33)
+		self.assertEqual(oarr[-1], 33)
+		self.assertEqual(oarr[-2], 55)
+		self.assertEqual(oarr[-3], 10)
+		self.assertEqual(oarr[:], (10, 55, 33))
+		self.assertEqual(oarr[1:], (55, 33))
+		self.assertEqual(oarr[:2], (10, 55))
+		self.assertEqual(oarr[:-1], (10, 55))
+		self.assertEqual(oarr[2:], (33,))
+		self.assertEqual(oarr[:0], ())
+		self.assertEqual(oarr[:1], (10,))
+		with self.assertRaises(IndexError):
+			oarr[3]
+		with self.assertRaises(IndexError):
+			oarr[-4]
+		with self.assertRaises(TypeError):
+			oarr['hello']
+		self.assertIn(10, oarr)
+		self.assertIn(55, oarr)
+		self.assertIn(33, oarr)
+		self.assertNotIn(11, oarr)
+		self.assertNotIn(12, oarr)
+		self.assertNotIn(49, oarr)
+		self.assertNotIn(32, oarr)
+		for i, x in enumerate(oarr):
+			self.assertEqual(x, oarr[i])
+		self.assertEqual(i, 2)
+		self.assertEqual(oarr.extrastuff, 49)
+
+		# ...and a subclass
+		lacls = heap._create_array_class(self, '[LList$$lambda;', oacls, ('more',))
+		self.assertEqual(str(lacls), 'List$$lambda[]')
+		self.assertEqual(repr(lacls), "<JavaClass 'List$$lambda[]'>")
+		self.assertTrue(isinstance(lacls, heap.JavaClass))
+		self.assertTrue(isinstance(lacls, heap.JavaArrayClass))
+		self.assertTrue(issubclass(lacls, heap.JavaObject))
+		self.assertTrue(issubclass(lacls, self.obj))
+		self.assertTrue(issubclass(lacls, oacls))
+
+		larr = lacls(97)
+		oacls._hprof_ifieldvals.__set__(larr, (56,))
+		lacls._hprof_ifieldvals.__set__(larr, (99,))
+		larr._hprof_array_data = (1, 3, 5, 7, 9)
+		self.assertEqual(len(larr), 5)
+		self.assertEqual(larr[0], 1)
+		self.assertEqual(larr[1], 3)
+		self.assertEqual(larr[2], 5)
+		self.assertEqual(larr[3], 7)
+		self.assertEqual(larr[4], 9)
+		self.assertEqual(larr[-1], 9)
+		self.assertEqual(larr[-2], 7)
+		self.assertEqual(larr[-3], 5)
+		self.assertEqual(larr[-4], 3)
+		self.assertEqual(larr[-5], 1)
+		self.assertEqual(larr[:], (1,3,5,7,9))
+		self.assertEqual(larr[1:], (3,5,7,9))
+		self.assertEqual(larr[:2], (1,3))
+		self.assertEqual(larr[:-1], (1,3,5,7))
+		self.assertEqual(larr[2:], (5,7,9))
+		self.assertEqual(larr[:0], ())
+		self.assertEqual(larr[:1], (1,))
+		with self.assertRaises(IndexError):
+			larr[5]
+		with self.assertRaises(IndexError):
+			larr[-6]
+		with self.assertRaises(TypeError):
+			larr['world']
+		self.assertIn(1, larr)
+		self.assertIn(3, larr)
+		self.assertIn(5, larr)
+		self.assertIn(7, larr)
+		self.assertIn(9, larr)
+		self.assertNotIn(0, larr)
+		self.assertNotIn(2, larr)
+		self.assertNotIn(4, larr)
+		self.assertNotIn(6, larr)
+		self.assertNotIn(8, larr)
+		self.assertNotIn(100, larr)
+		for i, x in enumerate(larr):
+			self.assertEqual(x, larr[i])
+		self.assertEqual(i, 4)
+		self.assertEqual(larr.extrastuff, 56)
+		self.assertEqual(larr.more, 99)
 
 	def test_static_vars(self):
 		c = self.cls(11)
