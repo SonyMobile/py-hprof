@@ -279,6 +279,78 @@ class TestJavaClass(unittest.TestCase):
 		self.assertEqual(larr.extrastuff, 56)
 		self.assertEqual(larr.more, 99)
 
+	def test_prim_array_types(self):
+		#single
+		self.assertEqual(str(heap._create_class(self, '[Z', self.obj, ())), 'boolean[]')
+		self.assertEqual(str(heap._create_class(self, '[C', self.obj, ())), 'char[]')
+		self.assertEqual(str(heap._create_class(self, '[F', self.obj, ())), 'float[]')
+		self.assertEqual(str(heap._create_class(self, '[D', self.obj, ())), 'double[]')
+		self.assertEqual(str(heap._create_class(self, '[B', self.obj, ())), 'byte[]')
+		self.assertEqual(str(heap._create_class(self, '[S', self.obj, ())), 'short[]')
+		self.assertEqual(str(heap._create_class(self, '[I', self.obj, ())), 'int[]')
+		self.assertEqual(str(heap._create_class(self, '[J', self.obj, ())), 'long[]')
+		#double
+		self.assertEqual(str(heap._create_class(self, '[[Z', self.obj, ())), 'boolean[][]')
+		self.assertEqual(str(heap._create_class(self, '[[C', self.obj, ())), 'char[][]')
+		self.assertEqual(str(heap._create_class(self, '[[F', self.obj, ())), 'float[][]')
+		self.assertEqual(str(heap._create_class(self, '[[D', self.obj, ())), 'double[][]')
+		self.assertEqual(str(heap._create_class(self, '[[B', self.obj, ())), 'byte[][]')
+		self.assertEqual(str(heap._create_class(self, '[[S', self.obj, ())), 'short[][]')
+		self.assertEqual(str(heap._create_class(self, '[[I', self.obj, ())), 'int[][]')
+		self.assertEqual(str(heap._create_class(self, '[[J', self.obj, ())), 'long[][]')
+		#triple
+		self.assertEqual(str(heap._create_class(self, '[[[Z', self.obj, ())), 'boolean[][][]')
+		self.assertEqual(str(heap._create_class(self, '[[[C', self.obj, ())), 'char[][][]')
+		self.assertEqual(str(heap._create_class(self, '[[[F', self.obj, ())), 'float[][][]')
+		self.assertEqual(str(heap._create_class(self, '[[[D', self.obj, ())), 'double[][][]')
+		self.assertEqual(str(heap._create_class(self, '[[[B', self.obj, ())), 'byte[][][]')
+		self.assertEqual(str(heap._create_class(self, '[[[S', self.obj, ())), 'short[][][]')
+		self.assertEqual(str(heap._create_class(self, '[[[I', self.obj, ())), 'int[][][]')
+		self.assertEqual(str(heap._create_class(self, '[[[J', self.obj, ())), 'long[][][]')
+
+	def test_prim_array(self):
+		sacls = heap._create_class(self, '[S', self.obj, ())
+		self.assertEqual(str(sacls), 'short[]')
+		self.assertEqual(repr(sacls), "<JavaClass 'short[]'>")
+		self.assertTrue(isinstance(sacls, heap.JavaClass))
+		self.assertTrue(isinstance(sacls, heap.JavaArrayClass))
+		self.assertTrue(issubclass(sacls, heap.JavaObject))
+		self.assertTrue(issubclass(sacls, self.obj))
+
+		sarr = sacls(1)
+		sarr._hprof_ifieldvals = ()
+		sarr._hprof_array_data = (1,2,9)
+		self.assertEqual(len(sarr), 3)
+		self.assertEqual(sarr[0], 1)
+		self.assertEqual(sarr[1], 2)
+		self.assertEqual(sarr[2], 9)
+		self.assertEqual(sarr[-1], 9)
+		self.assertEqual(sarr[-2], 2)
+		self.assertEqual(sarr[-3], 1)
+		self.assertEqual(sarr[:], (1, 2, 9))
+		self.assertEqual(sarr[1:], (2,9))
+		self.assertEqual(sarr[:2], (1, 2))
+		self.assertEqual(sarr[:-1], (1, 2))
+		self.assertEqual(sarr[2:], (9,))
+		self.assertEqual(sarr[:0], ())
+		self.assertEqual(sarr[:1], (1,))
+		with self.assertRaises(IndexError):
+			sarr[3]
+		with self.assertRaises(IndexError):
+			sarr[-4]
+		with self.assertRaises(TypeError):
+			sarr['hello']
+		self.assertIn(1, sarr)
+		self.assertIn(2, sarr)
+		self.assertIn(9, sarr)
+		self.assertNotIn(3, sarr)
+		self.assertNotIn(4, sarr)
+		self.assertNotIn(5, sarr)
+		self.assertNotIn(-1, sarr)
+		for i, x in enumerate(sarr):
+			self.assertEqual(x, sarr[i])
+		self.assertEqual(i, 2)
+
 	def test_static_vars(self):
 		c = self.cls(11)
 		l = self.lst(22)

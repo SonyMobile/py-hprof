@@ -198,15 +198,32 @@ def _get_or_create_container(container, parts, ctype):
 			container = next
 	return container
 
+
+_typechar_to_name = {
+	'Z': 'boolean',
+	'C': 'char',
+	'F': 'float',
+	'D': 'double',
+	'B': 'byte',
+	'S': 'short',
+	'I': 'int',
+	'J': 'long',
+}
+
+
 def _create_class(container, name, supercls, slots):
 	nests = 0
 	while name[nests] == '[':
 		nests += 1
 
 	if nests:
-		assert name[nests] == 'L'
-		assert name.endswith(';')
-		name = name[nests+1:-1]
+		if name[nests] == 'L':
+			assert name.endswith(';'), name
+			name = name[nests+1:-1]
+		else:
+			assert len(name) == nests + 1, name
+			name = name[nests]
+			name = _typechar_to_name[name]
 
 	assert '.' not in name
 	assert ';' not in name
