@@ -13,7 +13,7 @@ class TestParseHeapRecord(unittest.TestCase):
 		hprof._parsing.record_parsers[0x0c](hf, reader, progress)
 		self.assertEqual(len(hf.heaps), 1)
 		heap, = hf.heaps
-		self.assertEqual(len(heap.objects), 0)
+		self.assertEqual(len(heap), 0)
 		self.assertEqual(progress.call_count, 0)
 
 	def test_calls_heap_parser(self):
@@ -29,44 +29,49 @@ class TestParseHeapRecord(unittest.TestCase):
 		self.assertIsInstance(heap, hprof.heap.Heap)
 
 		self.assertEqual(ph.call_count, 1)
-		self.assertEqual(len(ph.call_args[0]), 3)
-		self.assertIs(ph.call_args[0][0], heap)
-		self.assertIs(ph.call_args[0][1], reader)
-		self.assertIs(ph.call_args[0][2], progress)
+		self.assertEqual(len(ph.call_args[0]), 4)
+		self.assertIs(ph.call_args[0][0], hf)
+		self.assertIs(ph.call_args[0][1], heap)
+		self.assertIs(ph.call_args[0][2], reader)
+		self.assertIs(ph.call_args[0][3], progress)
 		self.assertCountEqual(ph.call_args[1], ())
 
 		self.assertEqual(rhr.call_count, 1)
-		self.assertEqual(len(rhr.call_args[0]), 1)
-		self.assertIs(rhr.call_args[0][0], heap)
+		self.assertEqual(len(rhr.call_args[0]), 2)
+		self.assertIs(rhr.call_args[0][0], hf)
+		self.assertIs(rhr.call_args[0][1], heap)
 		self.assertCountEqual(ph.call_args[1], ())
 
 		self.assertEqual(progress.call_count, 0)
 
 	def test_heap_parser(self):
 		dummies = {}
-		dummies[1] = MagicMock(side_effect=lambda h,r: r.bytes(r.u1()))
+		dummies[1] = MagicMock(side_effect=lambda f,h,r: r.bytes(r.u1()))
 		dummies[2] = MagicMock()
 		progress = MagicMock()
+		hf = hprof._parsing.HprofFile()
 		heap = hprof.heap.Heap()
 		reader = hprof._parsing.PrimitiveReader(b'\2\2\2\1\3\6\6\6\2\1\2\4\3', None)
 		with patch('hprof._heap_parsing.record_parsers', dummies):
-			hprof._heap_parsing.parse_heap(heap, reader, progress)
+			hprof._heap_parsing.parse_heap(hf, heap, reader, progress)
 		self.assertEqual(dummies[1].call_count, 2)
 		self.assertEqual(dummies[2].call_count, 4)
-		self.assertCountEqual(dummies[1].call_args_list, 2 * (((heap, reader), {}),))
-		self.assertCountEqual(dummies[2].call_args_list, 4 * (((heap, reader), {}),))
+		self.assertCountEqual(dummies[1].call_args_list, 2 * (((hf, heap, reader), {}),))
+		self.assertCountEqual(dummies[2].call_args_list, 4 * (((hf, heap, reader), {}),))
 		self.assertEqual(progress.call_count, 0)
 
 	def test_unhandled_heap_record(self):
+		hf = hprof._parsing.HprofFile()
 		progress = MagicMock()
 		heap = hprof.heap.Heap()
 		reader = hprof._parsing.PrimitiveReader(b'\x67\1\2\3\4\5', None)
 		with self.assertRaisesRegex(hprof.error.FormatError, 'unrecognized heap record type 0x67'):
-			hprof._heap_parsing.parse_heap(heap, reader, progress)
+			hprof._heap_parsing.parse_heap(hf, heap, reader, progress)
 		self.assertEqual(progress.call_count, 0)
 
 	def test_big_arrays_progress(self):
 		from math import ceil
+		hf = hprof._parsing.HprofFile()
 		heap = hprof.heap.Heap()
 		data = bytearray()
 		while len(data) <= (3 << 20) + 20000:
@@ -81,7 +86,7 @@ class TestParseHeapRecord(unittest.TestCase):
 		for progress in (None, MagicMock()):
 			with self.subTest(progress_callback = progress):
 				reader = hprof._parsing.PrimitiveReader(memoryview(data), 4)
-				hprof._heap_parsing.parse_heap(heap, reader, progress)
+				hprof._heap_parsing.parse_heap(hf, heap, reader, progress)
 				if progress:
 					self.assertEqual(progress.call_count, 3)
 					self.assertEqual(progress.call_args_list[0][0], (expected1,))

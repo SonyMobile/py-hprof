@@ -105,4 +105,18 @@ class TestPerlerParsing(unittest.TestCase):
 	def test_num_unhandled(self):
 		self.assertEqual(sum(self.hf.unhandled.values()), 0)
 
+	def test_class_lookup(self):
+		heap, = self.hf.heaps
+		self.assertEqual(heap.classtree.se.dolkow.imagefiltering.ShrinkFilter, 'se.dolkow.imagefiltering.ShrinkFilter')
+		cls, = heap.classes['se.dolkow.imagefiltering.ShrinkFilter']
+		abstract, = heap.classes['se.dolkow.imagefiltering.AbstractImageFilter']
+		self.assertTrue(issubclass(cls, abstract))
+		self.assertCountEqual(cls._hprof_ifields, ('maxw', 'maxh', 'smooth', 'resListener'))
+		self.assertCountEqual(abstract._hprof_ifields, ('active', 'name', 'source', 'description'))
+
+	def test_static_fields(self):
+		heap, = self.hf.heaps
+		filt, = heap.classes['se.dolkow.imagefiltering.AbstractReduceColorsFilter']
+		self.assertEqual(filt.mult, 14)
+
 	# TODO: test heap accesses

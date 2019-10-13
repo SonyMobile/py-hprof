@@ -21,10 +21,8 @@ def varyingid(cls):
 					self.idsize = idsize
 					self.setUp()
 					self.assertEqual(self.idsize, idsize)
-					self.assertEqual(self.hf.idsize, idsize)
 					fn(self, *args, **kwargs)
 					self.assertEqual(self.idsize, idsize)
-					self.assertEqual(self.hf.idsize, idsize)
 		return idsize_loop
 	for name in cls.__dict__:
 		if name.startswith('test_'):
@@ -38,7 +36,6 @@ def varyingid(cls):
 			if hasattr(self, 'idsize'):
 				import hprof
 				self.hf = hprof._parsing.HprofFile()
-				self.hf.idsize = self.idsize
 				fn(self)
 		return idsize_setup
 	cls.setUp = wrap_setup(cls.setUp)
@@ -97,12 +94,17 @@ class Builder(bytearray):
 
 class HeapRecordTest(unittest.TestCase):
 	def setUp(self):
+		self.hf = hprof._parsing.HprofFile()
 		self.heap = hprof.heap.Heap()
+		load = hprof._parsing.ClassLoad()
+		load.class_id = self.id(0x0b1ec7)
+		load.class_name = 'java.lang.Object'
+		self.hf.classloads_by_id[load.class_id] = load
 
 	def doit(self, rtype, data):
 		expected_pos = len(data)
 		data.extend(b'sentinel')
-		reader = hprof._parsing.PrimitiveReader(memoryview(data), self.hf.idsize)
+		reader = hprof._parsing.PrimitiveReader(memoryview(data), self.idsize)
 		parser = hprof._heap_parsing.record_parsers[rtype]
-		parser(self.heap, reader)
+		parser(self.hf, self.heap, reader)
 		self.assertEqual(reader._pos, expected_pos, 'parser read more or less than expected')

@@ -1,9 +1,11 @@
-class Heap(object):
-	__slots__ = ('objects')
-
+class Heap(dict):
 	def __init__(self):
-		self.objects = {}
+		self.classes = dict() # JavaClassName -> [JavaClass, ...]
+		self.classtree = JavaHierarchy()
+		self._deferred_classes = dict()
 
+class JavaHierarchy(object):
+	pass
 
 class Ref(object):
 	__slots__ = ('_target', '_reftype')
@@ -126,11 +128,12 @@ class JavaObject(object):
 class JavaClass(type):
 	__slots__ = ()
 
-	def __new__(meta, name, supercls, instance_attrs):
+	def __new__(meta, name, supercls, static_attrs, instance_attrs):
 		assert '.' not in name
 		assert '/' not in name or name.find('/') >= name.find('$$')
 		assert '$' not in name or name.find('$') >= name.find('$$')
 		assert ';' not in name
+		assert isinstance(static_attrs, dict)
 		if supercls is None:
 			supercls = JavaObject
 		if meta is JavaArrayClass and not isinstance(supercls, JavaArrayClass):
@@ -140,13 +143,13 @@ class JavaClass(type):
 		cls = super().__new__(meta, name, (supercls,), {
 			'__slots__': slots,
 		})
-		cls._hprof_sfields = dict()
+		cls._hprof_sfields = static_attrs
 		cls._hprof_ifields = dict()
 		for ix, field in enumerate(instance_attrs):
 			cls._hprof_ifields[field] = ix
 		return cls
 
-	def __init__(meta, name, supercls, instance_attrs):
+	def __init__(meta, name, supercls, static_attrs, instance_attrs):
 		super().__init__(name, None, None)
 
 	def __str__(self):
@@ -211,7 +214,7 @@ _typechar_to_name = {
 }
 
 
-def _create_class(container, name, supercls, slots):
+def _create_class(container, name, supercls, staticattrs, instanceattrs):
 	nests = 0
 	while name[nests] == '[':
 		nests += 1
@@ -225,9 +228,9 @@ def _create_class(container, name, supercls, slots):
 			name = name[nests]
 			name = _typechar_to_name[name]
 
-	assert '.' not in name
-	assert ';' not in name
-	assert '[' not in name
+	assert '.' not in name, name
+	assert ';' not in name, name
+	assert '[' not in name, name
 
 	# special handling for lambda names (jvm-specific name generation?)
 	# in short: everything after $$ is part of the class name.
@@ -248,11 +251,11 @@ def _create_class(container, name, supercls, slots):
 	classname = _get_or_create_container(container, name[-1:], JavaClassName)
 	name = name[-1]
 	if nests:
-		cls = JavaArrayClass(name, supercls, slots)
+		cls = JavaArrayClass(name, supercls, staticattrs, instanceattrs)
 	else:
-		cls = JavaClass(name, supercls, slots)
+		cls = JavaClass(name, supercls, staticattrs, instanceattrs)
 	if isinstance(container, JavaClassContainer):
 		type.__setattr__(cls, '__module__', container)
 	else:
 		type.__setattr__(cls, '__module__', None)
-	return cls
+	return classname, cls

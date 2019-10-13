@@ -1,4 +1,4 @@
-import hprof.heap
+import hprof
 
 from .error import *
 
@@ -7,26 +7,29 @@ from . import jtype
 record_parsers = {}
 
 # TODO: useful stuff in these.
-record_parsers[0xff] = lambda h, r: (r.id())
-record_parsers[0x01] = lambda h, r: (r.id(), r.id())
-record_parsers[0x02] = lambda h, r: (r.id(), r.u4(), r.u4())
-record_parsers[0x03] = lambda h, r: (r.id(), r.u4(), r.u4())
-record_parsers[0x04] = lambda h, r: (r.id(), r.u4())
-record_parsers[0x05] = lambda h, r: (r.id())
-record_parsers[0x06] = lambda h, r: (r.id(), r.u4())
-record_parsers[0x07] = lambda h, r: (r.id())
-record_parsers[0x08] = lambda h, r: (r.id(), r.u4(), r.u4())
+record_parsers[0xff] = lambda f, h, r: (r.id())
+record_parsers[0x01] = lambda f, h, r: (r.id(), r.id())
+record_parsers[0x02] = lambda f, h, r: (r.id(), r.u4(), r.u4())
+record_parsers[0x03] = lambda f, h, r: (r.id(), r.u4(), r.u4())
+record_parsers[0x04] = lambda f, h, r: (r.id(), r.u4())
+record_parsers[0x05] = lambda f, h, r: (r.id())
+record_parsers[0x06] = lambda f, h, r: (r.id(), r.u4())
+record_parsers[0x07] = lambda f, h, r: (r.id())
+record_parsers[0x08] = lambda f, h, r: (r.id(), r.u4(), r.u4())
 
-def parse_class(heap, reader):
-	reader.id()
-	reader.u4()
-	reader.id()
-	reader.id()
-	reader.id()
-	reader.id()
-	reader.id()
-	reader.id()
-	reader.u4()
+def parse_class(hf, heap, reader):
+	objid   = reader.id()
+	strace  = reader.u4()
+	superid = reader.id()
+	loader  = reader.id()
+	signer  = reader.id()
+	protdom = reader.id()
+	res1    = reader.id()
+	res2    = reader.id()
+	objsize = reader.u4()
+
+	if objid in heap:
+		raise FormatError('duplicate object id 0x%x' % objid)
 
 	nconstants = reader.u2()
 	for i in range(nconstants):
@@ -34,19 +37,50 @@ def parse_class(heap, reader):
 		t = reader.jtype()
 		t.read(reader)
 
+	staticattrs = {}
 	nstatic = reader.u2()
 	for i in range(nstatic):
-		reader.id()
+		nameid = reader.id()
+		name = hf.names[nameid]
 		t = reader.jtype()
-		t.read(reader)
+		val = t.read(reader)
+		staticattrs[name] = val
 
+	instanceattrs = {}
 	ninstance = reader.u2()
 	for i in range(ninstance):
-		reader.id()
-		reader.jtype()
+		nameid = reader.id()
+		name = hf.names[nameid]
+		vtype = reader.jtype()
+		instanceattrs[name] = vtype
+
+	load = hf.classloads_by_id[objid]
+	if superid == 0:
+		supercls = None
+	else:
+		try:
+			supercls = heap[superid]
+		except KeyError:
+			if superid not in heap._deferred_classes:
+				heap._deferred_classes[superid] = []
+			heap._deferred_classes[superid].append((objid, load.class_name, staticattrs, instanceattrs))
+			return
+
+	def create(objid, cname, supercls, staticattrs, instanceattrs):
+		clsname, cls = hprof.heap._create_class(heap.classtree, cname, supercls, staticattrs, instanceattrs)
+		if clsname not in heap.classes:
+			heap.classes[clsname] = []
+		heap.classes[clsname].append(cls)
+		heap[objid] = cls
+		if objid in heap._deferred_classes:
+			deferred = heap._deferred_classes.pop(objid)
+			for objid, cname, staticattrs, instanceattrs in deferred:
+				create(objid, cname, cls, staticattrs, instanceattrs)
+
+	create(objid, load.class_name, supercls, staticattrs, instanceattrs)
 record_parsers[0x20] = parse_class
 
-def parse_instance(heap, reader):
+def parse_instance(hf, heap, reader):
 	reader.id()
 	reader.u4()
 	reader.id()
@@ -54,7 +88,7 @@ def parse_instance(heap, reader):
 	reader.bytes(remaining)
 record_parsers[0x21] = parse_instance
 
-def parse_object_array(heap, reader):
+def parse_object_array(hf, heap, reader):
 	reader.id()
 	reader.u4()
 	length = reader.u4()
@@ -63,7 +97,7 @@ def parse_object_array(heap, reader):
 		reader.id()
 record_parsers[0x22] = parse_object_array
 
-def parse_primitive_array(heap, reader):
+def parse_primitive_array(hf, heap, reader):
 	reader.id()
 	reader.u4()
 	length = reader.u4()
@@ -71,7 +105,7 @@ def parse_primitive_array(heap, reader):
 	reader.bytes(length * t.size)
 record_parsers[0x23] = parse_primitive_array
 
-def parse_heap(heap, reader, progresscb):
+def parse_heap(hf, heap, reader, progresscb):
 	lastreport = 0
 	while True:
 		try:
@@ -86,7 +120,8 @@ def parse_heap(heap, reader, progresscb):
 		except KeyError as e:
 			# impossible to handle; we don't know how long this record type is.
 			raise FormatError('unrecognized heap record type 0x%x' % rtype) from e
-		parser(heap, reader)
+		parser(hf, heap, reader)
 
-def resolve_heap_references(heap):
-	pass
+def resolve_heap_references(hf, heap):
+	if heap._deferred_classes:
+		raise FormatError('some class dumps never found their super class', heap._deferred_classes)

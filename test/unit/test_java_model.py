@@ -5,15 +5,15 @@ from hprof import heap
 
 class TestJavaClass(unittest.TestCase):
 	def setUp(self):
-		self.obj = heap._create_class(self, 'java/lang/Object', None, ('shadow',))
-		self.cls = heap._create_class(self, 'java/lang/Class', self.obj, ('secret',))
-		self.lst = heap._create_class(self, 'java/util/List', self.obj, ('next',))
-		self.inr = heap._create_class(self, 'java/util/List$Inner', self.obj, ('this$0',))
-		self.shd = heap._create_class(self, 'Shadower', self.lst, ('shadow','unique'))
+		_, self.obj = heap._create_class(self, 'java/lang/Object', None, {}, ('shadow',))
+		_, self.cls = heap._create_class(self, 'java/lang/Class', self.obj, {}, ('secret',))
+		_, self.lst = heap._create_class(self, 'java/util/List', self.obj, {}, ('next',))
+		_, self.inr = heap._create_class(self, 'java/util/List$Inner', self.obj, {}, ('this$0',))
+		_, self.shd = heap._create_class(self, 'Shadower', self.lst, {}, ('shadow','unique'))
 
 	def test_duplicate_class(self):
 		old = self.java.lang.Class
-		newcls = heap._create_class(self, 'java/lang/Class', self.obj, ('secret',))
+		_, newcls = heap._create_class(self, 'java/lang/Class', self.obj, {}, ('secret',))
 		self.assertIs(old, self.java.lang.Class) # same name object
 		self.assertIsNot(newcls, self.cls)
 
@@ -158,7 +158,7 @@ class TestJavaClass(unittest.TestCase):
 
 
 	def test_double_dollar(self):
-		lambdacls = heap._create_class(self, 'com/example/Vehicle$$Lambda$1/455659002', self.obj, ('closure_x', 'closure_y'))
+		_, lambdacls = heap._create_class(self, 'com/example/Vehicle$$Lambda$1/455659002', self.obj, {'line': 79}, ('closure_x', 'closure_y'))
 		self.assertEqual(str(lambdacls), 'com.example.Vehicle$$Lambda$1/455659002')
 		lambdaobj = lambdacls(33)
 		self.obj._hprof_ifieldvals.__set__(lambdaobj, (11,))
@@ -172,16 +172,17 @@ class TestJavaClass(unittest.TestCase):
 		self.assertEqual(lambdaobj.shadow, 11)
 		self.assertEqual(lambdaobj.closure_x, 10)
 		self.assertEqual(lambdaobj.closure_y, 20)
+		self.assertEqual(lambdaobj.line, 79)
 		self.assertIsInstance(lambdaobj, heap.JavaObject)
 		self.assertIsInstance(lambdaobj, self.obj)
 		self.assertIsInstance(lambdaobj, lambdacls)
 		self.assertEqual(str(lambdaobj), '<com.example.Vehicle$$Lambda$1/455659002 0x21>')
 		self.assertEqual(repr(lambdaobj), str(lambdaobj))
-		self.assertCountEqual(dir(lambdaobj), ('shadow', 'closure_x', 'closure_y'))
+		self.assertCountEqual(dir(lambdaobj), ('shadow', 'closure_x', 'closure_y', 'line'))
 
 	def test_obj_array(self):
 		# the base array class...
-		oacls = heap._create_class(self, '[Ljava/lang/Object;', self.obj, ('extrastuff',))
+		_, oacls = heap._create_class(self, '[Ljava/lang/Object;', self.obj, {}, ('extrastuff',))
 		self.assertEqual(str(oacls), 'java.lang.Object[]')
 		self.assertEqual(repr(oacls), "<JavaClass 'java.lang.Object[]'>")
 		self.assertTrue(isinstance(oacls, heap.JavaClass))
@@ -225,7 +226,7 @@ class TestJavaClass(unittest.TestCase):
 		self.assertEqual(oarr.extrastuff, 49)
 
 		# ...and a subclass
-		lacls = heap._create_class(self, '[LList$$lambda;', oacls, ('more',))
+		_, lacls = heap._create_class(self, '[LList$$lambda;', oacls, {}, ('more',))
 		self.assertEqual(str(lacls), 'List$$lambda[]')
 		self.assertEqual(repr(lacls), "<JavaClass 'List$$lambda[]'>")
 		self.assertTrue(isinstance(lacls, heap.JavaClass))
@@ -280,36 +281,42 @@ class TestJavaClass(unittest.TestCase):
 		self.assertEqual(larr.more, 99)
 
 	def test_prim_array_types(self):
+		def check(name, expected):
+			clsname, cls = heap._create_class(self, name, self.obj, {}, ())
+			self.assertIsNone(cls.__module__)
+			self.assertEqual(clsname, expected)
+			self.assertEqual(str(cls), expected)
+			self.assertEqual(repr(cls), "<JavaClass '%s'>" % expected)
 		#single
-		self.assertEqual(str(heap._create_class(self, '[Z', self.obj, ())), 'boolean[]')
-		self.assertEqual(str(heap._create_class(self, '[C', self.obj, ())), 'char[]')
-		self.assertEqual(str(heap._create_class(self, '[F', self.obj, ())), 'float[]')
-		self.assertEqual(str(heap._create_class(self, '[D', self.obj, ())), 'double[]')
-		self.assertEqual(str(heap._create_class(self, '[B', self.obj, ())), 'byte[]')
-		self.assertEqual(str(heap._create_class(self, '[S', self.obj, ())), 'short[]')
-		self.assertEqual(str(heap._create_class(self, '[I', self.obj, ())), 'int[]')
-		self.assertEqual(str(heap._create_class(self, '[J', self.obj, ())), 'long[]')
+		check('[Z', 'boolean[]')
+		check('[C', 'char[]')
+		check('[F', 'float[]')
+		check('[D', 'double[]')
+		check('[B', 'byte[]')
+		check('[S', 'short[]')
+		check('[I', 'int[]')
+		check('[J', 'long[]')
 		#double
-		self.assertEqual(str(heap._create_class(self, '[[Z', self.obj, ())), 'boolean[][]')
-		self.assertEqual(str(heap._create_class(self, '[[C', self.obj, ())), 'char[][]')
-		self.assertEqual(str(heap._create_class(self, '[[F', self.obj, ())), 'float[][]')
-		self.assertEqual(str(heap._create_class(self, '[[D', self.obj, ())), 'double[][]')
-		self.assertEqual(str(heap._create_class(self, '[[B', self.obj, ())), 'byte[][]')
-		self.assertEqual(str(heap._create_class(self, '[[S', self.obj, ())), 'short[][]')
-		self.assertEqual(str(heap._create_class(self, '[[I', self.obj, ())), 'int[][]')
-		self.assertEqual(str(heap._create_class(self, '[[J', self.obj, ())), 'long[][]')
+		check('[[Z', 'boolean[][]')
+		check('[[C', 'char[][]')
+		check('[[F', 'float[][]')
+		check('[[D', 'double[][]')
+		check('[[B', 'byte[][]')
+		check('[[S', 'short[][]')
+		check('[[I', 'int[][]')
+		check('[[J', 'long[][]')
 		#triple
-		self.assertEqual(str(heap._create_class(self, '[[[Z', self.obj, ())), 'boolean[][][]')
-		self.assertEqual(str(heap._create_class(self, '[[[C', self.obj, ())), 'char[][][]')
-		self.assertEqual(str(heap._create_class(self, '[[[F', self.obj, ())), 'float[][][]')
-		self.assertEqual(str(heap._create_class(self, '[[[D', self.obj, ())), 'double[][][]')
-		self.assertEqual(str(heap._create_class(self, '[[[B', self.obj, ())), 'byte[][][]')
-		self.assertEqual(str(heap._create_class(self, '[[[S', self.obj, ())), 'short[][][]')
-		self.assertEqual(str(heap._create_class(self, '[[[I', self.obj, ())), 'int[][][]')
-		self.assertEqual(str(heap._create_class(self, '[[[J', self.obj, ())), 'long[][][]')
+		check('[[[Z', 'boolean[][][]')
+		check('[[[C', 'char[][][]')
+		check('[[[F', 'float[][][]')
+		check('[[[D', 'double[][][]')
+		check('[[[B', 'byte[][][]')
+		check('[[[S', 'short[][][]')
+		check('[[[I', 'int[][][]')
+		check('[[[J', 'long[][][]')
 
 	def test_prim_array(self):
-		sacls = heap._create_class(self, '[S', self.obj, ())
+		_, sacls = heap._create_class(self, '[S', self.obj, {}, ())
 		self.assertEqual(str(sacls), 'short[]')
 		self.assertEqual(repr(sacls), "<JavaClass 'short[]'>")
 		self.assertTrue(isinstance(sacls, heap.JavaClass))
@@ -378,7 +385,7 @@ class TestJavaClass(unittest.TestCase):
 			self.l.sMissing
 
 	def test_refs(self):
-		extraclass = heap._create_class(self, 'Extra', self.shd, ('shadow',))
+		_, extraclass = heap._create_class(self, 'Extra', self.shd, {}, ('shadow',))
 		e = extraclass(0xbadf00d)
 		self.obj._hprof_ifieldvals.__set__(e, (1111,))
 		self.lst._hprof_ifieldvals.__set__(e, (708,))
@@ -470,7 +477,7 @@ class TestJavaClass(unittest.TestCase):
 		self.assertIs(hprof.cast(o), s)
 
 	def test_refs_to_class(self):
-		string = heap._create_class(self, 'java/lang/String', self.obj, ('chars',))
+		_, string = heap._create_class(self, 'java/lang/String', self.obj, {}, ('chars',))
 		o = hprof.cast(string, self.obj)
 		c = hprof.cast(string, self.cls)
 		self.assertIs(o, string)

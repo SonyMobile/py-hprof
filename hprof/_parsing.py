@@ -406,8 +406,8 @@ record_parsers[0x05] = parse_stack_trace_record
 def parse_heap_record(hf, reader, progresscb):
 	from . import _heap_parsing
 	out = heap.Heap()
-	_heap_parsing.parse_heap(out, reader, progresscb)
-	_heap_parsing.resolve_heap_references(out)
+	_heap_parsing.parse_heap(hf, out, reader, progresscb)
+	_heap_parsing.resolve_heap_references(hf, out)
 	hf.heaps.append(out)
 record_parsers[0x0c] = parse_heap_record
 
