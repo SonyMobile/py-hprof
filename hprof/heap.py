@@ -199,47 +199,18 @@ def _get_or_create_container(container, parts, ctype):
 	return container
 
 def _create_class(container, name, supercls, slots):
-	assert name
-	assert '.' not in name
-	assert ';' not in name
-
-	# special handling for lambda names (jvm-specific name generation?)
-	# in short: everything after $$ is part of the class name.
-	dollars = name.find('$$')
-	if dollars >= 0:
-		extra = name[dollars:]
-		name  = name[:dollars]
-	else:
-		extra = ''
-
-	name = name.split('/')
-	container = _get_or_create_container(container, name[:-1], JavaPackage)
-	name = name[-1].split('$')
-	if extra:
-		name[-1] += extra
-	container = _get_or_create_container(container, name[:-1], JavaClassName)
-	classname = _get_or_create_container(container, name[-1:], JavaClassName)
-	name = name[-1]
-	cls = JavaClass(name, supercls, slots)
-	if isinstance(container, JavaClassContainer):
-		type.__setattr__(cls, '__module__', container)
-	else:
-		type.__setattr__(cls, '__module__', None)
-	return cls
-
-def _create_array_class(container, name, supercls, slots):
-	assert name.startswith('[')
-
 	nests = 0
 	while name[nests] == '[':
 		nests += 1
 
-	assert name[nests] == 'L'
-	assert name.endswith(';')
+	if nests:
+		assert name[nests] == 'L'
+		assert name.endswith(';')
+		name = name[nests+1:-1]
 
-	name = name[nests+1:-1]
 	assert '.' not in name
 	assert ';' not in name
+	assert '[' not in name
 
 	# special handling for lambda names (jvm-specific name generation?)
 	# in short: everything after $$ is part of the class name.
@@ -259,7 +230,10 @@ def _create_array_class(container, name, supercls, slots):
 	container = _get_or_create_container(container, name[:-1], JavaClassName)
 	classname = _get_or_create_container(container, name[-1:], JavaClassName)
 	name = name[-1]
-	cls = JavaArrayClass(name, supercls, slots)
+	if nests:
+		cls = JavaArrayClass(name, supercls, slots)
+	else:
+		cls = JavaClass(name, supercls, slots)
 	if isinstance(container, JavaClassContainer):
 		type.__setattr__(cls, '__module__', container)
 	else:

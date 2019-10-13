@@ -181,7 +181,7 @@ class TestJavaClass(unittest.TestCase):
 
 	def test_obj_array(self):
 		# the base array class...
-		oacls = heap._create_array_class(self, '[Ljava/lang/Object;', self.obj, ('extrastuff',))
+		oacls = heap._create_class(self, '[Ljava/lang/Object;', self.obj, ('extrastuff',))
 		self.assertEqual(str(oacls), 'java.lang.Object[]')
 		self.assertEqual(repr(oacls), "<JavaClass 'java.lang.Object[]'>")
 		self.assertTrue(isinstance(oacls, heap.JavaClass))
@@ -225,7 +225,7 @@ class TestJavaClass(unittest.TestCase):
 		self.assertEqual(oarr.extrastuff, 49)
 
 		# ...and a subclass
-		lacls = heap._create_array_class(self, '[LList$$lambda;', oacls, ('more',))
+		lacls = heap._create_class(self, '[LList$$lambda;', oacls, ('more',))
 		self.assertEqual(str(lacls), 'List$$lambda[]')
 		self.assertEqual(repr(lacls), "<JavaClass 'List$$lambda[]'>")
 		self.assertTrue(isinstance(lacls, heap.JavaClass))
