@@ -1,7 +1,8 @@
 import unittest
 import hprof
 
-from unittest.mock import MagicMock, patch
+from contextlib import contextmanager
+from unittest.mock import MagicMock, sentinel, patch
 
 class TestOpen(unittest.TestCase):
 
@@ -9,19 +10,26 @@ class TestOpen(unittest.TestCase):
 		from io import IOBase
 		for ext in ('txt', 'txt.bz2', 'txt.gz', 'txt.xz'):
 			with self.subTest(ext):
-				expected = object()
-				def checkf(f, cb):
+				@contextmanager
+				def checkf(hf, f, cb):
+					self.assertIs(type(hf), hprof._parsing.HprofFile)
 					self.assertIsInstance(f, IOBase)
 					self.assertEqual(f.read(), b'Hello World!\n')
 					self.assertEqual(f.read(), b'')
 					self.assertIs(cb, progress)
-					return expected
+					yield
+					cleanup()
 				for progress in (None, MagicMock()):
-					with patch('hprof._parsing.parse', side_effect=checkf) as mock:
-						# TODO: gotta save the provided file contents.
+					cleanup = MagicMock()
+					with patch('hprof._parsing._parse_cm', side_effect=checkf) as mock:
 						out = hprof.open('testdata/helloworld.' + ext, progress)
-					self.assertIs(out, expected)
+						with out as hf:
+							self.assertIs(hf, out)
+							self.assertEqual(cleanup.call_count, 0)
+						self.assertEqual(cleanup.call_count, 1)
 					self.assertEqual(mock.call_count, 1)
+					self.assertIs(out, mock.call_args[0][0])
+					self.assertTrue(mock.call_args[0][1].closed)
 				self.assertEqual(progress.call_count, 1)
 				self.assertEqual(progress.call_args[0], ('opening', None, None))
 				self.assertEqual(progress.call_args[1], {})
@@ -40,21 +48,23 @@ def indatas():
 	with lzma.open('testdata/helloworld.txt.xz') as f:
 		yield f, 72
 
-@patch('hprof._parsing._parse', side_effect=lambda m, cb: bytes(m) + b' out')
+@patch('hprof._parsing._parse')
 class TestPublicParse(unittest.TestCase):
 
 	def test_parse(self, mock):
 		for j in (0, 1):
 			for i, (indata, insize) in enumerate(indatas()):
 				progress = MagicMock() if j else None
+				mock.reset_mock()
 				with self.subTest(indata, progresscb=progress):
 					out = hprof.parse(indata, progress)
-					self.assertEqual(out, b'Hello World!\n out')
-					self.assertEqual(mock.call_count, 5*j + i + 1)
-					(arg, cb), kwarg = mock.call_args
+					self.assertEqual(mock.call_count, 1)
+					(hf, arg, cb), kwarg = mock.call_args
 					self.assertFalse(kwarg)
 					self.assertIsInstance(arg, memoryview)
+					self.assertEqual(arg, b'Hello World!\n')
 					self.assertIs(cb, progress)
+					self.assertIs(hf, out)
 					if progress:
 						if i < 2:
 							self.assertEqual(progress.call_count, 0)
@@ -66,6 +76,11 @@ class TestPublicParse(unittest.TestCase):
 							self.assertEqual(progress.call_args_list[1][1], {})
 							self.assertEqual(progress.call_args_list[2][0], ('extracting', insize, insize))
 							self.assertEqual(progress.call_args_list[2][1], {})
+					with hf as tmp:
+						self.assertIs(tmp, hf)
+						self.assertEqual(arg[0], ord('H'))
+					with self.assertRaisesRegex(ValueError, 'released'):
+						arg[0]
 
 	def test_string_error(self, mock):
 		with self.assertRaises(TypeError):
@@ -93,11 +108,10 @@ class TestPublicParseErrors(unittest.TestCase):
 
 	def test_keep_mview_gz(self):
 		import gzip
-		with gzip.open('testdata/helloworld.txt.gz', 'rb') as f:
-			with patch('hprof._parsing._parse', side_effect=lambda mview, cb: mview[1:]):
-				with self.assertRaises(BufferError):
-					hprof.parse(f)
-
+		with patch('hprof._parsing._parse', side_effect=lambda hf, mview, cb: setattr(hf, 'val', mview[1:])):
+			with self.assertRaises(BufferError):
+				with hprof.open('testdata/helloworld.txt.gz'):
+					pass
 
 class TestPrivateParse(unittest.TestCase):
 
@@ -105,10 +119,10 @@ class TestPrivateParse(unittest.TestCase):
 		indata = 'hello'
 		expected = 'abc def'
 		progress = MagicMock()
-		with patch('hprof._parsing._parse_hprof', return_value=expected) as mock:
-			self.assertEqual(hprof._parsing._parse(indata, progress), expected)
+		with patch('hprof._parsing._parse_hprof') as mock:
+			hprof._parsing._parse(expected, indata, progress)
 		self.assertEqual(mock.call_count, 1)
-		self.assertEqual(mock.call_args[0], (indata,progress))
+		self.assertEqual(mock.call_args[0], (expected,indata,progress))
 		self.assertFalse(mock.call_args[1])
 		self.assertEqual(progress.call_count, 0)
 
@@ -119,7 +133,7 @@ class TestPrivateParse(unittest.TestCase):
 			with self.subTest(exctype):
 				with patch('hprof._parsing._parse_hprof', side_effect=exctype) as mock:
 					with self.assertRaises(hprof.error.UnhandledError):
-						hprof._parsing._parse(indata, progress)
+						hprof._parsing._parse(None, indata, progress)
 				self.assertEqual(mock.call_count, 1)
 				self.assertEqual(progress.call_count, 0)
 
@@ -135,7 +149,7 @@ class TestPrivateParse(unittest.TestCase):
 			with self.subTest(exctype):
 				with patch('hprof._parsing._parse_hprof', side_effect=exctype) as mock:
 					with self.assertRaises(exctype):
-						hprof._parsing._parse(indata, progress)
+						hprof._parsing._parse(None, indata, progress)
 				self.assertEqual(mock.call_count, 1)
 				self.assertEqual(progress.call_count, 0)
 
@@ -143,16 +157,18 @@ class TestParseHprof(unittest.TestCase):
 
 	def test_empty_input(self):
 		progress = MagicMock()
+		hf = sentinel.hf
 		with self.assertRaises(hprof.error.UnexpectedEof):
-			hprof._parsing._parse_hprof(b'', progress)
+			hprof._parsing._parse_hprof(hf, b'', progress)
 		self.assertEqual(progress.call_count, 1)
 		self.assertEqual(progress.call_args[0], ('parsing', 0, 0))
 		self.assertEqual(progress.call_args[1], {})
 
 	def test_bad_header(self):
 		progress = MagicMock()
+		hf = sentinel.hf
 		with self.assertRaisesRegex(hprof.error.FormatError, r'header.*PROFALE'):
-			hprof._parsing._parse_hprof(b'JAVA PROFALE 1.0.1\0\0\0\0\4\0\1\2\3\4\5\6\7', progress)
+			hprof._parsing._parse_hprof(hf, b'JAVA PROFALE 1.0.1\0\0\0\0\4\0\1\2\3\4\5\6\7', progress)
 		self.assertEqual(progress.call_count, 1)
 		self.assertEqual(progress.call_args[0], ('parsing', 0, 31))
 		self.assertEqual(progress.call_args[1], {})
@@ -165,7 +181,7 @@ class TestParseHprof(unittest.TestCase):
 			with self.subTest(n):
 				progress = MagicMock()
 				with self.assertRaises(hprof.error.UnexpectedEof):
-					hprof._parsing._parse_hprof(indata[:n], progress)
+					hprof._parsing._parse_hprof(sentinel.hf, indata[:n], progress)
 				self.assertEqual(progress.call_count, 1 if n < 31 else 2)
 				self.assertEqual(progress.call_args_list[0][0], ('parsing', 0, n))
 				self.assertEqual(progress.call_args_list[0][1], {})
@@ -179,7 +195,8 @@ class TestParseHprof(unittest.TestCase):
 			with self.subTest(n):
 				progress = MagicMock()
 				indata[22] = n # different idsize
-				hf = hprof._parsing._parse_hprof(indata, progress)
+				hf = hprof._parsing.HprofFile()
+				hprof._parsing._parse_hprof(hf, indata, progress)
 				self.assertCountEqual(hf.unhandled, ())
 				self.assertEqual(progress.call_count, 3)
 				self.assertEqual(progress.call_args_list[0][0], ('parsing', 0, 31))
@@ -192,8 +209,9 @@ class TestParseHprof(unittest.TestCase):
 	def test_one_record(self):
 		indata = b'JAVA PROFILE 1.0.1\0\0\0\0\4\0\1\2\3\4\5\6\7\x50\0\0\0\0\0\0\0\2\x33\x44'
 		progress = MagicMock()
+		hf = hprof._parsing.HprofFile()
 		with patch('hprof._parsing.record_parsers', {}), patch('hprof._parsing._resolve_references') as resolve:
-			hf = hprof._parsing._parse_hprof(indata, progress)
+			hprof._parsing._parse_hprof(hf, indata, progress)
 		self.assertEqual(hf.unhandled, {0x50: 1})
 		self.assertEqual(resolve.call_count, 1)
 		self.assertCountEqual(resolve.call_args[0], (hf,))
@@ -211,8 +229,9 @@ class TestParseHprof(unittest.TestCase):
 	def test_one_record_no_progress(self):
 		indata = b'JAVA PROFILE 1.0.1\0\0\0\0\4\0\1\2\3\4\5\6\7\x50\0\0\0\0\0\0\0\2\x33\x44'
 		mock_parsers = { 0x50: unittest.mock.MagicMock() }
+		hf = sentinel.hf
 		with patch('hprof._parsing.record_parsers', mock_parsers), patch('hprof._parsing._resolve_references') as resolve:
-			hf = hprof._parsing._parse_hprof(indata, None)
+			hprof._parsing._parse_hprof(sentinel.hf, indata, None)
 		self.assertEqual(mock_parsers[0x50].call_count, 1)
 		self.assertIs(mock_parsers[0x50].call_args[0][0], hf)
 		self.assertIsInstance(mock_parsers[0x50].call_args[0][1], hprof._parsing.PrimitiveReader)
@@ -232,8 +251,9 @@ class TestParseHprof(unittest.TestCase):
 			0x01: unittest.mock.MagicMock(side_effect=lambda h,r,p: p( 1000)),
 		}
 		progress = MagicMock()
+		hf = hprof._parsing.HprofFile()
 		with patch('hprof._parsing.record_parsers', mock_parsers), patch('hprof._parsing._resolve_references') as resolve:
-			hf = hprof._parsing._parse_hprof(indata, progress)
+			hprof._parsing._parse_hprof(hf, indata, progress)
 
 		self.assertEqual(mock_parsers[0x50].call_count, 2)
 		self.assertEqual(mock_parsers[0x01].call_count, 1)

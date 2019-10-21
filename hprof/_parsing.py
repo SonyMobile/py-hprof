@@ -1,6 +1,8 @@
 import struct
 import codecs
 
+from contextlib import contextmanager
+
 from .error import *
 from . import callstack
 from . import heap
@@ -8,6 +10,7 @@ from . import jtype
 
 class HprofFile(object):
 	def __init__(self):
+		self._context = None
 		self.unhandled = {} # record tag -> count
 		self.names = {0: None}
 		self.stackframes = {}
@@ -17,6 +20,11 @@ class HprofFile(object):
 		self.classloads_by_id = {}
 		self.heaps = []
 
+	def __enter__(self):
+		return self
+
+	def __exit__(self, exc_type, exc_val, tb):
+		return self._context.__exit__(exc_type, exc_val, tb)
 
 class ClassLoad(object):
 	__slots__ = ('class_id', 'class_name', 'stacktrace')
@@ -37,32 +45,52 @@ class ClassLoad(object):
 
 
 def open(path, progress_callback=None):
+	hf = HprofFile()
+	hf._context = _open_cm(hf, path, progress_callback)
+	hf._context.__enter__()
+	return hf
+
+@contextmanager
+def _open_cm(hf, path, progress_callback):
 	if progress_callback:
 		progress_callback('opening', None, None)
 	if path.endswith('.bz2'):
 		import bz2
 		with bz2.open(path, 'rb') as f:
-			return parse(f, progress_callback)
+			with _parse_cm(hf, f, progress_callback):
+				yield hf
 	elif path.endswith('.gz'):
 		import gzip
 		with gzip.open(path, 'rb') as f:
-			return parse(f, progress_callback)
+			with _parse_cm(hf, f, progress_callback):
+				yield hf
 	elif path.endswith('.xz'):
 		import lzma
 		with lzma.open(path, 'rb') as f:
-			return parse(f, progress_callback)
+			with _parse_cm(hf, f, progress_callback):
+				yield hf
 	else:
 		import builtins
 		with builtins.open(path, 'rb') as f:
-			return parse(f, progress_callback)
+			with _parse_cm(hf, f, progress_callback):
+				yield hf
 
 def parse(data, progress_callback=None):
+	hf = HprofFile()
+	hf._context = _parse_cm(hf, data, progress_callback)
+	hf._context.__enter__()
+	return hf
+
+@contextmanager
+def _parse_cm(hf, data, progress_callback):
 	failures = []
 
 	# is it a bytes-like?
 	try:
 		with memoryview(data) as mview:
-			return _parse(mview, progress_callback)
+			_parse(hf, mview, progress_callback)
+			yield hf
+			return
 	except (HprofError, BufferError):
 		# _parse failed
 		raise
@@ -79,7 +107,9 @@ def parse(data, progress_callback=None):
 		fsize = os.fstat(fno).st_size
 		with mmap(fno, fsize, access=ACCESS_READ) as mapped:
 			with memoryview(mapped) as mview:
-				return _parse(mview, progress_callback)
+				_parse(hf, mview, progress_callback)
+				yield hf
+				return
 
 	# can it be read?
 	try:
@@ -103,7 +133,9 @@ def parse(data, progress_callback=None):
 				progress_callback('extracting', insize, insize)
 			with mmap(f.fileno(), fsize) as mapped:
 				with memoryview(mapped) as mview:
-					return _parse(mview, progress_callback)
+					_parse(hf, mview, progress_callback)
+					yield hf
+					return
 	except BufferError as e:
 		raise
 	except Exception as e:
@@ -411,22 +443,21 @@ def parse_heap_record(hf, reader, progresscb):
 	hf.heaps.append(out)
 record_parsers[0x0c] = parse_heap_record
 
-def _parse(data, progresscb):
+def _parse(hf, data, progresscb):
 	try:
-		return _parse_hprof(data, progresscb)
+		_parse_hprof(hf, data, progresscb)
 	except HprofError:
 		raise
 	except Exception as e:
 		raise UnhandledError() from e
 
-def _parse_hprof(mview, progresscb):
+def _parse_hprof(hf, mview, progresscb):
 	reader = PrimitiveReader(mview, None)
 	if progresscb:
 		progresscb('parsing', 0, len(mview))
 	hdr = reader.ascii()
 	if not hdr == 'JAVA PROFILE 1.0.1':
 		raise FormatError('unknown header "%s"' % hdr)
-	hf = HprofFile()
 	idsize = reader._idsize = reader.u4()
 	reader.u8() # timestamp; ignore.
 	lastreport = -1<<32
@@ -457,7 +488,6 @@ def _parse_hprof(mview, progresscb):
 		progresscb('parsing', len(mview), len(mview))
 		progresscb('resolving', None, None)
 	_resolve_references(hf)
-	return hf
 
 def _resolve_references(hf):
 	''' Some objects can have forward references. In those cases, we've saved
