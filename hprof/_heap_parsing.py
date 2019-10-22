@@ -98,11 +98,19 @@ def parse_object_array(hf, heap, reader):
 record_parsers[0x22] = parse_object_array
 
 def parse_primitive_array(hf, heap, reader):
-	reader.id()
-	reader.u4()
+	objid  = reader.id()
+	strace = reader.u4()
 	length = reader.u4()
 	t = reader.jtype()
-	reader.bytes(length * t.size)
+	data = reader.bytes(length * t.size)
+	clsname = t.name + '[]'
+	assert clsname in heap.classes, 'class %s not found' % clsname
+	classes = heap.classes[clsname]
+	assert len(classes) == 1, 'there are %d classes named %s' % (len(classes), clsname)
+	cls, = classes
+	arr = cls(objid)
+	arr._hprof_array_data = hprof.heap._DeferredArrayData(t, data)
+	heap[objid] = arr
 record_parsers[0x23] = parse_primitive_array
 
 def parse_heap(hf, heap, reader, progresscb):

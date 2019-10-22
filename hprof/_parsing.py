@@ -24,7 +24,17 @@ class HprofFile(object):
 		return self
 
 	def __exit__(self, exc_type, exc_val, tb):
-		return self._context.__exit__(exc_type, exc_val, tb)
+		ctx = self._context
+		if ctx is not None:
+			self._context = None
+			del self.heaps
+			return ctx.__exit__(exc_type, exc_val, tb)
+
+	def close(self):
+		self.__exit__(None, None, None)
+
+	def __del__(self):
+		self.close()
 
 class ClassLoad(object):
 	__slots__ = ('class_id', 'class_name', 'stacktrace')

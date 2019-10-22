@@ -73,6 +73,7 @@ class TestParseHeapRecord(unittest.TestCase):
 		from math import ceil
 		hf = hprof._parsing.HprofFile()
 		heap = hprof.heap.Heap()
+		heap.classes['long[]'] = [MagicMock()]
 		data = bytearray()
 		while len(data) <= (3 << 20) + 20000:
 			before = len(data)

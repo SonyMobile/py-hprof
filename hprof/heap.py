@@ -178,6 +178,14 @@ class JavaClass(type):
 		raise AttributeError('type %r has no static attribute %r' % (self, name))
 
 
+class _DeferredArrayData(object):
+	__slots__ = ('bytes', 'jtype')
+
+	def __init__(self, jtype, bytes):
+		self.jtype = jtype
+		self.bytes = bytes
+
+
 class JavaArrayClass(JavaClass):
 	__slots__ = ()
 
