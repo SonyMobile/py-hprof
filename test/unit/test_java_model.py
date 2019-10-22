@@ -116,12 +116,13 @@ class TestJavaClass(unittest.TestCase):
 		self.assertIsInstance(o, self.obj)
 		self.assertNotIsInstance(o, self.cls)
 		self.assertNotIsInstance(o, self.lst)
+		self.assertNotIsInstance(o, heap.JavaArray)
 		self.assertEqual(str(o), '<java.lang.Object 0xf00d>')
 		self.assertEqual(repr(o), str(o))
 		self.assertCountEqual(dir(o), ('shadow',))
 		with self.assertRaisesRegex(TypeError, 'has no len'):
 			len(o)
-		with self.assertRaisesRegex(TypeError, 'not an array type'):
+		with self.assertRaisesRegex(TypeError, 'does not support indexing'):
 			o[3]
 
 	def test_class_instance(self):
@@ -188,9 +189,11 @@ class TestJavaClass(unittest.TestCase):
 		self.assertTrue(isinstance(oacls, heap.JavaClass))
 		self.assertTrue(isinstance(oacls, heap.JavaArrayClass))
 		self.assertTrue(issubclass(oacls, heap.JavaObject))
+		self.assertTrue(issubclass(oacls, heap.JavaArray))
 		self.assertTrue(issubclass(oacls, self.obj))
 
 		oarr = oacls(73)
+		self.obj._hprof_ifieldvals.__set__(oarr, (0xbeef,))
 		oarr._hprof_ifieldvals = (49,)
 		oarr._hprof_array_data = (10, 55, 33)
 		self.assertEqual(len(oarr), 3)
@@ -223,6 +226,8 @@ class TestJavaClass(unittest.TestCase):
 		for i, x in enumerate(oarr):
 			self.assertEqual(x, oarr[i])
 		self.assertEqual(i, 2)
+		self.assertCountEqual(dir(oarr), ('shadow','extrastuff'))
+		self.assertEqual(oarr.shadow, 0xbeef)
 		self.assertEqual(oarr.extrastuff, 49)
 
 		# ...and a subclass
@@ -322,11 +327,16 @@ class TestJavaClass(unittest.TestCase):
 		self.assertTrue(isinstance(sacls, heap.JavaClass))
 		self.assertTrue(isinstance(sacls, heap.JavaArrayClass))
 		self.assertTrue(issubclass(sacls, heap.JavaObject))
+		self.assertTrue(issubclass(sacls, heap.JavaArray))
 		self.assertTrue(issubclass(sacls, self.obj))
 
 		sarr = sacls(1)
-		sarr._hprof_ifieldvals = ()
+		self.obj._hprof_ifieldvals.__set__(sarr, (0xf00d,))
 		sarr._hprof_array_data = (1,2,9)
+
+		self.assertCountEqual(dir(sarr), ('shadow',))
+		self.assertEqual(sarr.shadow, 0xf00d)
+
 		self.assertEqual(len(sarr), 3)
 		self.assertEqual(sarr[0], 1)
 		self.assertEqual(sarr[1], 2)

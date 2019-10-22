@@ -95,7 +95,11 @@ class JavaObject(object):
 		while t is not JavaObject:
 			out.update(t._hprof_ifields.keys())
 			out.update(t._hprof_sfields.keys())
-			t, = t.__bases__
+			bases = t.__bases__
+			if len(bases) == 2:
+				t = bases[1 - bases.index(JavaArray)]
+			else:
+				t, = bases
 		return tuple(out)
 
 	def __getattr__(self, name, reftype=None):
@@ -110,19 +114,23 @@ class JavaObject(object):
 				return vals[ix]
 			elif name in t._hprof_sfields:
 				return t._hprof_sfields[name]
-			t, = t.__bases__
+			bases = t.__bases__
+			if len(bases) == 2:
+				t = bases[1 - bases.index(JavaArray)]
+			else:
+				t, = bases
 		# TODO: implement getattr(x, 'super') to return a Ref?
 		# TODO: ...and x.SuperClass too?
 		raise AttributeError('type %r has no attribute %r' % (type(self), name))
 
+
+class JavaArray(JavaObject):
+	__slots__ = ()
+
 	def __len__(self):
-		if not isinstance(type(self), JavaArrayClass):
-			raise TypeError('%r object has no len()' % type(self))
 		return len(self._hprof_array_data)
 
 	def __getitem__(self, ix):
-		if not isinstance(type(self), JavaArrayClass):
-			raise TypeError('%r is not an array type' % type(self))
 		return self._hprof_array_data[ix]
 
 class JavaClass(type):
@@ -138,9 +146,11 @@ class JavaClass(type):
 			supercls = JavaObject
 		if meta is JavaArrayClass and not isinstance(supercls, JavaArrayClass):
 			slots = ('_hprof_ifieldvals', '_hprof_array_data')
+			supercls = (JavaArray,supercls)
 		else:
 			slots = ('_hprof_ifieldvals')
-		cls = super().__new__(meta, name, (supercls,), {
+			supercls = (supercls,)
+		cls = super().__new__(meta, name, supercls, {
 			'__slots__': slots,
 		})
 		cls._hprof_sfields = static_attrs
