@@ -128,10 +128,21 @@ class JavaArray(JavaObject):
 	__slots__ = ()
 
 	def __len__(self):
-		return len(self._hprof_array_data)
+		try:
+			return len(self._hprof_array_data)
+		except TypeError:
+			self._hprof_array_data = self._hprof_array_data.toarray()
+			return len(self._hprof_array_data)
 
 	def __getitem__(self, ix):
-		return self._hprof_array_data[ix]
+		try:
+			return self._hprof_array_data[ix]
+		except TypeError:
+			try:
+				self._hprof_array_data = self._hprof_array_data.toarray()
+			except AttributeError:
+				pass # the TypeError was the caller's fault, not ours
+			return self._hprof_array_data[ix]
 
 class JavaClass(type):
 	__slots__ = ()
@@ -192,9 +203,27 @@ class _DeferredArrayData(object):
 	__slots__ = ('bytes', 'jtype')
 
 	def __init__(self, jtype, bytes):
+		assert len(bytes) % jtype.size == 0
 		self.jtype = jtype
 		self.bytes = bytes
 
+	def toarray(self):
+		from . import jtype
+		if self.jtype is jtype.char:
+			import codecs
+			# Decode bytes pair-by-pair.
+			# Not pretty, but we want the same behavior as Java, which
+			# means each char element is exactly 16 bits; surrogate pairs
+			# therefore must span two array indices.
+			return ''.join(
+				codecs.decode(self.bytes[i:i+2], 'utf-16-be', 'surrogatepass')
+				for i in range(0, len(self.bytes), 2)
+			)
+		else:
+			import struct
+			count = len(self.bytes) // self.jtype.size
+			fmt = '>%d%s' % (count, self.jtype.packfmt)
+			return struct.unpack(fmt, self.bytes)
 
 class JavaArrayClass(JavaClass):
 	__slots__ = ()

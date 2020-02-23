@@ -369,20 +369,28 @@ class PrimitiveReader(object):
 jtype.object.read  = PrimitiveReader.id
 jtype.boolean.read = PrimitiveReader.jboolean
 jtype.boolean.size = 1
+jtype.boolean.packfmt = '?'
 jtype.char.read    = PrimitiveReader.jchar
 jtype.char.size    = 2
+jtype.char.packfmt = 'c'
 jtype.float.read   = PrimitiveReader.jfloat
 jtype.float.size   = 4
+jtype.float.packfmt = 'f'
 jtype.double.read  = PrimitiveReader.jdouble
 jtype.double.size  = 8
+jtype.double.packfmt = 'd'
 jtype.byte.read    = PrimitiveReader.i1
 jtype.byte.size    = 1
+jtype.byte.packfmt = 'b'
 jtype.short.read   = PrimitiveReader.i2
 jtype.short.size   = 2
+jtype.short.packfmt = 'h'
 jtype.int.read     = PrimitiveReader.i4
 jtype.int.size     = 4
+jtype.int.packfmt  = 'i'
 jtype.long.read    = PrimitiveReader.i8
 jtype.long.size    = 8
+jtype.long.packfmt = 'q'
 
 
 record_parsers = {}
