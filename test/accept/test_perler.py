@@ -123,4 +123,16 @@ class TestPerlerParsing(unittest.TestCase):
 		filt, = heap.classes['se.dolkow.imagefiltering.AbstractReduceColorsFilter']
 		self.assertEqual(filt.mult, 14)
 
+	def test_instance_fields(self):
+		heap, = self.hf.heaps
+		abstract, = heap.classes['se.dolkow.imagefiltering.AbstractReduceColorsFilter']
+		dithered, = heap.classes['se.dolkow.imagefiltering.DitherReduceColorsFilter']
+		hashmap,  = heap.classes['java.util.HashMap']
+		instance = heap[0xcb4bc498]
+		self.assertIsInstance(instance, abstract)
+		self.assertIsInstance(instance, dithered)
+		self.assertEqual(instance.coeff, 0.800000011920929)
+		self.assertEqual(instance.colors, 0xcb4bc4d0) # TODO: should be a real ref, not just an ID
+		self.assertIsInstance(heap[0xcb4bc4d0], hashmap) # TODO: remove
+
 	# TODO: test heap accesses

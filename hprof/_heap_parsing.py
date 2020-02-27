@@ -4,6 +4,8 @@ from .error import *
 
 from . import jtype
 
+from collections import OrderedDict
+
 record_parsers = {}
 
 # TODO: useful stuff in these.
@@ -46,7 +48,7 @@ def parse_class(hf, heap, reader):
 		val = t.read(reader)
 		staticattrs[name] = val
 
-	instanceattrs = {}
+	instanceattrs = OrderedDict()
 	ninstance = reader.u2()
 	for i in range(ninstance):
 		nameid = reader.id()
@@ -81,11 +83,25 @@ def parse_class(hf, heap, reader):
 record_parsers[0x20] = parse_class
 
 def parse_instance(hf, heap, reader):
-	reader.id()
-	reader.u4()
-	reader.id()
+	objid = reader.id()
+	strace = reader.u4()
+	clsid = reader.id()
 	remaining = reader.u4()
-	reader.bytes(remaining)
+	expected_end = reader._pos + remaining
+
+	cls = heap[clsid]
+	obj = cls(objid)
+	while cls is not hprof.heap.JavaObject:
+		vals = tuple(
+				atype.read(reader)
+				for ix, (aname, atype)
+				in enumerate(cls._hprof_ifields.items())
+		)
+		assert len(vals) == len(cls._hprof_ifieldix), (len(vals), len(cls._hprof_ifieldix))
+		cls._hprof_ifieldvals.__set__(obj, vals)
+		cls, = cls.__bases__
+	assert reader._pos == expected_end, (reader._pos, expected_end)
+	heap[objid] = obj
 record_parsers[0x21] = parse_instance
 
 def parse_object_array(hf, heap, reader):

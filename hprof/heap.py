@@ -93,7 +93,7 @@ class JavaObject(object):
 		else:
 			t = reftype
 		while t is not JavaObject:
-			out.update(t._hprof_ifields.keys())
+			out.update(t._hprof_ifieldix.keys())
 			out.update(t._hprof_sfields.keys())
 			bases = t.__bases__
 			if len(bases) == 2:
@@ -108,8 +108,8 @@ class JavaObject(object):
 		else:
 			t = reftype
 		while t is not JavaObject:
-			if name in t._hprof_ifields:
-				ix = t._hprof_ifields[name]
+			if name in t._hprof_ifieldix:
+				ix = t._hprof_ifieldix[name]
 				vals = t._hprof_ifieldvals.__get__(self)
 				return vals[ix]
 			elif name in t._hprof_sfields:
@@ -165,9 +165,8 @@ class JavaClass(type):
 			'__slots__': slots,
 		})
 		cls._hprof_sfields = static_attrs
-		cls._hprof_ifields = dict()
-		for ix, field in enumerate(instance_attrs):
-			cls._hprof_ifields[field] = ix
+		cls._hprof_ifields = instance_attrs
+		cls._hprof_ifieldix = {name:ix for ix, name in enumerate(instance_attrs)}
 		return cls
 
 	def __init__(meta, name, supercls, static_attrs, instance_attrs):
