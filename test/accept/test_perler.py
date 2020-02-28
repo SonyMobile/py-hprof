@@ -135,4 +135,15 @@ class TestPerlerParsing(unittest.TestCase):
 		self.assertEqual(instance.colors, 0xcb4bc4d0) # TODO: should be a real ref, not just an ID
 		self.assertIsInstance(heap[0xcb4bc4d0], hashmap) # TODO: remove
 
-	# TODO: test heap accesses
+	def test_object_array(self):
+		heap, = self.hf.heaps
+		changecls, = heap.classes['se.dolkow.imagefiltering.DitherReduceColorsFilter.Change']
+		changearr, = heap.classes['se.dolkow.imagefiltering.DitherReduceColorsFilter.Change[]']
+		array = heap[0xcb1411e8]
+		self.assertIsInstance(array, changearr)
+		self.assertEqual(len(array), 4)
+		# TODO: refs should be real refs, not just IDs
+		self.assertEqual(array[0], 0xcb141268)
+		self.assertEqual(array[1], 0xcb141248)
+		self.assertEqual(array[2], 0xcb141228)
+		self.assertEqual(array[3], 0xcb141208)

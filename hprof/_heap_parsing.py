@@ -105,12 +105,16 @@ def parse_instance(hf, heap, reader):
 record_parsers[0x21] = parse_instance
 
 def parse_object_array(hf, heap, reader):
-	reader.id()
-	reader.u4()
+	objid = reader.id()
+	strace = reader.u4()
 	length = reader.u4()
-	reader.id()
-	for i in range(length):
-		reader.id()
+	clsid = reader.id()
+	elems = tuple(reader.id() for ix in range(length))
+
+	cls = heap[clsid]
+	arr = cls(objid)
+	arr._hprof_array_data = elems
+	heap[objid] = arr
 record_parsers[0x22] = parse_object_array
 
 def parse_primitive_array(hf, heap, reader):
