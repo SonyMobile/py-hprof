@@ -132,8 +132,8 @@ class TestPerlerParsing(unittest.TestCase):
 		self.assertIsInstance(instance, abstract)
 		self.assertIsInstance(instance, dithered)
 		self.assertEqual(instance.coeff, 0.800000011920929)
-		self.assertEqual(instance.colors, 0xcb4bc4d0) # TODO: should be a real ref, not just an ID
-		self.assertIsInstance(heap[0xcb4bc4d0], hashmap) # TODO: remove
+		self.assertIs(instance.colors, heap[0xcb4bc4d0])
+		self.assertIsInstance(instance.colors, hashmap)
 
 	def test_object_array(self):
 		heap, = self.hf.heaps
@@ -142,8 +142,11 @@ class TestPerlerParsing(unittest.TestCase):
 		array = heap[0xcb1411e8]
 		self.assertIsInstance(array, changearr)
 		self.assertEqual(len(array), 4)
-		# TODO: refs should be real refs, not just IDs
-		self.assertEqual(array[0], 0xcb141268)
-		self.assertEqual(array[1], 0xcb141248)
-		self.assertEqual(array[2], 0xcb141228)
-		self.assertEqual(array[3], 0xcb141208)
+		self.assertIs(array[0], heap[0xcb141268])
+		self.assertIs(array[1], heap[0xcb141248])
+		self.assertIs(array[2], heap[0xcb141228])
+		self.assertIs(array[3], heap[0xcb141208])
+		self.assertIsInstance(array[0], changecls)
+		self.assertIsInstance(array[1], changecls)
+		self.assertIsInstance(array[2], changecls)
+		self.assertIsInstance(array[3], changecls)

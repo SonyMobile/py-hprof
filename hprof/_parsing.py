@@ -1,5 +1,6 @@
 import struct
 import codecs
+import gc
 
 from contextlib import contextmanager
 
@@ -27,7 +28,9 @@ class HprofFile(object):
 		ctx = self._context
 		if ctx is not None:
 			self._context = None
-			del self.heaps
+			# drop the heaps and force a GC to eliminate refs into file mappings
+			self.heaps = None
+			gc.collect()
 			return ctx.__exit__(exc_type, exc_val, tb)
 
 	def close(self):
@@ -457,7 +460,7 @@ def parse_heap_record(hf, reader, progresscb):
 	from . import _heap_parsing
 	out = heap.Heap()
 	_heap_parsing.parse_heap(hf, out, reader, progresscb)
-	_heap_parsing.resolve_heap_references(hf, out)
+	_heap_parsing.resolve_heap_references(out)
 	hf.heaps.append(out)
 record_parsers[0x0c] = parse_heap_record
 

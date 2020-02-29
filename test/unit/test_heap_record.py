@@ -37,9 +37,8 @@ class TestParseHeapRecord(unittest.TestCase):
 		self.assertCountEqual(ph.call_args[1], ())
 
 		self.assertEqual(rhr.call_count, 1)
-		self.assertEqual(len(rhr.call_args[0]), 2)
-		self.assertIs(rhr.call_args[0][0], hf)
-		self.assertIs(rhr.call_args[0][1], heap)
+		self.assertEqual(len(rhr.call_args[0]), 1)
+		self.assertIs(rhr.call_args[0][0], heap)
 		self.assertCountEqual(ph.call_args[1], ())
 
 		self.assertEqual(progress.call_count, 0)

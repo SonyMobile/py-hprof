@@ -6,6 +6,9 @@ from . import jtype
 
 from collections import OrderedDict
 
+class DeferredRef(int):
+	__slots__ = ()
+
 record_parsers = {}
 
 # TODO: useful stuff in these.
@@ -150,6 +153,39 @@ def parse_heap(hf, heap, reader, progresscb):
 			raise FormatError('unrecognized heap record type 0x%x' % rtype) from e
 		parser(hf, heap, reader)
 
-def resolve_heap_references(hf, heap):
+def resolve_heap_references(heap):
+	# TODO: should take a progress callback function, so we don't freeze at "99%"
 	if heap._deferred_classes:
 		raise FormatError('some class dumps never found their super class', heap._deferred_classes)
+
+	def lookup(addr):
+		if not addr:
+			return None
+		try:
+			return heap[addr]
+		except KeyError as e:
+			raise hprof.error.MissingObject(hex(addr)) from e
+
+	for obj in heap.values():
+		cls = type(obj)
+		if isinstance(obj, hprof.heap.JavaArray):
+			# it's an array; is it an *object* array?
+			old = obj._hprof_array_data
+			# TODO: this check is probably a bit too fragile
+			if type(old) is not hprof.heap._DeferredArrayData:
+				obj._hprof_array_data = tuple(lookup(addr) for addr in old)
+		elif isinstance(obj, hprof.heap.JavaClass):
+			for name, val in obj._hprof_sfields.items():
+				if type(val) is DeferredRef:
+					obj._hprof_sfields[name] = lookup(val)
+		else:
+			# TODO: if/when we have fast per-class instance lookups, it may be faster to do
+			#       this one class at a time, rather than walking the hierarchy of each obj
+			while cls is not hprof.heap.JavaObject:
+				old = cls._hprof_ifieldvals.__get__(obj)
+				new = tuple(
+					lookup(old[ix]) if atype is hprof.jtype.object else old[ix]
+					for ix, (aname, atype) in enumerate(cls._hprof_ifields.items())
+				)
+				cls._hprof_ifieldvals.__set__(obj, new)
+				cls, = cls.__bases__
