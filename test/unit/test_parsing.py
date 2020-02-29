@@ -203,7 +203,7 @@ class TestParseHprof(unittest.TestCase):
 				self.assertEqual(progress.call_args_list[0][1], {})
 				self.assertEqual(progress.call_args_list[1][0], ('parsing', 31, 31))
 				self.assertEqual(progress.call_args_list[1][1], {})
-				self.assertEqual(progress.call_args_list[2][0], ('resolving', None, None))
+				self.assertEqual(progress.call_args_list[2][0], ('resolving stacktraces', None, None))
 				self.assertEqual(progress.call_args_list[2][1], {})
 
 	def test_one_record(self):
@@ -214,17 +214,15 @@ class TestParseHprof(unittest.TestCase):
 			hprof._parsing._parse_hprof(hf, indata, progress)
 		self.assertEqual(hf.unhandled, {0x50: 1})
 		self.assertEqual(resolve.call_count, 1)
-		self.assertCountEqual(resolve.call_args[0], (hf,))
+		self.assertEqual(resolve.call_args[0], (hf,progress))
 		self.assertFalse(resolve.call_args[1])
-		self.assertEqual(progress.call_count, 4)
+		self.assertEqual(progress.call_count, 3)
 		self.assertEqual(progress.call_args_list[0][0], ('parsing', 0, 42))
 		self.assertEqual(progress.call_args_list[0][1], {})
 		self.assertEqual(progress.call_args_list[1][0], ('parsing', 32, 42))
 		self.assertEqual(progress.call_args_list[1][1], {})
 		self.assertEqual(progress.call_args_list[2][0], ('parsing', 42, 42))
 		self.assertEqual(progress.call_args_list[2][1], {})
-		self.assertEqual(progress.call_args_list[3][0], ('resolving', None, None))
-		self.assertEqual(progress.call_args_list[3][1], {})
 
 	def test_one_record_no_progress(self):
 		indata = b'JAVA PROFILE 1.0.1\0\0\0\0\4\0\1\2\3\4\5\6\7\x50\0\0\0\0\0\0\0\2\x33\x44'
@@ -237,7 +235,7 @@ class TestParseHprof(unittest.TestCase):
 		self.assertIsInstance(mock_parsers[0x50].call_args[0][1], hprof._parsing.PrimitiveReader)
 		self.assertIsNone(mock_parsers[0x50].call_args[0][2])
 		self.assertEqual(resolve.call_count, 1)
-		self.assertCountEqual(resolve.call_args[0], (hf,))
+		self.assertEqual(resolve.call_args[0], (hf,None))
 		self.assertFalse(resolve.call_args[1])
 
 	def test_four_records(self):
@@ -260,10 +258,10 @@ class TestParseHprof(unittest.TestCase):
 
 		self.assertEqual(hf.unhandled, {0x02: 1})
 		self.assertEqual(resolve.call_count, 1)
-		self.assertCountEqual(resolve.call_args[0], (hf,))
+		self.assertEqual(resolve.call_args[0], (hf,progress))
 		self.assertFalse(resolve.call_args[1])
 
-		self.assertEqual(progress.call_count, 7)
+		self.assertEqual(progress.call_count, 6)
 		self.assertEqual(progress.call_args_list[0][0], ('parsing', 0, 79))
 		self.assertEqual(progress.call_args_list[0][1], {})
 		self.assertEqual(progress.call_args_list[1][0], ('parsing', 32, 79))
@@ -276,8 +274,6 @@ class TestParseHprof(unittest.TestCase):
 		self.assertEqual(progress.call_args_list[4][1], {})
 		self.assertEqual(progress.call_args_list[5][0], ('parsing', 79, 79))
 		self.assertEqual(progress.call_args_list[5][1], {})
-		self.assertEqual(progress.call_args_list[6][0], ('resolving', None, None))
-		self.assertEqual(progress.call_args_list[6][1], {})
 
 		for mock in mock_parsers.values():
 			for args, kwargs in mock.call_args_list:
@@ -299,3 +295,52 @@ class TestParseHprof(unittest.TestCase):
 		self.assertEqual(mock_parsers[0x50].call_args_list[0][0][1]._idsize, 0x5000005)
 		self.assertEqual(mock_parsers[0x50].call_args_list[1][0][1]._idsize, 0x5000005)
 		self.assertEqual(mock_parsers[0x01].call_args_list[0][0][1]._idsize, 0x5000005)
+
+class TestResolveReferences(unittest.TestCase):
+	def test_resolves_one_heap(self):
+		hf = MagicMock()
+		heap1 = MagicMock()
+		hf.heaps = [heap1]
+		with patch('hprof._heap_parsing.resolve_heap_references') as rhr:
+			hprof._parsing._resolve_references(hf, None)
+			self.assertEqual(rhr.call_count, 1)
+			self.assertEqual(rhr.call_args[1], {})
+			self.assertEqual(len(rhr.call_args[0]), 2)
+			self.assertIs(rhr.call_args[0][0], heap1)
+			self.assertIsNone(rhr.call_args[0][1])
+
+	def test_resolves_three_heaps(self):
+		callback = MagicMock()
+		heap1 = MagicMock()
+		heap1.__len__.return_value = 20
+		heap2 = MagicMock()
+		heap2.__len__.return_value = 10
+		heap3 = MagicMock()
+		heap3.__len__.return_value = 30
+		hf = MagicMock()
+		hf.heaps = [heap1, heap2, heap3]
+		rhr = MagicMock(side_effect=lambda h,cb: cb(h))
+		with patch('hprof._heap_parsing.resolve_heap_references', rhr):
+			hprof._parsing._resolve_references(hf, callback)
+			self.assertEqual(rhr.call_count, 3)
+			self.assertEqual(callback.call_count, 4)
+
+			self.assertEqual(rhr.call_args_list[0][1], {})
+			self.assertEqual(len(rhr.call_args_list[0][0]), 2)
+			self.assertIs(rhr.call_args_list[0][0][0], heap1)
+			self.assertIsNotNone(rhr.call_args_list[0][0][1])
+
+			self.assertEqual(rhr.call_args_list[1][1], {})
+			self.assertEqual(len(rhr.call_args_list[1][0]), 2)
+			self.assertIs(rhr.call_args_list[1][0][0], heap2)
+			self.assertIsNotNone(rhr.call_args_list[1][0][1])
+
+			self.assertEqual(rhr.call_args_list[2][1], {})
+			self.assertEqual(len(rhr.call_args_list[2][0]), 2)
+			self.assertIs(rhr.call_args_list[2][0][0], heap3)
+			self.assertIsNotNone(rhr.call_args_list[2][0][1])
+
+			self.assertEqual(callback.call_args_list[0][0], ('resolving stacktraces', None, None))
+			self.assertEqual(callback.call_args_list[1][0], ('resolving heap 1/3', heap1, 20))
+			self.assertEqual(callback.call_args_list[2][0], ('resolving heap 2/3', heap2, 10))
+			self.assertEqual(callback.call_args_list[3][0], ('resolving heap 3/3', heap3, 30))

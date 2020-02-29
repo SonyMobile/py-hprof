@@ -153,8 +153,7 @@ def parse_heap(hf, heap, reader, progresscb):
 			raise FormatError('unrecognized heap record type 0x%x' % rtype) from e
 		parser(hf, heap, reader)
 
-def resolve_heap_references(heap):
-	# TODO: should take a progress callback function, so we don't freeze at "99%"
+def resolve_heap_references(heap, progresscb):
 	if heap._deferred_classes:
 		raise FormatError('some class dumps never found their super class', heap._deferred_classes)
 
@@ -166,7 +165,13 @@ def resolve_heap_references(heap):
 		except KeyError as e:
 			raise hprof.error.MissingObject(hex(addr)) from e
 
-	for obj in heap.values():
+	lastreport = 0
+	if progresscb:
+		progresscb(0)
+	for progress, obj in enumerate(heap.values()):
+		if progresscb and progress - lastreport >= 10000:
+			progresscb(progress)
+			lastreport = progress
 		cls = type(obj)
 		if isinstance(obj, hprof.heap.JavaArray):
 			# it's an array; is it an *object* array?
@@ -189,3 +194,5 @@ def resolve_heap_references(heap):
 				)
 				cls._hprof_ifieldvals.__set__(obj, new)
 				cls, = cls.__bases__
+	if progresscb:
+		progresscb(len(heap))

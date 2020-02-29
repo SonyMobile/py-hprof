@@ -460,7 +460,6 @@ def parse_heap_record(hf, reader, progresscb):
 	from . import _heap_parsing
 	out = heap.Heap()
 	_heap_parsing.parse_heap(hf, out, reader, progresscb)
-	_heap_parsing.resolve_heap_references(out)
 	hf.heaps.append(out)
 record_parsers[0x0c] = parse_heap_record
 
@@ -507,12 +506,12 @@ def _parse_hprof(hf, mview, progresscb):
 			parser(hf, PrimitiveReader(data, idsize), innerprogress)
 	if progresscb:
 		progresscb('parsing', len(mview), len(mview))
-		progresscb('resolving', None, None)
-	_resolve_references(hf)
+	_resolve_references(hf, progresscb)
 
-def _resolve_references(hf):
+def _resolve_references(hf, progresscb):
 	''' Some objects can have forward references. In those cases, we've saved
 	a serial or id -- now is the time to replace them with real references.'''
+	if progresscb: progresscb('resolving stacktraces', None, None)
 	for load in hf.classloads.values():
 		try:
 			if type(load.stacktrace) is int:
@@ -520,3 +519,12 @@ def _resolve_references(hf):
 		except KeyError as e:
 			msg = 'ClassLoad of %s refers to stacktrace 0x%x, which cannot be found'
 			raise FormatError(msg % (load.class_name, load.stacktrace)) from e
+	from . import _heap_parsing
+	for heapix, heap in enumerate(hf.heaps, start=1):
+		n = len(heap)
+		label = 'resolving heap %d/%d' % (heapix, len(hf.heaps))
+		def innerprogress(pos):
+			progresscb(label, pos, n)
+		if not progresscb:
+			innerprogress = None
+		_heap_parsing.resolve_heap_references(heap, innerprogress)

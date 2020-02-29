@@ -31,7 +31,7 @@ class TestParseClassLoadRecord(unittest.TestCase):
 		self.assertEqual(load.class_name, 'Kenny')
 		self.assertIn(2, self.hf.classloads_by_id)
 		self.assertIs(self.hf.classloads_by_id[2], load)
-		hprof._parsing._resolve_references(self.hf)
+		hprof._parsing._resolve_references(self.hf, None)
 		self.assertIs(load.stacktrace, self.dummytrace1)
 
 	def test_multiple(self):
@@ -58,7 +58,7 @@ class TestParseClassLoadRecord(unittest.TestCase):
 		self.assertIn(self.id(0x2021222324), self.hf.classloads_by_id)
 		self.assertIs(self.hf.classloads_by_id[self.id(0x2021222324)], load2)
 
-		hprof._parsing._resolve_references(self.hf)
+		hprof._parsing._resolve_references(self.hf, None)
 		self.assertIs(load1.stacktrace, self.dummytrace2)
 		self.assertIs(load2.stacktrace, self.dummytrace1)
 
@@ -80,13 +80,13 @@ class TestParseClassLoadRecord(unittest.TestCase):
 		self.assertEqual(self.hf.classloads[1].class_id, 2)
 		self.assertEqual(self.hf.classloads[1].stacktrace, 3)
 		self.assertEqual(self.hf.classloads[1].class_name, 'Kenny')
-		hprof._parsing._resolve_references(self.hf)
+		hprof._parsing._resolve_references(self.hf, None)
 		self.assertIs(self.hf.classloads[1].stacktrace, self.dummytrace1)
 
 	def test_missing_stacktrace(self):
 		self.addload(1, 2, 33, 0xdeadd00d)
 		with self.assertRaisesRegex(hprof.error.FormatError, r'stacktrace.*cannot be found'):
-			hprof._parsing._resolve_references(self.hf)
+			hprof._parsing._resolve_references(self.hf, None)
 
 	def test_eq(self):
 		a = hprof._parsing.ClassLoad()

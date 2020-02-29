@@ -373,4 +373,4 @@ class TestHeapClass(HeapRecordTest):
 			self.assertEqual(mock.call_count, 0)
 
 			with self.assertRaisesRegex(hprof.error.FormatError, 'super class'):
-				hprof._heap_parsing.resolve_heap_references(self.heap)
+				hprof._heap_parsing.resolve_heap_references(self.heap, None)

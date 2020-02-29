@@ -68,7 +68,7 @@ class TestHeapRefResolution(unittest.TestCase):
 		self.ints._hprof_array_data = hprof.heap._DeferredArrayData(hprof.jtype.int, b'abcdefgh')
 
 	def test_objarray_resolution(self):
-		resolve(self.heap)
+		resolve(self.heap, None)
 		self.assertEqual(len(self.beef), 5)
 		self.assertIs(self.beef[0], self.f00d)
 		self.assertIs(self.beef[1], self.dead)
@@ -77,13 +77,13 @@ class TestHeapRefResolution(unittest.TestCase):
 		self.assertIs(self.beef[4], self.fade)
 
 	def test_primarray_no_resolution(self):
-		resolve(self.heap)
+		resolve(self.heap, None)
 		self.assertEqual(len(self.ints), 2)
 		self.assertEqual(self.ints[0], 0x61626364)
 		self.assertEqual(self.ints[1], 0x65666768)
 
 	def test_obj_instance_resolution(self):
-		resolve(self.heap)
+		resolve(self.heap, None)
 		self.assertEqual(self.fade.il, 1)
 		self.assertIs(self.fade.io, self.dead)
 		self.assertEqual(self.fade.ii, 2)
@@ -94,14 +94,14 @@ class TestHeapRefResolution(unittest.TestCase):
 		self.assertIs(self.fade.cp, self.fade)
 
 	def test_obj_class_resolution(self):
-		resolve(self.heap)
+		resolve(self.heap, None)
 		self.assertEqual(self.ObjectCls.cl, 8010)
 		self.assertIs(self.ObjectCls.co, self.f00d)
 		self.assertEqual(self.ObjectCls.ci, 7)
 		self.assertIs(self.ObjectCls.cp, self.fade)
 
 	def test_string_instance_resolution(self):
-		resolve(self.heap)
+		resolve(self.heap, None)
 		with self.subTest('0xf00d'):
 			self.assertEqual(self.f00d.il, 10)
 			self.assertIs(self.f00d.io, self.fade)
@@ -124,7 +124,7 @@ class TestHeapRefResolution(unittest.TestCase):
 			self.assertIs(self.dead.cp, self.fade)
 
 	def test_string_class_resolution(self):
-		resolve(self.heap)
+		resolve(self.heap, None)
 		self.assertEqual(self.StringCls.cl, 8010)
 		self.assertIs(self.StringCls.co, self.f00d)
 		self.assertEqual(self.StringCls.ci, 7)
@@ -134,14 +134,41 @@ class TestHeapRefResolution(unittest.TestCase):
 	def test_dangling_ref_iattr(self):
 		self.StringCls._hprof_ifieldvals.__set__(self.dead, (0xbadf00d,))
 		with self.assertRaisesRegex(hprof.error.MissingObject, '0xbadf00d'):
-			resolve(self.heap)
+			resolve(self.heap, None)
 
 	def test_dangling_ref_sattr(self):
 		self.ObjectCls._hprof_sfields['co'] = hprof._heap_parsing.DeferredRef(0xdeadbeef)
 		with self.assertRaisesRegex(hprof.error.MissingObject, '0xdeadbeef'):
-			resolve(self.heap)
+			resolve(self.heap, None)
 
 	def test_dangling_ref_array(self):
 		self.beef._hprof_array_data = (0xf00d, 0xdead, 0xca7f00d, 0xf00d, 0xfade)
 		with self.assertRaisesRegex(hprof.error.MissingObject, '0xca7f00d'):
-			resolve(self.heap)
+			resolve(self.heap, None)
+
+	def test_progress_callback(self):
+		cb = MagicMock()
+		resolve(self.heap, cb)
+		self.assertEqual(cb.call_count, 2)
+		self.assertEqual(cb.call_args_list[0][0], (0,))
+		self.assertEqual(cb.call_args_list[1][0], (9,))
+
+	def test_progress_callback_no_objs(self):
+		heap = hprof.heap.Heap()
+		cb = MagicMock()
+		resolve(heap, cb)
+		self.assertEqual(cb.call_count, 2)
+		self.assertEqual(cb.call_args_list[0][0], (0,))
+		self.assertEqual(cb.call_args_list[1][0], (0,))
+
+	def test_progress_callback_many_objs(self):
+		heap = MagicMock()
+		heap._deferred_classes = []
+		heap.values.return_value = (self.ObjectCls for i in range(10009))
+		heap.__len__.return_value = 10009
+		cb = MagicMock()
+		resolve(heap, cb)
+		self.assertEqual(cb.call_count, 3)
+		self.assertEqual(cb.call_args_list[0][0], (0,))
+		self.assertEqual(cb.call_args_list[1][0], (10000,))
+		self.assertEqual(cb.call_args_list[2][0], (10009,))
