@@ -476,7 +476,7 @@ def _parse_hprof(hf, mview, progresscb):
 	if progresscb:
 		progresscb('parsing', 0, len(mview))
 	hdr = reader.ascii()
-	if not hdr == 'JAVA PROFILE 1.0.1':
+	if hdr not in ('JAVA PROFILE 1.0.1', 'JAVA PROFILE 1.0.2', 'JAVA PROFILE 1.0.3'):
 		raise FormatError('unknown header "%s"' % hdr)
 	idsize = reader._idsize = reader.u4()
 	reader.u8() # timestamp; ignore.

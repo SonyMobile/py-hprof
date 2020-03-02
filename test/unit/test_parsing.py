@@ -207,22 +207,24 @@ class TestParseHprof(unittest.TestCase):
 				self.assertEqual(progress.call_args_list[2][1], {})
 
 	def test_one_record(self):
-		indata = b'JAVA PROFILE 1.0.1\0\0\0\0\4\0\1\2\3\4\5\6\7\x50\0\0\0\0\0\0\0\2\x33\x44'
-		progress = MagicMock()
-		hf = hprof._parsing.HprofFile()
-		with patch('hprof._parsing.record_parsers', {}), patch('hprof._parsing._resolve_references') as resolve:
-			hprof._parsing._parse_hprof(hf, indata, progress)
-		self.assertEqual(hf.unhandled, {0x50: 1})
-		self.assertEqual(resolve.call_count, 1)
-		self.assertEqual(resolve.call_args[0], (hf,progress))
-		self.assertFalse(resolve.call_args[1])
-		self.assertEqual(progress.call_count, 3)
-		self.assertEqual(progress.call_args_list[0][0], ('parsing', 0, 42))
-		self.assertEqual(progress.call_args_list[0][1], {})
-		self.assertEqual(progress.call_args_list[1][0], ('parsing', 32, 42))
-		self.assertEqual(progress.call_args_list[1][1], {})
-		self.assertEqual(progress.call_args_list[2][0], ('parsing', 42, 42))
-		self.assertEqual(progress.call_args_list[2][1], {})
+		for v in (1,2,3):
+			with self.subTest('version10%d' % v):
+				indata = b'JAVA PROFILE 1.0.%d\0\0\0\0\4\0\1\2\3\4\5\6\7\x50\0\0\0\0\0\0\0\2\x33\x44' % v
+				progress = MagicMock()
+				hf = hprof._parsing.HprofFile()
+				with patch('hprof._parsing.record_parsers', {}), patch('hprof._parsing._resolve_references') as resolve:
+					hprof._parsing._parse_hprof(hf, indata, progress)
+				self.assertEqual(hf.unhandled, {0x50: 1})
+				self.assertEqual(resolve.call_count, 1)
+				self.assertEqual(resolve.call_args[0], (hf,progress))
+				self.assertFalse(resolve.call_args[1])
+				self.assertEqual(progress.call_count, 3)
+				self.assertEqual(progress.call_args_list[0][0], ('parsing', 0, 42))
+				self.assertEqual(progress.call_args_list[0][1], {})
+				self.assertEqual(progress.call_args_list[1][0], ('parsing', 32, 42))
+				self.assertEqual(progress.call_args_list[1][1], {})
+				self.assertEqual(progress.call_args_list[2][0], ('parsing', 42, 42))
+				self.assertEqual(progress.call_args_list[2][1], {})
 
 	def test_one_record_no_progress(self):
 		indata = b'JAVA PROFILE 1.0.1\0\0\0\0\4\0\1\2\3\4\5\6\7\x50\0\0\0\0\0\0\0\2\x33\x44'
