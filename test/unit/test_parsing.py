@@ -300,7 +300,7 @@ class TestParseHprof(unittest.TestCase):
 
 class TestResolveReferences(unittest.TestCase):
 	def test_resolves_one_heap(self):
-		hf = MagicMock()
+		hf = MagicMock(_pending_heap=None)
 		heap1 = MagicMock()
 		hf.heaps = [heap1]
 		with patch('hprof._heap_parsing.resolve_heap_references') as rhr:
@@ -319,7 +319,7 @@ class TestResolveReferences(unittest.TestCase):
 		heap2.__len__.return_value = 10
 		heap3 = MagicMock()
 		heap3.__len__.return_value = 30
-		hf = MagicMock()
+		hf = MagicMock(_pending_heap=None)
 		hf.heaps = [heap1, heap2, heap3]
 		rhr = MagicMock(side_effect=lambda h,cb: cb(h))
 		with patch('hprof._heap_parsing.resolve_heap_references', rhr):

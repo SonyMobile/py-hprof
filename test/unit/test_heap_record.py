@@ -91,3 +91,45 @@ class TestParseHeapRecord(unittest.TestCase):
 					self.assertEqual(progress.call_args_list[1][1], {})
 					self.assertEqual(progress.call_args_list[2][0], (expected3,))
 					self.assertEqual(progress.call_args_list[2][1], {})
+
+	def test_segmented_heap(self):
+		hf = MagicMock()
+		hf.heaps = []
+		reader1 = MagicMock()
+		reader2 = MagicMock()
+		reader3 = MagicMock()
+		reader4 = MagicMock()
+		progress = MagicMock()
+		with patch('hprof._heap_parsing.parse_heap') as ph:
+			hprof._parsing.record_parsers[0x1c](hf, reader1, progress)
+			hprof._parsing.record_parsers[0x1c](hf, reader2, progress)
+			hprof._parsing.record_parsers[0x1c](hf, reader3, progress)
+		self.assertEqual(ph.call_count, 3)
+		heap = ph.call_args_list[0][0][1]
+		self.assertEqual(ph.call_args_list[0][0], (hf, heap, reader1, progress))
+		self.assertEqual(ph.call_args_list[1][0], (hf, heap, reader2, progress))
+		self.assertEqual(ph.call_args_list[2][0], (hf, heap, reader3, progress))
+		self.assertEqual(len(hf.heaps), 0)
+
+		hprof._parsing.record_parsers[0x2c](hf, reader4, progress)
+		self.assertCountEqual(hf.heaps, (heap,))
+		self.assertIsNone(hf._pending_heap)
+
+	def test_segmented_heap_end_without_start(self):
+		hf = MagicMock()
+		hf._pending_heap = None
+		with self.assertRaisesRegex(hprof.error.FormatError, 'no pending heap'):
+			hprof._parsing.record_parsers[0x2c](hf, MagicMock(), None)
+
+	def test_nested_heap(self):
+		hf = MagicMock()
+		with patch('hprof._heap_parsing.parse_heap') as ph:
+			hprof._parsing.record_parsers[0x1c](hf, MagicMock(), None)
+			with self.assertRaisesRegex(hprof.error.FormatError, 'unfinished segmented heap'):
+				hprof._parsing.record_parsers[0x0c](hf, MagicMock(), None)
+
+	def test_dangling_heap(self):
+		hf = MagicMock()
+		hf._pending_heap = 'hello'
+		with self.assertRaisesRegex(hprof.error.FormatError, 'segmented heap'):
+			hprof._parsing._resolve_references(hf, None)

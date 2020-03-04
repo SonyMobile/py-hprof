@@ -20,6 +20,7 @@ class HprofFile(object):
 		self.classloads = {} # by serial
 		self.classloads_by_id = {}
 		self.heaps = []
+		self._pending_heap = None
 
 	def __enter__(self):
 		return self
@@ -457,11 +458,25 @@ def parse_stack_trace_record(hf, reader, progresscb):
 record_parsers[0x05] = parse_stack_trace_record
 
 def parse_heap_record(hf, reader, progresscb):
-	from . import _heap_parsing
-	out = heap.Heap()
-	_heap_parsing.parse_heap(hf, out, reader, progresscb)
-	hf.heaps.append(out)
+	if hf._pending_heap is not None:
+		raise FormatError('found non-segmented heap, but have unfinished segmented heap')
+	parse_heap_record_segment(hf, reader, progresscb)
+	parse_heap_record_seg_end(hf, reader, progresscb)
 record_parsers[0x0c] = parse_heap_record
+
+def parse_heap_record_segment(hf, reader, progresscb):
+	from . import _heap_parsing
+	if hf._pending_heap is None:
+		hf._pending_heap = heap.Heap()
+	_heap_parsing.parse_heap(hf, hf._pending_heap, reader, progresscb)
+record_parsers[0x1c] = parse_heap_record_segment
+
+def parse_heap_record_seg_end(hf, reader, progresscb):
+	if hf._pending_heap is None:
+		raise FormatError('no pending heap to end')
+	hf.heaps.append(hf._pending_heap)
+	hf._pending_heap = None
+record_parsers[0x2c] = parse_heap_record_seg_end
 
 def _parse(hf, data, progresscb):
 	try:
@@ -520,6 +535,8 @@ def _resolve_references(hf, progresscb):
 			msg = 'ClassLoad of %s refers to stacktrace 0x%x, which cannot be found'
 			raise FormatError(msg % (load.class_name, load.stacktrace)) from e
 	from . import _heap_parsing
+	if hf._pending_heap is not None:
+		raise FormatError('unfinished segmented heap')
 	for heapix, heap in enumerate(hf.heaps, start=1):
 		n = len(heap)
 		label = 'resolving heap %d/%d' % (heapix, len(hf.heaps))
