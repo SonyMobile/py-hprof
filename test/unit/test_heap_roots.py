@@ -50,3 +50,23 @@ class TestGcRoots(HeapRecordTest):
 		self.doit(0x08, self.build().id(0xbadf00d).u4(0x752ead).u4(0x57acc))
 		# TODO: check added root's attributes
 		# TODO: do reference resolution, check results
+
+	def test_interned_str_root(self):
+		self.doit(0x89, self.build().id(0xbadf00d))
+		# TODO: check added root's attributes
+		# TODO: do reference resolution, check results
+
+	def test_debugger_root(self):
+		self.doit(0x8b, self.build().id(0xbadf00d))
+		# TODO: check added root's attributes
+		# TODO: do reference resolution, check results
+
+	def test_vm_internal_root(self):
+		self.doit(0x8d, self.build().id(0xbadf00d))
+		# TODO: check added root's attributes
+		# TODO: do reference resolution, check results
+
+	def test_jni_monitor_root(self):
+		self.doit(0x8e, self.build().id(0xbadf00d).u4(0x752ead).u4(48))
+		# TODO: check added root's attributes
+		# TODO: do reference resolution, check results

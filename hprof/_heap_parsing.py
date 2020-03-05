@@ -21,6 +21,10 @@ record_parsers[0x05] = lambda f, h, r: (r.id())
 record_parsers[0x06] = lambda f, h, r: (r.id(), r.u4())
 record_parsers[0x07] = lambda f, h, r: (r.id())
 record_parsers[0x08] = lambda f, h, r: (r.id(), r.u4(), r.u4())
+record_parsers[0x89] = lambda f, h, r: (r.id())
+record_parsers[0x8b] = lambda f, h, r: (r.id())
+record_parsers[0x8d] = lambda f, h, r: (r.id())
+record_parsers[0x8e] = lambda f, h, r: (r.id(), r.u4(), r.u4())
 
 def parse_class(hf, heap, reader):
 	objid   = reader.id()
