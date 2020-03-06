@@ -521,7 +521,15 @@ def _parse_hprof(hf, mview, progresscb):
 			parser(hf, PrimitiveReader(data, idsize), innerprogress)
 	if progresscb:
 		progresscb('parsing', len(mview), len(mview))
+	_instantiate(hf, progresscb)
 	_resolve_references(hf, progresscb)
+
+def _instantiate(hf, progresscb):
+	from . import _heap_parsing
+	for heapix, heap in enumerate(hf.heaps, start=1):
+		if progresscb:
+			progresscb('instantiating heap %d/%d' % (heapix, len(hf.heaps)), None, None)
+		_heap_parsing.create_primarrays(heap)
 
 def _resolve_references(hf, progresscb):
 	''' Some objects can have forward references. In those cases, we've saved

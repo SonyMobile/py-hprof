@@ -230,7 +230,7 @@ class TestParseHprof(unittest.TestCase):
 		indata = b'JAVA PROFILE 1.0.1\0\0\0\0\4\0\1\2\3\4\5\6\7\x50\0\0\0\0\0\0\0\2\x33\x44'
 		mock_parsers = { 0x50: unittest.mock.MagicMock() }
 		hf = sentinel.hf
-		with patch('hprof._parsing.record_parsers', mock_parsers), patch('hprof._parsing._resolve_references') as resolve:
+		with patch('hprof._parsing.record_parsers', mock_parsers), patch('hprof._parsing._resolve_references') as resolve, patch('hprof._parsing._instantiate') as instantiate:
 			hprof._parsing._parse_hprof(sentinel.hf, indata, None)
 		self.assertEqual(mock_parsers[0x50].call_count, 1)
 		self.assertIs(mock_parsers[0x50].call_args[0][0], hf)
@@ -239,6 +239,9 @@ class TestParseHprof(unittest.TestCase):
 		self.assertEqual(resolve.call_count, 1)
 		self.assertEqual(resolve.call_args[0], (hf,None))
 		self.assertFalse(resolve.call_args[1])
+		self.assertEqual(instantiate.call_count, 1)
+		self.assertEqual(instantiate.call_args[0], (hf,None))
+		self.assertFalse(instantiate.call_args[1])
 
 	def test_four_records(self):
 		indata = b'JAVA PROFILE 1.0.1\0\5\0\0\5\0\1\2\3\4\5\6\7'
@@ -297,6 +300,49 @@ class TestParseHprof(unittest.TestCase):
 		self.assertEqual(mock_parsers[0x50].call_args_list[0][0][1]._idsize, 0x5000005)
 		self.assertEqual(mock_parsers[0x50].call_args_list[1][0][1]._idsize, 0x5000005)
 		self.assertEqual(mock_parsers[0x01].call_args_list[0][0][1]._idsize, 0x5000005)
+
+class TestInstantiate(unittest.TestCase):
+	def test_instantiates_one_heap(self):
+		hf = MagicMock(_pending_heap=None)
+		heap1 = MagicMock()
+		hf.heaps = [heap1]
+		with patch('hprof._heap_parsing.create_primarrays') as prims:
+			hprof._parsing._instantiate(hf, None)
+			self.assertEqual(prims.call_count, 1)
+			self.assertEqual(prims.call_args[1], {})
+			self.assertEqual(len(prims.call_args[0]), 1)
+			self.assertIs(prims.call_args[0][0], heap1)
+
+	def test_instantiates_three_heaps(self):
+		callback = MagicMock()
+		heap1 = MagicMock()
+		heap1.__len__.return_value = 20
+		heap2 = MagicMock()
+		heap2.__len__.return_value = 10
+		heap3 = MagicMock()
+		heap3.__len__.return_value = 30
+		hf = MagicMock(_pending_heap=None)
+		hf.heaps = [heap1, heap2, heap3]
+		with patch('hprof._heap_parsing.create_primarrays') as prims:
+			hprof._parsing._instantiate(hf, callback)
+			self.assertEqual(prims.call_count, 3)
+			self.assertEqual(callback.call_count, 3)
+
+			self.assertEqual(prims.call_args_list[0][1], {})
+			self.assertEqual(len(prims.call_args_list[0][0]), 1)
+			self.assertIs(prims.call_args_list[0][0][0], heap1)
+
+			self.assertEqual(prims.call_args_list[1][1], {})
+			self.assertEqual(len(prims.call_args_list[1][0]), 1)
+			self.assertIs(prims.call_args_list[1][0][0], heap2)
+
+			self.assertEqual(prims.call_args_list[2][1], {})
+			self.assertEqual(len(prims.call_args_list[2][0]), 1)
+			self.assertIs(prims.call_args_list[2][0][0], heap3)
+
+			self.assertEqual(callback.call_args_list[0][0], ('instantiating heap 1/3', None, None))
+			self.assertEqual(callback.call_args_list[1][0], ('instantiating heap 2/3', None, None))
+			self.assertEqual(callback.call_args_list[2][0], ('instantiating heap 3/3', None, None))
 
 class TestResolveReferences(unittest.TestCase):
 	def test_resolves_one_heap(self):

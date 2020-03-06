@@ -3,6 +3,7 @@ class Heap(dict):
 		self.classes = dict() # JavaClassName -> [JavaClass, ...]
 		self.classtree = JavaHierarchy()
 		self._deferred_classes = dict()
+		self._deferred_primarrays = list()
 
 class JavaHierarchy(object):
 	pass

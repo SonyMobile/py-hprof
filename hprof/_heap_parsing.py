@@ -132,15 +132,23 @@ def parse_primitive_array(hf, heap, reader):
 	length = reader.u4()
 	t = reader.jtype()
 	data = reader.bytes(length * t.size)
-	clsname = t.name + '[]'
-	assert clsname in heap.classes, 'class %s not found' % clsname
-	classes = heap.classes[clsname]
-	assert len(classes) == 1, 'there are %d classes named %s' % (len(classes), clsname)
-	cls, = classes
-	arr = cls(objid)
-	arr._hprof_array_data = hprof.heap._DeferredArrayData(t, data)
-	heap[objid] = arr
+	data = hprof.heap._DeferredArrayData(t, data)
+	heap._deferred_primarrays.append((objid, strace, data))
 record_parsers[0x23] = parse_primitive_array
+
+def create_primarrays(heap):
+	for objid, strace, data in heap._deferred_primarrays:
+		t = data.jtype
+		clsname = t.name + '[]'
+		assert clsname in heap.classes, 'class %s not found' % clsname
+		classes = heap.classes[clsname]
+		assert len(classes) == 1, 'there are %d classes named %s' % (len(classes), clsname)
+		cls, = classes
+		# TODO: speed: the class lookup could be done once per array type
+		arr = cls(objid)
+		arr._hprof_array_data = data
+		heap[objid] = arr
+	heap._deferred_primarrays.clear()
 
 def parse_heap(hf, heap, reader, progresscb):
 	lastreport = 0
