@@ -529,11 +529,29 @@ def _instantiate(hf, idsize, progresscb):
 	for heapix, heap in enumerate(hf.heaps, start=1):
 		if heap._deferred_classes:
 			raise FormatError('some class dumps never found their super class', heap._deferred_classes)
+
+		total = (
+			len(heap._deferred_objects)
+			+ len(heap._deferred_objarrays)
+			+ len(heap._deferred_primarrays)
+		)
+		done = 0
+		label = 'instantiating heap %d/%d' % (heapix, len(hf.heaps))
 		if progresscb:
-			progresscb('instantiating heap %d/%d' % (heapix, len(hf.heaps)), None, None)
-		_heap_parsing.create_instances(heap, idsize)
-		_heap_parsing.create_primarrays(heap)
-		_heap_parsing.create_objarrays(heap)
+			def localprogress(n):
+				progresscb(label, done + n, total)
+		else:
+			def localprogress(n):
+				pass
+
+		_heap_parsing.create_instances(heap, idsize, localprogress)
+		done += len(heap._deferred_objects)
+		_heap_parsing.create_objarrays(heap, localprogress)
+		done += len(heap._deferred_objarrays)
+		_heap_parsing.create_primarrays(heap, localprogress)
+		done += len(heap._deferred_primarrays)
+
+		localprogress(0)
 
 def _resolve_references(hf, progresscb):
 	''' Some objects can have forward references. In those cases, we've saved

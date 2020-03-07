@@ -100,9 +100,14 @@ def parse_instance(hf, heap, reader):
 	heap._deferred_objects.append((objid, strace, clsid, bytes))
 record_parsers[0x21] = parse_instance
 
-def create_instances(heap, idsize):
+def create_instances(heap, idsize, progress):
 	from ._parsing import PrimitiveReader
-	for objid, strace, clsid, bytes in heap._deferred_objects:
+	until_report = 0
+	for ix, (objid, strace, clsid, bytes) in enumerate(heap._deferred_objects):
+		if until_report == 0:
+			until_report = 4096
+			progress(ix)
+		until_report -= 1
 		reader = PrimitiveReader(bytes, idsize)
 		cls = heap[clsid]
 		obj = cls(objid)
@@ -128,8 +133,13 @@ def parse_object_array(hf, heap, reader):
 	heap._deferred_objarrays.append((objid, strace, clsid, elems))
 record_parsers[0x22] = parse_object_array
 
-def create_objarrays(heap):
-	for objid, strace, clsid, elems in heap._deferred_objarrays:
+def create_objarrays(heap, progress):
+	until_report = 0
+	for ix, (objid, strace, clsid, elems) in enumerate(heap._deferred_objarrays):
+		if until_report == 0:
+			until_report = 4096
+			progress(ix)
+		until_report -= 1
 		cls = heap[clsid]
 		arr = cls(objid)
 		arr._hprof_array_data = elems
@@ -146,8 +156,13 @@ def parse_primitive_array(hf, heap, reader):
 	heap._deferred_primarrays.append((objid, strace, data))
 record_parsers[0x23] = parse_primitive_array
 
-def create_primarrays(heap):
-	for objid, strace, data in heap._deferred_primarrays:
+def create_primarrays(heap, progress):
+	until_report = 0
+	for ix, (objid, strace, data) in enumerate(heap._deferred_primarrays):
+		if until_report == 0:
+			until_report = 4096
+			progress(ix)
+		until_report -= 1
 		t = data.jtype
 		clsname = t.name + '[]'
 		assert clsname in heap.classes, 'class %s not found' % clsname

@@ -74,8 +74,9 @@ class TestHeapObject(HeapRecordTest):
 			(0x0b1ec5, 0x57acca, 0x2022, self.build().i4(0x98979695).u2(0x1314).id(0xabcd0123f)),
 		)
 		self.heap._deferred_objects.extend(fakes)
+		progress = MagicMock()
 
-		hprof._heap_parsing.create_instances(self.heap, self.idsize)
+		hprof._heap_parsing.create_instances(self.heap, self.idsize, progress)
 
 		with self.subTest('0 attrs'):
 			self.assertEqual(cls0attr.call_count, 1)
@@ -105,3 +106,4 @@ class TestHeapObject(HeapRecordTest):
 			self.assertEqual(cls1attr._hprof_ifieldvals.call_args_list[1][0], ((self.id(0xabcd0123f),),))
 
 		self.assertEqual(len(self.heap._deferred_objects), 0)
+		progress.assert_called_once_with(0)

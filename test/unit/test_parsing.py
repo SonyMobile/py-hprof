@@ -312,28 +312,43 @@ class TestInstantiate(unittest.TestCase):
 		with self.subTest('primarray'):
 			self.assertEqual(prims.call_count, 1)
 			self.assertEqual(prims.call_args[1], {})
-			self.assertEqual(len(prims.call_args[0]), 1)
+			self.assertEqual(len(prims.call_args[0]), 2)
 			self.assertIs(prims.call_args[0][0], heap1)
+			self.assertTrue(callable(prims.call_args[0][1]))
 		with self.subTest('objarray'):
 			self.assertEqual(oarrs.call_count, 1)
 			self.assertEqual(oarrs.call_args[1], {})
-			self.assertEqual(len(oarrs.call_args[0]), 1)
+			self.assertEqual(len(oarrs.call_args[0]), 2)
 			self.assertIs(oarrs.call_args[0][0], heap1)
+			self.assertTrue(callable(oarrs.call_args[0][1]))
 		with self.subTest('objects'):
 			self.assertEqual(objs.call_count, 1)
 			self.assertEqual(objs.call_args[1], {})
-			self.assertEqual(len(objs.call_args[0]), 2)
+			self.assertEqual(len(objs.call_args[0]), 3)
 			self.assertIs(objs.call_args[0][0], heap1)
 			self.assertIs(objs.call_args[0][1], idsize)
+			self.assertTrue(callable(objs.call_args[0][2]))
 
 	def test_instantiates_three_heaps(self):
-		callback = MagicMock()
 		heap1 = MagicMock(_deferred_classes=[])
 		heap1.__len__.return_value = 20
+		heap1._deferred_objects = ['a']
+		heap1._deferred_primarrays = ['b', 'c']
+		heap1._deferred_objarrays = ['d']
+
 		heap2 = MagicMock(_deferred_classes=[])
 		heap2.__len__.return_value = 10
+		heap2._deferred_objects = []
+		heap2._deferred_primarrays = ['e', 'f', 'g']
+		heap2._deferred_objarrays = []
+
 		heap3 = MagicMock(_deferred_classes=[])
 		heap3.__len__.return_value = 30
+		heap3._deferred_objects = ['i', 'j', 'k']
+		heap3._deferred_primarrays = ['l', 'm', 'n']
+		heap3._deferred_objarrays = ['o', 'p', 'q']
+
+		callback = MagicMock()
 		hf = MagicMock(_pending_heap=None)
 		idsize = MagicMock()
 		hf.heaps = [heap1, heap2, heap3]
@@ -344,55 +359,69 @@ class TestInstantiate(unittest.TestCase):
 			self.assertEqual(prims.call_count, 3)
 
 			self.assertEqual(prims.call_args_list[0][1], {})
-			self.assertEqual(len(prims.call_args_list[0][0]), 1)
+			self.assertEqual(len(prims.call_args_list[0][0]), 2)
 			self.assertIs(prims.call_args_list[0][0][0], heap1)
+			self.assertTrue(callable(prims.call_args_list[0][0][1]))
 
 			self.assertEqual(prims.call_args_list[1][1], {})
-			self.assertEqual(len(prims.call_args_list[1][0]), 1)
+			self.assertEqual(len(prims.call_args_list[1][0]), 2)
 			self.assertIs(prims.call_args_list[1][0][0], heap2)
+			self.assertTrue(callable(prims.call_args_list[1][0][1]))
 
 			self.assertEqual(prims.call_args_list[2][1], {})
-			self.assertEqual(len(prims.call_args_list[2][0]), 1)
+			self.assertEqual(len(prims.call_args_list[2][0]), 2)
 			self.assertIs(prims.call_args_list[2][0][0], heap3)
+			self.assertTrue(callable(prims.call_args_list[2][0][1]))
 
 		with self.subTest('objarray'):
 			self.assertEqual(oarrs.call_count, 3)
 
 			self.assertEqual(oarrs.call_args_list[0][1], {})
-			self.assertEqual(len(oarrs.call_args_list[0][0]), 1)
+			self.assertEqual(len(oarrs.call_args_list[0][0]), 2)
 			self.assertIs(oarrs.call_args_list[0][0][0], heap1)
+			self.assertTrue(callable(oarrs.call_args_list[0][0][1]))
 
 			self.assertEqual(oarrs.call_args_list[1][1], {})
-			self.assertEqual(len(oarrs.call_args_list[1][0]), 1)
+			self.assertEqual(len(oarrs.call_args_list[1][0]), 2)
 			self.assertIs(oarrs.call_args_list[1][0][0], heap2)
+			self.assertTrue(callable(oarrs.call_args_list[1][0][1]))
 
 			self.assertEqual(oarrs.call_args_list[2][1], {})
-			self.assertEqual(len(oarrs.call_args_list[2][0]), 1)
+			self.assertEqual(len(oarrs.call_args_list[2][0]), 2)
 			self.assertIs(oarrs.call_args_list[2][0][0], heap3)
+			self.assertTrue(callable(oarrs.call_args_list[2][0][1]))
 
 		with self.subTest('objects'):
 			self.assertEqual(objs.call_count, 3)
 
 			self.assertEqual(objs.call_args_list[0][1], {})
-			self.assertEqual(len(objs.call_args_list[0][0]), 2)
+			self.assertEqual(len(objs.call_args_list[0][0]), 3)
 			self.assertIs(objs.call_args_list[0][0][0], heap1)
 			self.assertIs(objs.call_args_list[0][0][1], idsize)
+			self.assertTrue(callable(objs.call_args_list[0][0][2]))
 
 			self.assertEqual(objs.call_args_list[1][1], {})
-			self.assertEqual(len(objs.call_args_list[1][0]), 2)
+			self.assertEqual(len(objs.call_args_list[1][0]), 3)
 			self.assertIs(objs.call_args_list[1][0][0], heap2)
 			self.assertIs(objs.call_args_list[1][0][1], idsize)
+			self.assertTrue(callable(objs.call_args_list[1][0][2]))
 
 			self.assertEqual(objs.call_args_list[2][1], {})
-			self.assertEqual(len(objs.call_args_list[2][0]), 2)
+			self.assertEqual(len(objs.call_args_list[2][0]), 3)
 			self.assertIs(objs.call_args_list[2][0][0], heap3)
 			self.assertIs(objs.call_args_list[2][0][1], idsize)
+			self.assertTrue(callable(objs.call_args_list[2][0][2]))
 
 		with self.subTest('progress'):
+			for i in range(3):
+				# expect all three functions to get the same progress callable
+				self.assertIs(prims.call_args_list[i][0][1], oarrs.call_args_list[i][0][1])
+				self.assertIs(oarrs.call_args_list[i][0][1],  objs.call_args_list[i][0][2])
+
 			self.assertEqual(callback.call_count, 3)
-			self.assertEqual(callback.call_args_list[0][0], ('instantiating heap 1/3', None, None))
-			self.assertEqual(callback.call_args_list[1][0], ('instantiating heap 2/3', None, None))
-			self.assertEqual(callback.call_args_list[2][0], ('instantiating heap 3/3', None, None))
+			self.assertEqual(callback.call_args_list[0][0], ('instantiating heap 1/3', 4, 4))
+			self.assertEqual(callback.call_args_list[1][0], ('instantiating heap 2/3', 3, 3))
+			self.assertEqual(callback.call_args_list[2][0], ('instantiating heap 3/3', 9, 9))
 
 class TestResolveReferences(unittest.TestCase):
 	def test_resolves_one_heap(self):
