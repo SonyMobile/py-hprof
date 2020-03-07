@@ -5,6 +5,7 @@ class Heap(dict):
 		self._deferred_classes = dict()
 		self._deferred_primarrays = list()
 		self._deferred_objarrays = list()
+		self._deferred_objects = list()
 
 class JavaHierarchy(object):
 	pass

@@ -96,22 +96,28 @@ def parse_instance(hf, heap, reader):
 	strace = reader.u4()
 	clsid = reader.id()
 	remaining = reader.u4()
-	expected_end = reader._pos + remaining
-
-	cls = heap[clsid]
-	obj = cls(objid)
-	while cls is not hprof.heap.JavaObject:
-		vals = tuple(
-				atype.read(reader)
-				for ix, (aname, atype)
-				in enumerate(cls._hprof_ifields.items())
-		)
-		assert len(vals) == len(cls._hprof_ifieldix), (len(vals), len(cls._hprof_ifieldix))
-		cls._hprof_ifieldvals.__set__(obj, vals)
-		cls, = cls.__bases__
-	assert reader._pos == expected_end, (reader._pos, expected_end)
-	heap[objid] = obj
+	bytes = reader.bytes(remaining)
+	heap._deferred_objects.append((objid, strace, clsid, bytes))
 record_parsers[0x21] = parse_instance
+
+def create_instances(heap, idsize):
+	from ._parsing import PrimitiveReader
+	for objid, strace, clsid, bytes in heap._deferred_objects:
+		reader = PrimitiveReader(bytes, idsize)
+		cls = heap[clsid]
+		obj = cls(objid)
+		while cls is not hprof.heap.JavaObject:
+			vals = tuple(
+					atype.read(reader)
+					for ix, (aname, atype)
+					in enumerate(cls._hprof_ifields.items())
+			)
+			assert len(vals) == len(cls._hprof_ifieldix), (len(vals), len(cls._hprof_ifieldix))
+			cls._hprof_ifieldvals.__set__(obj, vals)
+			cls, = cls.__bases__
+		assert reader._pos == len(bytes), (reader._pos, len(bytes))
+		heap[objid] = obj
+	heap._deferred_objects.clear()
 
 def parse_object_array(hf, heap, reader):
 	objid = reader.id()

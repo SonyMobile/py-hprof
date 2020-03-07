@@ -521,14 +521,15 @@ def _parse_hprof(hf, mview, progresscb):
 			parser(hf, PrimitiveReader(data, idsize), innerprogress)
 	if progresscb:
 		progresscb('parsing', len(mview), len(mview))
-	_instantiate(hf, progresscb)
+	_instantiate(hf, reader._idsize, progresscb)
 	_resolve_references(hf, progresscb)
 
-def _instantiate(hf, progresscb):
+def _instantiate(hf, idsize, progresscb):
 	from . import _heap_parsing
 	for heapix, heap in enumerate(hf.heaps, start=1):
 		if progresscb:
 			progresscb('instantiating heap %d/%d' % (heapix, len(hf.heaps)), None, None)
+		_heap_parsing.create_instances(heap, idsize)
 		_heap_parsing.create_primarrays(heap)
 		_heap_parsing.create_objarrays(heap)
 
