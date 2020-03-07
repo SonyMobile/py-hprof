@@ -306,12 +306,18 @@ class TestInstantiate(unittest.TestCase):
 		hf = MagicMock(_pending_heap=None)
 		heap1 = MagicMock()
 		hf.heaps = [heap1]
-		with patch('hprof._heap_parsing.create_primarrays') as prims:
+		with patch('hprof._heap_parsing.create_primarrays') as prims, patch('hprof._heap_parsing.create_objarrays') as oarrs:
 			hprof._parsing._instantiate(hf, None)
+		with self.subTest('primarray'):
 			self.assertEqual(prims.call_count, 1)
 			self.assertEqual(prims.call_args[1], {})
 			self.assertEqual(len(prims.call_args[0]), 1)
 			self.assertIs(prims.call_args[0][0], heap1)
+		with self.subTest('objarray'):
+			self.assertEqual(oarrs.call_count, 1)
+			self.assertEqual(oarrs.call_args[1], {})
+			self.assertEqual(len(oarrs.call_args[0]), 1)
+			self.assertIs(oarrs.call_args[0][0], heap1)
 
 	def test_instantiates_three_heaps(self):
 		callback = MagicMock()
@@ -323,10 +329,11 @@ class TestInstantiate(unittest.TestCase):
 		heap3.__len__.return_value = 30
 		hf = MagicMock(_pending_heap=None)
 		hf.heaps = [heap1, heap2, heap3]
-		with patch('hprof._heap_parsing.create_primarrays') as prims:
+		with patch('hprof._heap_parsing.create_primarrays') as prims, patch('hprof._heap_parsing.create_objarrays') as oarrs:
 			hprof._parsing._instantiate(hf, callback)
+
+		with self.subTest('primarray'):
 			self.assertEqual(prims.call_count, 3)
-			self.assertEqual(callback.call_count, 3)
 
 			self.assertEqual(prims.call_args_list[0][1], {})
 			self.assertEqual(len(prims.call_args_list[0][0]), 1)
@@ -340,6 +347,23 @@ class TestInstantiate(unittest.TestCase):
 			self.assertEqual(len(prims.call_args_list[2][0]), 1)
 			self.assertIs(prims.call_args_list[2][0][0], heap3)
 
+		with self.subTest('objarray'):
+			self.assertEqual(oarrs.call_count, 3)
+
+			self.assertEqual(oarrs.call_args_list[0][1], {})
+			self.assertEqual(len(oarrs.call_args_list[0][0]), 1)
+			self.assertIs(oarrs.call_args_list[0][0][0], heap1)
+
+			self.assertEqual(oarrs.call_args_list[1][1], {})
+			self.assertEqual(len(oarrs.call_args_list[1][0]), 1)
+			self.assertIs(oarrs.call_args_list[1][0][0], heap2)
+
+			self.assertEqual(oarrs.call_args_list[2][1], {})
+			self.assertEqual(len(oarrs.call_args_list[2][0]), 1)
+			self.assertIs(oarrs.call_args_list[2][0][0], heap3)
+
+		with self.subTest('progress'):
+			self.assertEqual(callback.call_count, 3)
 			self.assertEqual(callback.call_args_list[0][0], ('instantiating heap 1/3', None, None))
 			self.assertEqual(callback.call_args_list[1][0], ('instantiating heap 2/3', None, None))
 			self.assertEqual(callback.call_args_list[2][0], ('instantiating heap 3/3', None, None))

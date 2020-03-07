@@ -119,12 +119,16 @@ def parse_object_array(hf, heap, reader):
 	length = reader.u4()
 	clsid = reader.id()
 	elems = tuple(reader.id() for ix in range(length))
-
-	cls = heap[clsid]
-	arr = cls(objid)
-	arr._hprof_array_data = elems
-	heap[objid] = arr
+	heap._deferred_objarrays.append((objid, strace, clsid, elems))
 record_parsers[0x22] = parse_object_array
+
+def create_objarrays(heap):
+	for objid, strace, clsid, elems in heap._deferred_objarrays:
+		cls = heap[clsid]
+		arr = cls(objid)
+		arr._hprof_array_data = elems
+		heap[objid] = arr
+	heap._deferred_objarrays.clear()
 
 def parse_primitive_array(hf, heap, reader):
 	objid  = reader.id()

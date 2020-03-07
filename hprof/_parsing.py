@@ -530,6 +530,7 @@ def _instantiate(hf, progresscb):
 		if progresscb:
 			progresscb('instantiating heap %d/%d' % (heapix, len(hf.heaps)), None, None)
 		_heap_parsing.create_primarrays(heap)
+		_heap_parsing.create_objarrays(heap)
 
 def _resolve_references(hf, progresscb):
 	''' Some objects can have forward references. In those cases, we've saved
