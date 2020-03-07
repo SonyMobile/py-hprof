@@ -64,8 +64,20 @@ def cast(obj, desired=None):
 	return Ref(obj, desired)
 
 
-class JavaClassContainer(str):
-	pass
+class JavaClassContainer(object):
+	__slots__ = ('_name')
+
+	def __init__(self, name):
+		self._name = name
+
+	def __str__(self):
+		return self._name
+
+	def __hash__(self):
+		return hash(self._name)
+
+	def __eq__(self, other):
+		return self is other or self._name == str(other)
 
 class JavaPackage(JavaClassContainer):
 	''' a Java package, containing JavaClassName objects '''
@@ -181,7 +193,7 @@ class JavaClass(type):
 
 	def __str__(self):
 		if self.__module__:
-			return self.__module__ + '.' + self.__name__
+			return str(self.__module__) + '.' + self.__name__
 		return self.__name__
 
 	def __repr__(self):
@@ -244,7 +256,7 @@ def _get_or_create_container(container, parts, ctype):
 		assert '$' not in p or p.find('$') >= p.find('$$')
 		if hasattr(container, p):
 			container = getattr(container, p)
-			assert isinstance(container, ctype)
+			assert isinstance(container, ctype), container
 		else:
 			if isinstance(container, JavaClassContainer):
 				next = ctype(str(container) + '.' + p)
