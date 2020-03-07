@@ -304,7 +304,7 @@ class TestParseHprof(unittest.TestCase):
 class TestInstantiate(unittest.TestCase):
 	def test_instantiates_one_heap(self):
 		hf = MagicMock(_pending_heap=None)
-		heap1 = MagicMock()
+		heap1 = MagicMock(_deferred_classes=[])
 		hf.heaps = [heap1]
 		idsize = MagicMock()
 		with patch('hprof._heap_parsing.create_primarrays') as prims, patch('hprof._heap_parsing.create_objarrays') as oarrs, patch('hprof._heap_parsing.create_instances') as objs:
@@ -328,11 +328,11 @@ class TestInstantiate(unittest.TestCase):
 
 	def test_instantiates_three_heaps(self):
 		callback = MagicMock()
-		heap1 = MagicMock()
+		heap1 = MagicMock(_deferred_classes=[])
 		heap1.__len__.return_value = 20
-		heap2 = MagicMock()
+		heap2 = MagicMock(_deferred_classes=[])
 		heap2.__len__.return_value = 10
-		heap3 = MagicMock()
+		heap3 = MagicMock(_deferred_classes=[])
 		heap3.__len__.return_value = 30
 		hf = MagicMock(_pending_heap=None)
 		idsize = MagicMock()

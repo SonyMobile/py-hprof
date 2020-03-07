@@ -96,6 +96,7 @@ class HeapRecordTest(unittest.TestCase):
 	def setUp(self):
 		self.hf = hprof._parsing.HprofFile()
 		self.heap = hprof.heap.Heap()
+		self.hf.heaps.append(self.heap)
 		load = hprof._parsing.ClassLoad()
 		load.class_id = self.id(0x0b1ec7)
 		load.class_name = 'java.lang.Object'

@@ -178,9 +178,6 @@ def parse_heap(hf, heap, reader, progresscb):
 		parser(hf, heap, reader)
 
 def resolve_heap_references(heap, progresscb):
-	if heap._deferred_classes:
-		raise FormatError('some class dumps never found their super class', heap._deferred_classes)
-
 	def lookup(addr):
 		if not addr:
 			return None

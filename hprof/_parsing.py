@@ -527,6 +527,8 @@ def _parse_hprof(hf, mview, progresscb):
 def _instantiate(hf, idsize, progresscb):
 	from . import _heap_parsing
 	for heapix, heap in enumerate(hf.heaps, start=1):
+		if heap._deferred_classes:
+			raise FormatError('some class dumps never found their super class', heap._deferred_classes)
 		if progresscb:
 			progresscb('instantiating heap %d/%d' % (heapix, len(hf.heaps)), None, None)
 		_heap_parsing.create_instances(heap, idsize)
