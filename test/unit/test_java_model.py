@@ -3,17 +3,17 @@ import unittest
 import hprof
 from hprof import heap
 
-class TestJavaClass(unittest.TestCase):
+class CommonClassTests(object):
 	def setUp(self):
-		_, self.obj = heap._create_class(self, 'java/lang/Object', None, {}, ('shadow',))
-		_, self.cls = heap._create_class(self, 'java/lang/Class', self.obj, {}, ('secret',))
-		_, self.lst = heap._create_class(self, 'java/util/List', self.obj, {}, ('next',))
-		_, self.inr = heap._create_class(self, 'java/util/List$Inner', self.obj, {}, ('this$0',))
-		_, self.shd = heap._create_class(self, 'Shadower', self.lst, {}, ('shadow','unique'))
+		_, self.obj = heap._create_class(self, self.names['obj'], None, {}, ('shadow',))
+		_, self.cls = heap._create_class(self, self.names['cls'], self.obj, {}, ('secret',))
+		_, self.lst = heap._create_class(self, self.names['lst'], self.obj, {}, ('next',))
+		_, self.inr = heap._create_class(self, self.names['inn'], self.obj, {}, ('this$0',))
+		_, self.shd = heap._create_class(self, self.names['shd'], self.lst, {}, ('shadow','unique'))
 
 	def test_duplicate_class(self):
 		old = self.java.lang.Class
-		_, newcls = heap._create_class(self, 'java/lang/Class', self.obj, {}, ('secret',))
+		_, newcls = heap._create_class(self, self.names['cls'], self.obj, {}, ('secret',))
 		self.assertIs(old, self.java.lang.Class) # same name object
 		self.assertIsNot(newcls, self.cls)
 
@@ -159,7 +159,7 @@ class TestJavaClass(unittest.TestCase):
 
 
 	def test_double_dollar(self):
-		_, lambdacls = heap._create_class(self, 'com/example/Vehicle$$Lambda$1/455659002', self.obj, {'line': 79}, ('closure_x', 'closure_y'))
+		_, lambdacls = heap._create_class(self, self.names['lam'], self.obj, {'line': 79}, ('closure_x', 'closure_y'))
 		self.assertEqual(str(lambdacls), 'com.example.Vehicle$$Lambda$1/455659002')
 		lambdaobj = lambdacls(33)
 		self.obj._hprof_ifieldvals.__set__(lambdaobj, (11,))
@@ -183,7 +183,7 @@ class TestJavaClass(unittest.TestCase):
 
 	def test_obj_array(self):
 		# the base array class...
-		_, oacls = heap._create_class(self, '[Ljava/lang/Object;', self.obj, {}, ('extrastuff',))
+		_, oacls = heap._create_class(self, self.names['oar'], self.obj, {}, ('extrastuff',))
 		self.assertEqual(str(oacls), 'java.lang.Object[]')
 		self.assertEqual(repr(oacls), "<JavaClass 'java.lang.Object[]'>")
 		self.assertTrue(isinstance(oacls, heap.JavaClass))
@@ -231,7 +231,7 @@ class TestJavaClass(unittest.TestCase):
 		self.assertEqual(oarr.extrastuff, 49)
 
 		# ...and a subclass
-		_, lacls = heap._create_class(self, '[LList$$lambda;', oacls, {}, ('more',))
+		_, lacls = heap._create_class(self, self.names['lar'], oacls, {}, ('more',))
 		self.assertEqual(str(lacls), 'List$$lambda[]')
 		self.assertEqual(repr(lacls), "<JavaClass 'List$$lambda[]'>")
 		self.assertTrue(isinstance(lacls, heap.JavaClass))
@@ -293,35 +293,35 @@ class TestJavaClass(unittest.TestCase):
 			self.assertEqual(str(cls), expected)
 			self.assertEqual(repr(cls), "<JavaClass '%s'>" % expected)
 		#single
-		check('[Z', 'boolean[]')
-		check('[C', 'char[]')
-		check('[F', 'float[]')
-		check('[D', 'double[]')
-		check('[B', 'byte[]')
-		check('[S', 'short[]')
-		check('[I', 'int[]')
-		check('[J', 'long[]')
+		check(self.names['Zar'], 'boolean[]')
+		check(self.names['Car'], 'char[]')
+		check(self.names['Far'], 'float[]')
+		check(self.names['Dar'], 'double[]')
+		check(self.names['Bar'], 'byte[]')
+		check(self.names['Sar'], 'short[]')
+		check(self.names['Iar'], 'int[]')
+		check(self.names['Jar'], 'long[]')
 		#double
-		check('[[Z', 'boolean[][]')
-		check('[[C', 'char[][]')
-		check('[[F', 'float[][]')
-		check('[[D', 'double[][]')
-		check('[[B', 'byte[][]')
-		check('[[S', 'short[][]')
-		check('[[I', 'int[][]')
-		check('[[J', 'long[][]')
+		check(self.names['Zarar'], 'boolean[][]')
+		check(self.names['Carar'], 'char[][]')
+		check(self.names['Farar'], 'float[][]')
+		check(self.names['Darar'], 'double[][]')
+		check(self.names['Barar'], 'byte[][]')
+		check(self.names['Sarar'], 'short[][]')
+		check(self.names['Iarar'], 'int[][]')
+		check(self.names['Jarar'], 'long[][]')
 		#triple
-		check('[[[Z', 'boolean[][][]')
-		check('[[[C', 'char[][][]')
-		check('[[[F', 'float[][][]')
-		check('[[[D', 'double[][][]')
-		check('[[[B', 'byte[][][]')
-		check('[[[S', 'short[][][]')
-		check('[[[I', 'int[][][]')
-		check('[[[J', 'long[][][]')
+		check(self.names['Zararar'], 'boolean[][][]')
+		check(self.names['Cararar'], 'char[][][]')
+		check(self.names['Fararar'], 'float[][][]')
+		check(self.names['Dararar'], 'double[][][]')
+		check(self.names['Bararar'], 'byte[][][]')
+		check(self.names['Sararar'], 'short[][][]')
+		check(self.names['Iararar'], 'int[][][]')
+		check(self.names['Jararar'], 'long[][][]')
 
 	def test_prim_array(self):
-		_, sacls = heap._create_class(self, '[S', self.obj, {}, ())
+		_, sacls = heap._create_class(self, self.names['Sar'], self.obj, {}, ())
 		self.assertEqual(str(sacls), 'short[]')
 		self.assertEqual(repr(sacls), "<JavaClass 'short[]'>")
 		self.assertTrue(isinstance(sacls, heap.JavaClass))
@@ -370,7 +370,7 @@ class TestJavaClass(unittest.TestCase):
 
 
 	def test_prim_array_deferred_bool(self):
-		_, acls = heap._create_class(self, '[Z', self.obj, {}, ())
+		_, acls = heap._create_class(self, self.names['Zar'], self.obj, {}, ())
 		arr = acls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.boolean, b'\x23\x10\xff\x10\x00\x00\x21\x78')
 
@@ -388,7 +388,7 @@ class TestJavaClass(unittest.TestCase):
 			arr[8]
 
 	def test_prim_array_deferred_char(self):
-		_, acls = heap._create_class(self, '[C', self.obj, {}, ())
+		_, acls = heap._create_class(self, self.names['Car'], self.obj, {}, ())
 		arr = acls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.char, b'\0\x57\0\xf6\0\x72\0\x6c\xd8\x01\xdc\x00\0\x21')
 
@@ -405,7 +405,7 @@ class TestJavaClass(unittest.TestCase):
 			arr[7]
 
 	def test_prim_array_deferred_byte(self):
-		_, acls = heap._create_class(self, '[B', self.obj, {}, ())
+		_, acls = heap._create_class(self, self.names['Bar'], self.obj, {}, ())
 		arr = acls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.byte, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84')
 
@@ -424,7 +424,7 @@ class TestJavaClass(unittest.TestCase):
 			arr[9]
 
 	def test_prim_array_deferred_short(self):
-		_, sacls = heap._create_class(self, '[S', self.obj, {}, ())
+		_, sacls = heap._create_class(self, self.names['Sar'], self.obj, {}, ())
 		sarr = sacls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.short, b'\x23\x10\xff\x10\x00\x00\x21\x78')
 
@@ -446,7 +446,7 @@ class TestJavaClass(unittest.TestCase):
 			sarr[4]
 
 	def test_prim_array_deferred_int(self):
-		_, acls = heap._create_class(self, '[I', self.obj, {}, ())
+		_, acls = heap._create_class(self, self.names['Iar'], self.obj, {}, ())
 		arr = acls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.int, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76')
 
@@ -459,7 +459,7 @@ class TestJavaClass(unittest.TestCase):
 			arr[3]
 
 	def test_prim_array_deferred_long(self):
-		_, acls = heap._create_class(self, '[J', self.obj, {}, ())
+		_, acls = heap._create_class(self, self.names['Jar'], self.obj, {}, ())
 		arr = acls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.long, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76\x12\x34\x56\x78')
 
@@ -471,7 +471,7 @@ class TestJavaClass(unittest.TestCase):
 			arr[2]
 
 	def test_prim_array_deferred_float(self):
-		_, acls = heap._create_class(self, '[F', self.obj, {}, ())
+		_, acls = heap._create_class(self, self.names['Far'], self.obj, {}, ())
 		arr = acls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.float, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76')
 
@@ -484,7 +484,7 @@ class TestJavaClass(unittest.TestCase):
 			arr[3]
 
 	def test_prim_array_deferred_double(self):
-		_, acls = heap._create_class(self, '[D', self.obj, {}, ())
+		_, acls = heap._create_class(self, self.names['Dar'], self.obj, {}, ())
 		arr = acls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.double, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76\x12\x34\x56\x78')
 
@@ -523,7 +523,7 @@ class TestJavaClass(unittest.TestCase):
 			self.l.sMissing
 
 	def test_refs(self):
-		_, extraclass = heap._create_class(self, 'Extra', self.shd, {}, ('shadow',))
+		_, extraclass = heap._create_class(self, self.names['ext'], self.shd, {}, ('shadow',))
 		e = extraclass(0xbadf00d)
 		self.obj._hprof_ifieldvals.__set__(e, (1111,))
 		self.lst._hprof_ifieldvals.__set__(e, (708,))
@@ -615,7 +615,7 @@ class TestJavaClass(unittest.TestCase):
 		self.assertIs(hprof.cast(o), s)
 
 	def test_refs_to_class(self):
-		_, string = heap._create_class(self, 'java/lang/String', self.obj, {}, ('chars',))
+		_, string = heap._create_class(self, self.names['str'], self.obj, {}, ('chars',))
 		o = hprof.cast(string, self.obj)
 		c = hprof.cast(string, self.cls)
 		self.assertIs(o, string)
@@ -624,3 +624,51 @@ class TestJavaClass(unittest.TestCase):
 			hprof.cast(string, string)
 		with self.assertRaises(TypeError):
 			hprof.cast(string, self.lst)
+
+class TestJavaClass(CommonClassTests, unittest.TestCase):
+	def setUp(self):
+		self.names = {
+			'obj': 'java/lang/Object',
+			'cls': 'java/lang/Class',
+			'lst': 'java/util/List',
+			'inn': 'java/util/List$Inner',
+			'shd': 'Shadower',
+			'ext': 'Extra',
+			'str': 'java/lang/String',
+			'lam': 'com/example/Vehicle$$Lambda$1/455659002',
+			'oar': '[Ljava/lang/Object;',
+			'lar': '[LList$$lambda;',
+			'Zar': '[Z', 'Zarar': '[[Z', 'Zararar': '[[[Z',
+			'Bar': '[B', 'Barar': '[[B', 'Bararar': '[[[B',
+			'Sar': '[S', 'Sarar': '[[S', 'Sararar': '[[[S',
+			'Iar': '[I', 'Iarar': '[[I', 'Iararar': '[[[I',
+			'Jar': '[J', 'Jarar': '[[J', 'Jararar': '[[[J',
+			'Far': '[F', 'Farar': '[[F', 'Fararar': '[[[F',
+			'Dar': '[D', 'Darar': '[[D', 'Dararar': '[[[D',
+			'Car': '[C', 'Carar': '[[C', 'Cararar': '[[[C',
+		}
+		super().setUp()
+
+class TestAndroidClass(CommonClassTests, unittest.TestCase):
+	def setUp(self):
+		self.names = {
+			'obj': 'java.lang.Object',
+			'cls': 'java.lang.Class',
+			'lst': 'java.util.List',
+			'inn': 'java.util.List$Inner',
+			'shd': 'Shadower',
+			'ext': 'Extra',
+			'str': 'java.lang.String',
+			'lam': 'com.example.Vehicle$$Lambda$1/455659002',
+			'oar': 'java.lang.Object[]',
+			'lar': 'List$$lambda[]',
+			'Zar': 'boolean[]', 'Zarar': 'boolean[][]', 'Zararar': 'boolean[][][]',
+			'Bar':    'byte[]', 'Barar':    'byte[][]', 'Bararar':    'byte[][][]',
+			'Sar':   'short[]', 'Sarar':   'short[][]', 'Sararar':   'short[][][]',
+			'Iar':     'int[]', 'Iarar':     'int[][]', 'Iararar':     'int[][][]',
+			'Jar':    'long[]', 'Jarar':    'long[][]', 'Jararar':    'long[][][]',
+			'Far':   'float[]', 'Farar':   'float[][]', 'Fararar':   'float[][][]',
+			'Dar':  'double[]', 'Darar':  'double[][]', 'Dararar':  'double[][][]',
+			'Car':    'char[]', 'Carar':    'char[][]', 'Cararar':    'char[][][]',
+		}
+		super().setUp()

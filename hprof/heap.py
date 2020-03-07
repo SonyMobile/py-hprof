@@ -1,3 +1,7 @@
+import re as _re
+
+_namesplit = _re.compile(r'\.|/')
+
 class Heap(dict):
 	def __init__(self):
 		self.classes = dict() # JavaClassName -> [JavaClass, ...]
@@ -262,8 +266,34 @@ _typechar_to_name = {
 	'J': 'long',
 }
 
+_name_to_typechar = {
+	'boolean': 'Z',
+	'char': 'C',
+	'float': 'F',
+	'double': 'D',
+	'byte': 'B',
+	'short': 'S',
+	'int': 'I',
+	'long': 'J',
+}
+
 
 def _create_class(container, name, supercls, staticattrs, instanceattrs):
+	# android hprofs may have slightly different class name format...
+	if '.' in name:
+		name = name.replace('.', '/')
+	if name.endswith('[]'):
+		a = 0
+		while name.endswith('[]'):
+			name = name[:-2]
+			a += 1
+		if name in _name_to_typechar:
+			name = _name_to_typechar[name]
+		else:
+			name = 'L' + name + ';'
+		name = a * '[' + name
+
+	# okay, now we should be "normalized"
 	nests = 0
 	while name[nests] == '[':
 		nests += 1
