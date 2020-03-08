@@ -352,7 +352,13 @@ class TestInstantiate(unittest.TestCase):
 		hf = MagicMock(_pending_heap=None)
 		idsize = MagicMock()
 		hf.heaps = [heap1, heap2, heap3]
-		with patch('hprof._heap_parsing.create_primarrays') as prims, patch('hprof._heap_parsing.create_objarrays') as oarrs, patch('hprof._heap_parsing.create_instances') as objs:
+
+		prims = MagicMock(side_effect=lambda h,p:   h._deferred_primarrays.clear())
+		oarrs = MagicMock(side_effect=lambda h,p:   h._deferred_objarrays.clear())
+		objs  = MagicMock(side_effect=lambda h,i,p: h._deferred_objects.clear())
+		with patch('hprof._heap_parsing.create_primarrays', prims), \
+				patch('hprof._heap_parsing.create_objarrays', oarrs), \
+				patch('hprof._heap_parsing.create_instances', objs):
 			hprof._parsing._instantiate(hf, idsize, callback)
 
 		with self.subTest('primarray'):

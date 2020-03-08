@@ -530,12 +530,13 @@ def _instantiate(hf, idsize, progresscb):
 		if heap._deferred_classes:
 			raise FormatError('some class dumps never found their super class', heap._deferred_classes)
 
-		total = (
-			len(heap._deferred_objects)
-			+ len(heap._deferred_objarrays)
-			+ len(heap._deferred_primarrays)
-		)
-		done = 0
+		def remaining():
+			return (
+				len(heap._deferred_objects)
+				+ len(heap._deferred_objarrays)
+				+ len(heap._deferred_primarrays)
+			)
+		total = remaining()
 		label = 'instantiating heap %d/%d' % (heapix, len(hf.heaps))
 		if progresscb:
 			def localprogress(n):
@@ -544,13 +545,13 @@ def _instantiate(hf, idsize, progresscb):
 			def localprogress(n):
 				pass
 
+		done = 0
 		_heap_parsing.create_instances(heap, idsize, localprogress)
-		done += len(heap._deferred_objects)
+		done = total - remaining()
 		_heap_parsing.create_objarrays(heap, localprogress)
-		done += len(heap._deferred_objarrays)
+		done = total - remaining()
 		_heap_parsing.create_primarrays(heap, localprogress)
-		done += len(heap._deferred_primarrays)
-
+		done = total - remaining()
 		localprogress(0)
 
 def _resolve_references(hf, progresscb):
