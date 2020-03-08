@@ -2,11 +2,15 @@ from unittest import TestCase
 
 from .example_shadowing import TestShadowing
 
+from . import util
+
 import hprof
 
 def setUpModule():
 	global thefile
-	thefile = hprof.open('testdata/example-android.hprof.bz2')
+	print()
+	thefile = hprof.open('testdata/example-android.hprof.bz2', util.progress('example-android'))
+	print('example-android: file loaded!            ')
 
 def tearDownModule():
 	global thefile

@@ -1,24 +1,14 @@
 import unittest
 import hprof
 
+from . import util
+
 class TestPerlerParsing(unittest.TestCase):
 	@classmethod
 	def setUpClass(cls):
 		print()
-		last = (None, None)
-		def progress(action, pos, end):
-			if pos is None:
-				print('perler.hprof.bz2: %s...                \r' % action, end='')
-			elif end is None:
-				print('perler.hprof.bz2: %s %d                \r' % (action, pos), end='')
-			else:
-				nonlocal last
-				percent = int(100 * pos / end)
-				if last[0] != action or last[1] != percent:
-					last = (action, percent)
-					print('perler.hprof.bz2: %s %3d%%             \r' % last, end='')
-		cls.hf = hprof.open('testdata/perler.hprof.bz2', progress)
-		print('perler.hprof.bz2: file loaded!            ')
+		cls.hf = hprof.open('testdata/perler.hprof.bz2', util.progress('perler'))
+		print('perler: file loaded!            ')
 
 	@classmethod
 	def tearDownClass(cls):
