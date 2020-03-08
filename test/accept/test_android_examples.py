@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from .example_shadowing import TestShadowing
+from .example_arrays import TestArrays
 
 from . import util
 
@@ -17,7 +18,10 @@ def tearDownModule():
 	thefile.close()
 	thefile = None
 
-class TestShadowingAndroid(TestShadowing, TestCase):
+class AndroidTest(TestCase):
 	@classmethod
 	def setUpClass(self):
 		self.hf = thefile
+
+class TestShadowingAndroid(TestShadowing, AndroidTest): pass
+class TestArraysAndroid(TestArrays, AndroidTest): pass

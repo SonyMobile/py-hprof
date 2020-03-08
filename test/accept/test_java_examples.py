@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from .example_shadowing import TestShadowing
+from .example_arrays import TestArrays
 
 import hprof
 
@@ -17,7 +18,10 @@ def tearDownModule():
 	thefile.close()
 	thefile = None
 
-class TestShadowingJvm(TestShadowing, TestCase):
+class JvmTest(TestCase):
 	@classmethod
 	def setUpClass(self):
 		self.hf = thefile
+
+class TestShadowingJvm(TestShadowing, JvmTest): pass
+class TestArraysJvm(TestArrays, JvmTest): pass
