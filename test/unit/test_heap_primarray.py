@@ -76,6 +76,8 @@ class TestPrimitiveArray(HeapRecordTest):
 		out3 = MagicMock()
 		self.heap.classes['short[]']   = shortmock, = (MagicMock(side_effect=(out1, out2)),)
 		self.heap.classes['boolean[]'] =  boolmock, = (MagicMock(side_effect=(out3,)),)
+		self.heap._instances[shortmock] = []
+		self.heap._instances[ boolmock] = []
 		self.heap._deferred_primarrays.extend(fakes)
 		progress = MagicMock()
 
@@ -102,5 +104,8 @@ class TestPrimitiveArray(HeapRecordTest):
 		self.assertIn(3, self.heap)
 		self.assertIs(self.heap[3], out2)
 		self.assertIs(self.heap[3]._hprof_array_data, fakes[2][2])
+
+		self.assertCountEqual(self.heap._instances[shortmock], (self.heap[3], self.heap[1]))
+		self.assertCountEqual(self.heap._instances[ boolmock], (self.heap[5],))
 
 		progress.assert_called_once_with(0)

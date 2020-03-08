@@ -79,6 +79,7 @@ def parse_class(hf, heap, reader):
 
 	def create(objid, cname, supercls, staticattrs, instanceattrs):
 		clsname, cls = hprof.heap._create_class(heap.classtree, cname, supercls, staticattrs, instanceattrs)
+		heap._instances[cls] = []
 		if clsname not in heap.classes:
 			heap.classes[clsname] = []
 		heap.classes[clsname].append(cls)
@@ -109,7 +110,7 @@ def create_instances(heap, idsize, progress):
 			progress(ix)
 		until_report -= 1
 		reader = PrimitiveReader(bytes, idsize)
-		cls = heap[clsid]
+		exactcls = cls = heap[clsid]
 		obj = cls(objid)
 		while cls is not hprof.heap.JavaObject:
 			vals = tuple(
@@ -121,6 +122,7 @@ def create_instances(heap, idsize, progress):
 			cls._hprof_ifieldvals.__set__(obj, vals)
 			cls, = cls.__bases__
 		assert reader._pos == len(bytes), (reader._pos, len(bytes))
+		heap._instances[exactcls].append(obj)
 		heap[objid] = obj
 	heap._deferred_objects.clear()
 
@@ -143,6 +145,7 @@ def create_objarrays(heap, progress):
 		cls = heap[clsid]
 		arr = cls(objid)
 		arr._hprof_array_data = elems
+		heap._instances[cls].append(arr)
 		heap[objid] = arr
 	heap._deferred_objarrays.clear()
 
@@ -172,6 +175,7 @@ def create_primarrays(heap, progress):
 		# TODO: speed: the class lookup could be done once per array type
 		arr = cls(objid)
 		arr._hprof_array_data = data
+		heap._instances[cls].append(arr)
 		heap[objid] = arr
 	heap._deferred_primarrays.clear()
 

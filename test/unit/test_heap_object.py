@@ -67,6 +67,9 @@ class TestHeapObject(HeapRecordTest):
 		self.heap[0x2020] = cls0attr
 		self.heap[0x2021] = cls1attr
 		self.heap[0x2022] = cls3attr
+		self.heap._instances[cls0attr] = []
+		self.heap._instances[cls1attr] = []
+		self.heap._instances[cls3attr] = []
 
 		fakes = (
 			(0x0b1ec7, 0x57acc,  0x2020, b''),
@@ -85,6 +88,7 @@ class TestHeapObject(HeapRecordTest):
 			obj = self.heap[0x0b1ec7]
 			self.assertIs(obj, cls0attr.return_value)
 			cls0attr._hprof_ifieldvals.assert_called_once_with(())
+			self.assertCountEqual(self.heap._instances[cls0attr], (obj,))
 
 		with self.subTest('1 attr'):
 			self.assertEqual(cls1attr.call_count, 1)
@@ -94,6 +98,7 @@ class TestHeapObject(HeapRecordTest):
 			self.assertIs(obj, cls1attr.return_value)
 			self.assertGreaterEqual(cls1attr._hprof_ifieldvals.call_count, 1)
 			self.assertEqual(cls1attr._hprof_ifieldvals.call_args_list[0][0], ((self.id(0x12345678),),))
+			self.assertCountEqual(self.heap._instances[cls1attr], (obj,))
 
 		with self.subTest('3 attrs'):
 			self.assertEqual(cls3attr.call_count, 1)
@@ -104,6 +109,7 @@ class TestHeapObject(HeapRecordTest):
 			cls3attr._hprof_ifieldvals.assert_called_once_with((0x98979695-0x100000000,0x1314))
 			self.assertEqual(cls1attr._hprof_ifieldvals.call_count, 2)
 			self.assertEqual(cls1attr._hprof_ifieldvals.call_args_list[1][0], ((self.id(0xabcd0123f),),))
+			self.assertCountEqual(self.heap._instances[cls3attr], (obj,))
 
 		self.assertEqual(len(self.heap._deferred_objects), 0)
 		progress.assert_called_once_with(0)

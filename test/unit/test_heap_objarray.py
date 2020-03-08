@@ -61,6 +61,8 @@ class TestObjectArray(HeapRecordTest):
 		self.heap[10] = cls1 = MagicMock(side_effect=(out1,out2))
 		self.heap[11] = cls2 = MagicMock(side_effect=(out3,))
 		self.heap._deferred_objarrays.extend(fakes)
+		self.heap._instances[cls1] = []
+		self.heap._instances[cls2] = []
 		progress = MagicMock()
 
 		hprof._heap_parsing.create_objarrays(self.heap, progress)
@@ -86,5 +88,8 @@ class TestObjectArray(HeapRecordTest):
 		self.assertIn(79, self.heap)
 		self.assertIs(self.heap[79], out3)
 		self.assertIs(self.heap[79]._hprof_array_data, fakes[1][3])
+
+		self.assertCountEqual(self.heap._instances[cls1], (out1, out2))
+		self.assertCountEqual(self.heap._instances[cls2], (out3,))
 
 		progress.assert_called_once_with(0)

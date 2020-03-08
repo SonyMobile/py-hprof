@@ -34,6 +34,7 @@ class TestHeapClass(HeapRecordTest):
 		self.assertIn(self.heap.classtree.java.lang.Class, self.heap.classes)
 		matches = self.heap.classes[self.heap.classtree.java.lang.Class]
 		self.assertEqual(matches, [cls])
+		self.assertEqual(self.heap._instances[cls], [])
 
 	def test_minimal(self):
 		expected = object()
@@ -68,6 +69,7 @@ class TestHeapClass(HeapRecordTest):
 		self.assertIs(self.heap[cid], expected)
 		self.assertIn('java.lang.String', self.heap.classes)
 		self.assertEqual(self.heap.classes['java.lang.String'], [expected])
+		self.assertEqual(self.heap._instances[expected], [])
 
 	def test_small(self):
 		expected = object()
@@ -115,6 +117,7 @@ class TestHeapClass(HeapRecordTest):
 		self.assertIs(self.heap[cid], expected)
 		self.assertIn('java.lang.String', self.heap.classes)
 		self.assertEqual(self.heap.classes['java.lang.String'], [expected])
+		self.assertEqual(self.heap._instances[expected], [])
 
 	def test_duplicate_class(self):
 		load = hprof._parsing.ClassLoad()
@@ -198,6 +201,8 @@ class TestHeapClass(HeapRecordTest):
 			)
 			self.doit(0x20, data)
 		self.assertCountEqual(self.heap.classes['java.lang.String'], (expected1, expected2))
+		self.assertEqual(self.heap._instances[expected1], [])
+		self.assertEqual(self.heap._instances[expected2], [])
 
 	def test_super_after_subclass(self):
 		load = hprof._parsing.ClassLoad()
@@ -305,6 +310,10 @@ class TestHeapClass(HeapRecordTest):
 			self.assertEqual(self.heap.get(self.id(0x7e577e55)), ChainedList)
 
 			self.assertEqual(self.heap._deferred_classes, {})
+
+			self.assertEqual(self.heap._instances[List], [])
+			self.assertEqual(self.heap._instances[LinkedList], [])
+			self.assertEqual(self.heap._instances[ChainedList], [])
 
 	def test_super_not_found(self):
 		load = hprof._parsing.ClassLoad()

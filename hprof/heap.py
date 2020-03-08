@@ -6,10 +6,32 @@ class Heap(dict):
 	def __init__(self):
 		self.classes = dict() # JavaClassName -> [JavaClass, ...]
 		self.classtree = JavaHierarchy()
+		self._instances = dict() # JavaClass -> [instance, instance, ...]
 		self._deferred_classes = dict()
 		self._deferred_primarrays = list()
 		self._deferred_objarrays = list()
 		self._deferred_objects = list()
+
+	def _classes(self, cls_or_name):
+		if isinstance(cls_or_name, JavaClass):
+			yield cls_or_name
+		else:
+			yield from self.classes[cls_or_name]
+
+	def exact_instances(self, cls_or_name):
+		''' returns an iterable over all objects of exactly this class. '''
+		for cls in self._classes(cls_or_name):
+			if cls in self.classes.get('java.lang.Class', ()):
+				for lst in self.classes.values():
+					yield from lst
+			yield from self._instances[cls]
+
+	def all_instances(self, cls_or_name):
+		''' returns an iterable over all objects of this class or any of its subclasses. '''
+		for cls in self._classes(cls_or_name):
+			yield from self.exact_instances(cls)
+			for subcls in cls.__subclasses__():
+				yield from self.all_instances(subcls)
 
 class JavaHierarchy(object):
 	pass
