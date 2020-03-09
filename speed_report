@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+
+import argparse
+import sys
+import hprof
+
+from cProfile import Profile
+from pstats import Stats
+from time import time
+
+def do_one(filename):
+	print(filename)
+	current_stage = 'setup'
+	current_start = time()
+	stage_stats = []
+	last = (None, None)
+	def cb(action, pos, end):
+		nonlocal current_stage
+		nonlocal current_start
+		if action != current_stage:
+			now = time()
+			stage_stats.append((current_stage, current_start, now))
+			current_stage = action
+			current_start = now
+		if pos is None:
+			print('%s...                \r' % action, end='')
+		elif end is None:
+			print('%s %d                \r' % (action, pos), end='')
+		else:
+			nonlocal last
+			percent = int(100 * pos / end)
+			if last[0] != action or last[1] != percent:
+				last = (action, percent)
+				print('%s %3d%%             \r' % (action, percent), end='')
+
+	prof = Profile()
+	prof.enable()
+	with hprof.open(filename, cb):
+		pass
+	prof.disable()
+	print('file parsing completed.                                  ')
+
+	stage_stats.append((current_stage, current_start, time()))
+
+	stats = Stats(prof)
+	stats.sort_stats('cumulative', 'tottime')
+	nprinted = 0
+	print()
+	print('PROFILE:')
+	import os.path
+
+	def splitpath(p):
+		out = []
+		while True:
+			p, component = os.path.split(p)
+			if not component:
+				out.reverse()
+				return out
+			out.append(component)
+
+	fmt = '%15s %7s %7s %7s %7s %s'
+	arg = ('ncalls', 'tottime', 'percall', 'cumtime', 'percall', 'function')
+	print(fmt % arg)
+	for func in stats.fcn_list:
+		path, line, name = func
+		ncalls, nrecursive, internal, total, callers = stats.stats[func]
+
+		# shorten the path a bit.
+		for syspath in sys.path:
+			if syspath and path.startswith(syspath):
+				path = splitpath(path)
+				syspath = splitpath(syspath)
+				path = path[len(syspath)-1:] # keep one parent
+				path = os.path.join(*path)
+				break
+
+		if nrecursive == ncalls:
+			callstr = '%d' % ncalls
+		else:
+			callstr = '%d/%d' % (nrecursive, ncalls)
+		if path == '~' and line == 0:
+			descr = name
+		else:
+			descr = '%-20s %s:%d' % (name, path, line)
+		fmt = '%15s %7.3f %7.3f %7.3f %7.3f %s'
+		arg = (callstr, internal, internal/nrecursive, total, total/ncalls, descr)
+		print(fmt % arg)
+		if args.show_callers:
+			for caller, cstats in sorted(callers.items(), key=lambda p: -p[1][0]):
+				path, line, name = caller
+				ncalls, nrecursive, internal, total = cstats
+				print('%51s %8d %7.3f %s' % ('->', ncalls, total, name))
+		nprinted += 1
+		if nprinted >= 50:
+			break
+
+	print()
+	print('PER-STAGE TIMES:')
+	for stage, start, end in stage_stats:
+		print('%10.3f %s' % (end-start, stage))
+	print('----------------------------------')
+	first_start = stage_stats[0][1]
+	last_end = stage_stats[-1][2]
+	total = last_end - first_start
+	print('%10.3f TOTAL' % total)
+	return total
+
+parser = argparse.ArgumentParser(description='Measure open times for hprof files.')
+parser.add_argument('files',
+	nargs='*',
+	help='paths to the files you want to measure')
+parser.add_argument('--show-callers',
+	action='store_true',
+	dest='show_callers',
+	help='show callers in profiling output')
+
+args = parser.parse_args()
+grand_total = 0
+for filename in args.files:
+	grand_total += do_one(filename)
+	print()
+	print('==================================')
+print()
+print('ALL FILES: %.3f' % grand_total)
