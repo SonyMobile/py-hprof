@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from .example_shadowing import TestShadowing
 from .example_arrays import TestArrays
+from .example_cars import TestCars
 
 from . import util
 
@@ -25,3 +26,4 @@ class AndroidTest(TestCase):
 
 class TestShadowingAndroid(TestShadowing, AndroidTest): pass
 class TestArraysAndroid(TestArrays, AndroidTest): pass
+class TestCarsAndroid(TestCars, AndroidTest): pass

@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from .example_shadowing import TestShadowing
 from .example_arrays import TestArrays
+from .example_cars import TestCars
 
 import hprof
 
@@ -25,3 +26,4 @@ class JvmTest(TestCase):
 
 class TestShadowingJvm(TestShadowing, JvmTest): pass
 class TestArraysJvm(TestArrays, JvmTest): pass
+class TestCarsJvm(TestCars, JvmTest): pass
