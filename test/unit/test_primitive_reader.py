@@ -161,7 +161,7 @@ class TestPrimitiveReader(unittest.TestCase):
 		self.assertEqual(self.r.bytes(5), b'hi yo')
 
 	def test_id_size3(self):
-		self.r._idsize = 3
+		self.r._set_idsize(3)
 		self.assertEqual(self.r.id(), 0x686920)
 		self.assertEqual(self.r.id(), 0x796f75)
 		self.assertEqual(self.r.id(), 0x00c39c)
@@ -169,21 +169,27 @@ class TestPrimitiveReader(unittest.TestCase):
 			self.r.id()
 
 	def test_id_size4(self):
-		self.r._idsize = 4
+		self.r._set_idsize(4)
 		self.assertEqual(self.r.id(), 0x68692079)
 		self.assertEqual(self.r.id(), 0x6f7500c3)
 		with self.assertRaises(hprof.error.UnexpectedEof):
 			self.r.id()
 
 	def test_id_size_5(self):
-		self.r._idsize = 5
+		self.r._set_idsize(5)
 		self.assertEqual(self.r.id(), 0x686920796f)
 		self.assertEqual(self.r.id(), 0x7500c39c7a)
 		with self.assertRaises(hprof.error.UnexpectedEof):
 			self.r.id()
 
+	def test_id_size_8(self):
+		self.r._set_idsize(8)
+		self.assertEqual(self.r.id(), 0x686920796f7500c3)
+		with self.assertRaises(hprof.error.UnexpectedEof):
+			self.r.id()
+
 	def test_id_size_11(self):
-		self.r._idsize = 11
+		self.r._set_idsize(11)
 		self.assertEqual(self.r.id(), 0x686920796f7500c39c7a78)
 		with self.assertRaises(hprof.error.UnexpectedEof):
 			self.r.id()

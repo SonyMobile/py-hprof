@@ -193,7 +193,19 @@ class PrimitiveReader(object):
 	def __init__(self, bytes, idsize):
 		self._bytes = bytes
 		self._pos = 0
+		self._set_idsize(idsize)
+
+	def _set_idsize(self, idsize):
 		self._idsize = idsize
+		if idsize == 8:
+			self.id = self.u8
+		elif idsize == 4:
+			self.id = self.u4
+		else:
+			self.id = self._generic_id
+
+	def _indirect_id(self):
+		return self.id()
 
 	@property
 	def remaining(self):
@@ -235,7 +247,7 @@ class PrimitiveReader(object):
 		self._pos += nbytes
 		return out
 
-	def id(self):
+	def _generic_id(self):
 		out = 0
 		bs = self._bytes
 		nbytes = self._idsize
@@ -370,7 +382,7 @@ class PrimitiveReader(object):
 		v, = struct.unpack('>d', self.bytes(8))
 		return v
 
-jtype.object.read  = PrimitiveReader.id
+jtype.object.read  = PrimitiveReader._indirect_id
 jtype.boolean.read = PrimitiveReader.jboolean
 jtype.boolean.size = 1
 jtype.boolean.packfmt = '?'
@@ -493,7 +505,8 @@ def _parse_hprof(hf, mview, progresscb):
 	hdr = reader.ascii()
 	if hdr not in ('JAVA PROFILE 1.0.1', 'JAVA PROFILE 1.0.2', 'JAVA PROFILE 1.0.3'):
 		raise FormatError('unknown header "%s"' % hdr)
-	idsize = reader._idsize = reader.u4()
+	idsize = reader.u4()
+	reader._set_idsize(idsize)
 	reader.u8() # timestamp; ignore.
 	lastreport = -1<<32
 	def innerprogress(pos):
