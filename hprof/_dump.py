@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Sony Mobile Communications Inc.
+# Licensed under the LICENSE
+
 from ._errors import *
 from .heap import *
 from ._slotted import Slotted

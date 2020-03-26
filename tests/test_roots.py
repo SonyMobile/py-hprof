@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Sony Mobile Communications Inc.
+# Licensed under the LICENSE
+
 from unittest import TestCase
 
 from .util import HprofBuilder, varying_idsize

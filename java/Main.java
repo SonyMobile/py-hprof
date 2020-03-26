@@ -1,3 +1,6 @@
+// Copyright (C) 2019 Sony Mobile Communications Inc.
+// Licensed under the LICENSE
+
 import android.os.Debug;
 import com.example.cars.CarExample;
 import com.example.shadowing.ShadowingExample;

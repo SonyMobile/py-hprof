@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Sony Mobile Communications Inc.
+# Licensed under the LICENSE
+
 class Slotted(type):
 	''' a metaclass that makes sure that classes have __slots__ set '''
 	def __new__(cls, name, bases, cdict):

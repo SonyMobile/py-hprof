@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Sony Mobile Communications Inc.
+# Licensed under the LICENSE
+
 from unittest import TestCase
 from hprof._commonrecord import HprofSlice
 from hprof.record import Record

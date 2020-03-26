@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Sony Mobile Communications Inc.
+# Licensed under the LICENSE
+
 from struct import pack, unpack
 from unittest import TestCase
 

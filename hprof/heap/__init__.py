@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Sony Mobile Communications Inc.
+# Licensed under the LICENSE
+
 '''hprof.heap holds record classes for interpreting records inside hprof.record.HeapDumpSegment.
 
 The create() function can be used to create a record from an HprofFile and address. However, records

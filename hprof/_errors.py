@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Sony Mobile Communications Inc.
+# Licensed under the LICENSE
+
 class Error(Exception):
 	''' Base Error from hprof. Rarely thrown. '''
 

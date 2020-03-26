@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Sony Mobile Communications Inc.
+# Licensed under the LICENSE
+
 from ._heaprecord import Allocation
 
 from .._errors import FieldNotFoundError

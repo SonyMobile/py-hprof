@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Sony Mobile Communications Inc.
+# Licensed under the LICENSE
+
 from .test_hprof_carexample import TestJavaCarExample
 from .test_hprof_shadowexample import TestJavaShadowExample
 

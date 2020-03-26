@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Sony Mobile Communications Inc.
+# Licensed under the LICENSE
+
 from datetime import datetime
 from mmap import mmap, MAP_PRIVATE, PROT_READ
 

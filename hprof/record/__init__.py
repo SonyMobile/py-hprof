@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Sony Mobile Communications Inc.
+# Licensed under the LICENSE
+
 '''hprof.record holds all the top-level hprof record classes.
 
 The create() function can be used to create a record from an HprofFile and address, though you'll
