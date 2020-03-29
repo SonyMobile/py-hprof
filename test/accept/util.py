@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Snild Dolkow
+# Licensed under the LICENSE.
+
 def progress(fname):
 	last = (None, None)
 	def cb(action, pos, end):

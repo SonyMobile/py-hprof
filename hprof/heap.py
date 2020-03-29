@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Snild Dolkow
+# Licensed under the LICENSE.
+
 import re as _re
 
 _namesplit = _re.compile(r'\.|/')

@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Snild Dolkow
+# Licensed under the LICENSE.
+
 import hprof
 
 from .error import *

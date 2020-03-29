@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Snild Dolkow
+# Licensed under the LICENSE.
+
 import unittest
 
 # This file is essentially a test/demo of *python* behavior that the

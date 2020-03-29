@@ -1,3 +1,5 @@
+# Copyright (C) 2019 Snild Dolkow
+# Licensed under the LICENSE.
 
 class TestArrays(object):
 	def setUp(self):

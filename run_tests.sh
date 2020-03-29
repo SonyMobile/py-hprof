@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright (C) 2019 Snild Dolkow
+# Licensed under the LICENSE.
 
 function fail() {
 	tput setaf 1

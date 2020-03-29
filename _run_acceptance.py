@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (C) 2019 Snild Dolkow
+# Licensed under the LICENSE.
 
 import unittest
 from cProfile import Profile

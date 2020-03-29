@@ -1,3 +1,6 @@
+# Copyright (C) 2019 Snild Dolkow
+# Licensed under the LICENSE.
+
 from unittest import TestCase
 
 from .example_shadowing import TestShadowing

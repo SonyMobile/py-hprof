@@ -1,3 +1,5 @@
+# Copyright (C) 2019 Snild Dolkow
+# Licensed under the LICENSE.
 
 class TestCars(object):
 	def setUp(self):
