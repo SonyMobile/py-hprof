@@ -32,27 +32,27 @@ RECORD_PARSERS[0xfe] = lambda f, h, r: (r.u4(), r.id())
 
 def parse_class(hf, heap, reader):
 	objid   = reader.id()
-	strace  = reader.u4()
+	_       = reader.u4() # stacktrace id
 	superid = reader.id()
-	loader  = reader.id()
-	signer  = reader.id()
-	protdom = reader.id()
-	res1    = reader.id()
-	res2    = reader.id()
-	objsize = reader.u4()
+	_       = reader.id() # loader
+	_       = reader.id() # signer
+	_       = reader.id() # protection domain
+	_       = reader.id() # reserved 1
+	_       = reader.id() # reserved 2
+	_       = reader.u4() # object size
 
 	if objid in heap:
 		raise FormatError('duplicate object id 0x%x' % objid)
 
 	nconstants = reader.u2()
-	for i in range(nconstants):
+	for _ in range(nconstants):
 		reader.u2()
 		t = reader.jtype()
 		t.read(reader)
 
 	staticattrs = {}
 	nstatic = reader.u2()
-	for i in range(nstatic):
+	for _ in range(nstatic):
 		nameid = reader.id()
 		name = hf.names[nameid]
 		t = reader.jtype()
@@ -62,7 +62,7 @@ def parse_class(hf, heap, reader):
 	iattr_names = []
 	iattr_types = []
 	ninstance = reader.u2()
-	for i in range(ninstance):
+	for _ in range(ninstance):
 		nameid = reader.id()
 		name = hf.names[nameid]
 		vtype = reader.jtype()
@@ -110,7 +110,7 @@ RECORD_PARSERS[0x21] = parse_instance
 def create_instances(heap, idsize, progress):
 	from ._parsing import PrimitiveReader
 	until_report = 0
-	for ix, (objid, strace, clsid, bytes) in enumerate(heap._deferred_objects):
+	for ix, (objid, _, clsid, bytes) in enumerate(heap._deferred_objects):
 		if until_report == 0:
 			until_report = 4096
 			progress(ix)
@@ -143,7 +143,7 @@ RECORD_PARSERS[0x22] = parse_object_array
 
 def create_objarrays(heap, progress):
 	until_report = 0
-	for ix, (objid, strace, clsid, elems) in enumerate(heap._deferred_objarrays):
+	for ix, (objid, _, clsid, elems) in enumerate(heap._deferred_objarrays):
 		if until_report == 0:
 			until_report = 4096
 			progress(ix)
@@ -167,7 +167,7 @@ RECORD_PARSERS[0x23] = parse_primitive_array
 
 def create_primarrays(heap, progress):
 	until_report = 0
-	for ix, (objid, strace, data) in enumerate(heap._deferred_primarrays):
+	for ix, (objid, _, data) in enumerate(heap._deferred_primarrays):
 		if until_report == 0:
 			until_report = 4096
 			progress(ix)

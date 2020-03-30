@@ -465,7 +465,7 @@ def parse_stack_trace_record(hf, reader, progresscb):
 		hf.threads[thread] = 'dummy thread' # TODO: use a real thread instance
 	trace.thread = hf.threads[thread]
 	nframes = reader.u4()
-	for ix in range(nframes):
+	for _ in range(nframes):
 		fid = reader.id()
 		trace.append(hf.stackframes[fid])
 	if serial in hf.stacktraces:
@@ -527,12 +527,12 @@ def _parse_hprof(hf, mview, progresscb):
 			if reader._pos - lastreport >= 1<<20:
 				lastreport = reader._pos
 				progresscb('parsing', reader._pos, len(mview))
-		micros = reader.u4()
+		_ = reader.u4() # microsecond timestamp
 		datasize = reader.u4()
 		data = reader.bytes(datasize)
 		try:
 			parser = RECORD_PARSERS[rtype]
-		except KeyError as e:
+		except KeyError:
 			hf.unhandled[rtype] = hf.unhandled.get(rtype, 0) + 1
 		else:
 			parser(hf, PrimitiveReader(data, idsize), innerprogress)
