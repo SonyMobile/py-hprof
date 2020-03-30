@@ -218,6 +218,7 @@ class JavaClass(type):
 		return cls
 
 	def __init__(meta, name, supercls, static_attrs, iattr_names, iattr_types):
+		del supercls, static_attrs, iattr_names, iattr_types # unused
 		super().__init__(name, None, None)
 
 	def __str__(self):

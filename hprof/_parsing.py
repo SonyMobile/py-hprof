@@ -416,6 +416,7 @@ jtype.long.packfmt = 'q'
 RECORD_PARSERS = {}
 
 def parse_name_record(hf, reader, progresscb):
+	del progresscb # unused
 	nameid = reader.id()
 	name = reader.utf8(reader.remaining)
 	if nameid in hf.names:
@@ -424,6 +425,7 @@ def parse_name_record(hf, reader, progresscb):
 RECORD_PARSERS[0x01] = parse_name_record
 
 def parse_class_load_record(hf, reader, progresscb):
+	del progresscb # unused
 	serial = reader.u4()
 	clsid  = reader.id()
 	load = ClassLoad()
@@ -445,6 +447,7 @@ def parse_class_load_record(hf, reader, progresscb):
 RECORD_PARSERS[0x02] = parse_class_load_record
 
 def parse_stack_frame_record(hf, reader, progresscb):
+	del progresscb # unused
 	frame = callstack.Frame()
 	fid = reader.id()
 	frame.method     = hf.names[reader.id()]
@@ -458,6 +461,7 @@ def parse_stack_frame_record(hf, reader, progresscb):
 RECORD_PARSERS[0x04] = parse_stack_frame_record
 
 def parse_stack_trace_record(hf, reader, progresscb):
+	del progresscb # unused
 	trace = callstack.Trace()
 	serial = reader.u4()
 	thread = reader.u4()
@@ -488,6 +492,7 @@ def parse_heap_record_segment(hf, reader, progresscb):
 RECORD_PARSERS[0x1c] = parse_heap_record_segment
 
 def parse_heap_record_seg_end(hf, reader, progresscb):
+	del reader, progresscb # unused
 	if hf._pending_heap is None:
 		raise FormatError('no pending heap to end')
 	hf.heaps.append(hf._pending_heap)
@@ -560,7 +565,7 @@ def _instantiate(hf, idsize, progresscb):
 				progresscb(label, done + n, total)
 		else:
 			def localprogress(n):
-				pass
+				del n # unused
 
 		done = 0
 		_heap_parsing.create_instances(heap, idsize, localprogress)

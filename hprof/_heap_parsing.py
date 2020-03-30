@@ -99,6 +99,7 @@ def parse_class(hf, heap, reader):
 RECORD_PARSERS[0x20] = parse_class
 
 def parse_instance(hf, heap, reader):
+	del hf # unused
 	objid = reader.id()
 	strace = reader.u4()
 	clsid = reader.id()
@@ -133,6 +134,7 @@ def create_instances(heap, idsize, progress):
 	heap._deferred_objects.clear()
 
 def parse_object_array(hf, heap, reader):
+	del hf # unused
 	objid = reader.id()
 	strace = reader.u4()
 	length = reader.u4()
@@ -156,6 +158,7 @@ def create_objarrays(heap, progress):
 	heap._deferred_objarrays.clear()
 
 def parse_primitive_array(hf, heap, reader):
+	del hf # unused
 	objid  = reader.id()
 	strace = reader.u4()
 	length = reader.u4()
