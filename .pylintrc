@@ -1,0 +1,14 @@
+[FORMAT]
+indent-string=\t
+variable-rgx=[a-z_][a-z0-9_]*$
+argument-rgx=[a-z_][a-z0-9_]*$
+
+[MESSAGES CONTROL]
+disable=
+	bad-continuation,
+	bad-whitespace,
+	protected-access,
+	no-member,
+	line-too-long,
+	too-few-public-methods,
+	fixme
