@@ -1,4 +1,5 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import unittest
@@ -27,11 +28,11 @@ class TestParseStackTraceRecords(unittest.TestCase):
 
 	def addframe(self, indata):
 		reader = hprof._parsing.PrimitiveReader(memoryview(indata), self.idsize)
-		hprof._parsing.record_parsers[0x04](self.hf, reader, None)
+		hprof._parsing.RECORD_PARSERS[0x04](self.hf, reader, None)
 
 	def addstack(self, indata):
 		reader = hprof._parsing.PrimitiveReader(memoryview(indata), self.idsize)
-		hprof._parsing.record_parsers[0x05](self.hf, reader, None)
+		hprof._parsing.RECORD_PARSERS[0x05](self.hf, reader, None)
 
 	def test_frame_only(self):
 		self.addframe(self.build()

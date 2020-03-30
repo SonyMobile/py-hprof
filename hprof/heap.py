@@ -4,7 +4,7 @@
 
 import re as _re
 
-_namesplit = _re.compile(r'\.|/')
+_NAMESPLIT = _re.compile(r'\.|/')
 
 class Heap(dict):
 	def __init__(self):
@@ -296,7 +296,7 @@ def _get_or_create_container(container, parts, ctype):
 	return container
 
 
-_typechar_to_name = {
+_TYPECHAR_TO_NAME = {
 	'Z': 'boolean',
 	'C': 'char',
 	'F': 'float',
@@ -307,7 +307,7 @@ _typechar_to_name = {
 	'J': 'long',
 }
 
-_name_to_typechar = {
+_NAME_TO_TYPECHAR = {
 	'boolean': 'Z',
 	'char': 'C',
 	'float': 'F',
@@ -328,8 +328,8 @@ def _create_class(container, name, supercls, staticattrs, iattr_names, iattr_typ
 		while name.endswith('[]'):
 			name = name[:-2]
 			a += 1
-		if name in _name_to_typechar:
-			name = _name_to_typechar[name]
+		if name in _NAME_TO_TYPECHAR:
+			name = _NAME_TO_TYPECHAR[name]
 		else:
 			name = 'L' + name + ';'
 		name = a * '[' + name
@@ -346,7 +346,7 @@ def _create_class(container, name, supercls, staticattrs, iattr_names, iattr_typ
 		else:
 			assert len(name) == nests + 1, name
 			name = name[nests]
-			name = _typechar_to_name[name]
+			name = _TYPECHAR_TO_NAME[name]
 
 	assert '.' not in name, name
 	assert ';' not in name, name

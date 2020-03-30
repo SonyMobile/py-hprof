@@ -1,4 +1,5 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import unittest
@@ -11,7 +12,7 @@ class TestParseNameRecord(unittest.TestCase):
 
 	def callit(self, indata):
 		reader = hprof._parsing.PrimitiveReader(memoryview(indata), self.idsize)
-		hprof._parsing.record_parsers[0x01](self.hf, reader, None)
+		hprof._parsing.RECORD_PARSERS[0x01](self.hf, reader, None)
 
 	def test_empty_name(self):
 		self.callit(self.build().id(0x20305043))

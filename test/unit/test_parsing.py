@@ -1,4 +1,5 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import unittest
@@ -215,7 +216,7 @@ class TestParseHprof(unittest.TestCase):
 				indata = b'JAVA PROFILE 1.0.%d\0\0\0\0\4\0\1\2\3\4\5\6\7\x50\0\0\0\0\0\0\0\2\x33\x44' % v
 				progress = MagicMock()
 				hf = hprof._parsing.HprofFile()
-				with patch('hprof._parsing.record_parsers', {}), patch('hprof._parsing._resolve_references') as resolve:
+				with patch('hprof._parsing.RECORD_PARSERS', {}), patch('hprof._parsing._resolve_references') as resolve:
 					hprof._parsing._parse_hprof(hf, indata, progress)
 				self.assertEqual(hf.unhandled, {0x50: 1})
 				self.assertEqual(resolve.call_count, 1)
@@ -233,7 +234,7 @@ class TestParseHprof(unittest.TestCase):
 		indata = b'JAVA PROFILE 1.0.1\0\0\0\0\4\0\1\2\3\4\5\6\7\x50\0\0\0\0\0\0\0\2\x33\x44'
 		mock_parsers = { 0x50: unittest.mock.MagicMock() }
 		hf = sentinel.hf
-		with patch('hprof._parsing.record_parsers', mock_parsers), patch('hprof._parsing._resolve_references') as resolve, patch('hprof._parsing._instantiate') as instantiate:
+		with patch('hprof._parsing.RECORD_PARSERS', mock_parsers), patch('hprof._parsing._resolve_references') as resolve, patch('hprof._parsing._instantiate') as instantiate:
 			hprof._parsing._parse_hprof(sentinel.hf, indata, None)
 		self.assertEqual(mock_parsers[0x50].call_count, 1)
 		self.assertIs(mock_parsers[0x50].call_args[0][0], hf)
@@ -258,7 +259,7 @@ class TestParseHprof(unittest.TestCase):
 		}
 		progress = MagicMock()
 		hf = hprof._parsing.HprofFile()
-		with patch('hprof._parsing.record_parsers', mock_parsers), patch('hprof._parsing._resolve_references') as resolve:
+		with patch('hprof._parsing.RECORD_PARSERS', mock_parsers), patch('hprof._parsing._resolve_references') as resolve:
 			hprof._parsing._parse_hprof(hf, indata, progress)
 
 		self.assertEqual(mock_parsers[0x50].call_count, 2)

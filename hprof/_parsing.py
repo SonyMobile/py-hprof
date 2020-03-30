@@ -1,4 +1,5 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import struct
@@ -201,11 +202,11 @@ class PrimitiveReader(object):
 	def _set_idsize(self, idsize):
 		self._idsize = idsize
 		if idsize == 8:
-			self.id = self.u8
+			self.id = self.u8 # pylint: disable=invalid-name
 		elif idsize == 4:
-			self.id = self.u4
+			self.id = self.u4 # pylint: disable=invalid-name
 		else:
-			self.id = self._generic_id
+			self.id = self._generic_id # pylint: disable=invalid-name
 
 	def _indirect_id(self):
 		return self.id()
@@ -226,10 +227,10 @@ class PrimitiveReader(object):
 		''' read a zero-terminated ASCII string '''
 		end = self._pos
 		bs = self._bytes
-		N = len(bs)
-		while end < N and bs[end] != 0:
+		n = len(bs)
+		while end < n and bs[end] != 0:
 			end += 1
-		if end == N:
+		if end == n:
 			raise UnexpectedEof('unterminated ascii string')
 		try:
 			out = str(bs[self._pos : end], 'ascii')
@@ -263,7 +264,7 @@ class PrimitiveReader(object):
 		self._pos += nbytes
 		return out
 
-	def u1(self):
+	def u1(self): # pylint: disable=invalid-name
 		try:
 			out = self._bytes[self._pos]
 		except IndexError as e:
@@ -271,7 +272,7 @@ class PrimitiveReader(object):
 		self._pos += 1
 		return out
 
-	def u2(self):
+	def u2(self): # pylint: disable=invalid-name
 		bs = self._bytes
 		pos = self._pos
 		try:
@@ -282,7 +283,7 @@ class PrimitiveReader(object):
 		self._pos += 2
 		return out
 
-	def u4(self):
+	def u4(self): # pylint: disable=invalid-name
 		bs = self._bytes
 		pos = self._pos
 		try:
@@ -295,7 +296,7 @@ class PrimitiveReader(object):
 		self._pos += 4
 		return out
 
-	def u8(self):
+	def u8(self): # pylint: disable=invalid-name
 		bs = self._bytes
 		pos = self._pos
 		try:
@@ -312,7 +313,7 @@ class PrimitiveReader(object):
 		self._pos += 8
 		return out
 
-	def i1(self):
+	def i1(self): # pylint: disable=invalid-name
 		try:
 			out = (self._bytes[self._pos] ^ 0x80) - 0x80
 		except IndexError as e:
@@ -320,7 +321,7 @@ class PrimitiveReader(object):
 		self._pos += 1
 		return out
 
-	def i2(self):
+	def i2(self): # pylint: disable=invalid-name
 		bs = self._bytes
 		pos = self._pos
 		try:
@@ -332,7 +333,7 @@ class PrimitiveReader(object):
 		self._pos += 2
 		return out
 
-	def i4(self):
+	def i4(self): # pylint: disable=invalid-name
 		bs = self._bytes
 		pos = self._pos
 		try:
@@ -346,7 +347,7 @@ class PrimitiveReader(object):
 		self._pos += 4
 		return out
 
-	def i8(self):
+	def i8(self): # pylint: disable=invalid-name
 		bs = self._bytes
 		pos = self._pos
 		try:
@@ -412,7 +413,7 @@ jtype.long.size    = 8
 jtype.long.packfmt = 'q'
 
 
-record_parsers = {}
+RECORD_PARSERS = {}
 
 def parse_name_record(hf, reader, progresscb):
 	nameid = reader.id()
@@ -420,7 +421,7 @@ def parse_name_record(hf, reader, progresscb):
 	if nameid in hf.names:
 		raise FormatError('duplicate name id 0x%x' % nameid)
 	hf.names[nameid] = name
-record_parsers[0x01] = parse_name_record
+RECORD_PARSERS[0x01] = parse_name_record
 
 def parse_class_load_record(hf, reader, progresscb):
 	serial = reader.u4()
@@ -441,7 +442,7 @@ def parse_class_load_record(hf, reader, progresscb):
 			raise FormatError('duplicate class load id 0x%x' % clsid, other, load)
 	hf.classloads[serial] = load
 	hf.classloads_by_id[clsid] = load
-record_parsers[0x02] = parse_class_load_record
+RECORD_PARSERS[0x02] = parse_class_load_record
 
 def parse_stack_frame_record(hf, reader, progresscb):
 	frame = callstack.Frame()
@@ -454,7 +455,7 @@ def parse_stack_frame_record(hf, reader, progresscb):
 	if fid in hf.stackframes:
 		raise FormatError('duplicate stack frame id 0x%x' % fid)
 	hf.stackframes[fid] = frame
-record_parsers[0x04] = parse_stack_frame_record
+RECORD_PARSERS[0x04] = parse_stack_frame_record
 
 def parse_stack_trace_record(hf, reader, progresscb):
 	trace = callstack.Trace()
@@ -470,28 +471,28 @@ def parse_stack_trace_record(hf, reader, progresscb):
 	if serial in hf.stacktraces:
 		raise FormatError('duplicate stack trace serial 0x%x' % serial)
 	hf.stacktraces[serial] = trace
-record_parsers[0x05] = parse_stack_trace_record
+RECORD_PARSERS[0x05] = parse_stack_trace_record
 
 def parse_heap_record(hf, reader, progresscb):
 	if hf._pending_heap is not None:
 		raise FormatError('found non-segmented heap, but have unfinished segmented heap')
 	parse_heap_record_segment(hf, reader, progresscb)
 	parse_heap_record_seg_end(hf, reader, progresscb)
-record_parsers[0x0c] = parse_heap_record
+RECORD_PARSERS[0x0c] = parse_heap_record
 
 def parse_heap_record_segment(hf, reader, progresscb):
 	from . import _heap_parsing
 	if hf._pending_heap is None:
 		hf._pending_heap = heap.Heap()
 	_heap_parsing.parse_heap(hf, hf._pending_heap, reader, progresscb)
-record_parsers[0x1c] = parse_heap_record_segment
+RECORD_PARSERS[0x1c] = parse_heap_record_segment
 
 def parse_heap_record_seg_end(hf, reader, progresscb):
 	if hf._pending_heap is None:
 		raise FormatError('no pending heap to end')
 	hf.heaps.append(hf._pending_heap)
 	hf._pending_heap = None
-record_parsers[0x2c] = parse_heap_record_seg_end
+RECORD_PARSERS[0x2c] = parse_heap_record_seg_end
 
 def _parse(hf, data, progresscb):
 	try:
@@ -530,7 +531,7 @@ def _parse_hprof(hf, mview, progresscb):
 		datasize = reader.u4()
 		data = reader.bytes(datasize)
 		try:
-			parser = record_parsers[rtype]
+			parser = RECORD_PARSERS[rtype]
 		except KeyError as e:
 			hf.unhandled[rtype] = hf.unhandled.get(rtype, 0) + 1
 		else:

@@ -11,24 +11,24 @@ from . import jtype
 class DeferredRef(int):
 	__slots__ = ()
 
-record_parsers = {}
+RECORD_PARSERS = {}
 
 # TODO: useful stuff in these.
-record_parsers[0xff] = lambda f, h, r: (r.id())
-record_parsers[0x01] = lambda f, h, r: (r.id(), r.id())
-record_parsers[0x02] = lambda f, h, r: (r.id(), r.u4(), r.u4())
-record_parsers[0x03] = lambda f, h, r: (r.id(), r.u4(), r.u4())
-record_parsers[0x04] = lambda f, h, r: (r.id(), r.u4())
-record_parsers[0x05] = lambda f, h, r: (r.id())
-record_parsers[0x06] = lambda f, h, r: (r.id(), r.u4())
-record_parsers[0x07] = lambda f, h, r: (r.id())
-record_parsers[0x08] = lambda f, h, r: (r.id(), r.u4(), r.u4())
-record_parsers[0x89] = lambda f, h, r: (r.id())
-record_parsers[0x8b] = lambda f, h, r: (r.id())
-record_parsers[0x8d] = lambda f, h, r: (r.id())
-record_parsers[0x8e] = lambda f, h, r: (r.id(), r.u4(), r.u4())
+RECORD_PARSERS[0xff] = lambda f, h, r: (r.id())
+RECORD_PARSERS[0x01] = lambda f, h, r: (r.id(), r.id())
+RECORD_PARSERS[0x02] = lambda f, h, r: (r.id(), r.u4(), r.u4())
+RECORD_PARSERS[0x03] = lambda f, h, r: (r.id(), r.u4(), r.u4())
+RECORD_PARSERS[0x04] = lambda f, h, r: (r.id(), r.u4())
+RECORD_PARSERS[0x05] = lambda f, h, r: (r.id())
+RECORD_PARSERS[0x06] = lambda f, h, r: (r.id(), r.u4())
+RECORD_PARSERS[0x07] = lambda f, h, r: (r.id())
+RECORD_PARSERS[0x08] = lambda f, h, r: (r.id(), r.u4(), r.u4())
+RECORD_PARSERS[0x89] = lambda f, h, r: (r.id())
+RECORD_PARSERS[0x8b] = lambda f, h, r: (r.id())
+RECORD_PARSERS[0x8d] = lambda f, h, r: (r.id())
+RECORD_PARSERS[0x8e] = lambda f, h, r: (r.id(), r.u4(), r.u4())
 
-record_parsers[0xfe] = lambda f, h, r: (r.u4(), r.id())
+RECORD_PARSERS[0xfe] = lambda f, h, r: (r.u4(), r.id())
 
 def parse_class(hf, heap, reader):
 	objid   = reader.id()
@@ -96,7 +96,7 @@ def parse_class(hf, heap, reader):
 				create(objid, cname, cls, staticattrs, iattr_names, iattr_types)
 
 	create(objid, load.class_name, supercls, staticattrs, iattr_names, iattr_types)
-record_parsers[0x20] = parse_class
+RECORD_PARSERS[0x20] = parse_class
 
 def parse_instance(hf, heap, reader):
 	objid = reader.id()
@@ -105,7 +105,7 @@ def parse_instance(hf, heap, reader):
 	remaining = reader.u4()
 	bytes = reader.bytes(remaining)
 	heap._deferred_objects.append((objid, strace, clsid, bytes))
-record_parsers[0x21] = parse_instance
+RECORD_PARSERS[0x21] = parse_instance
 
 def create_instances(heap, idsize, progress):
 	from ._parsing import PrimitiveReader
@@ -139,7 +139,7 @@ def parse_object_array(hf, heap, reader):
 	clsid = reader.id()
 	elems = tuple(reader.id() for ix in range(length))
 	heap._deferred_objarrays.append((objid, strace, clsid, elems))
-record_parsers[0x22] = parse_object_array
+RECORD_PARSERS[0x22] = parse_object_array
 
 def create_objarrays(heap, progress):
 	until_report = 0
@@ -163,7 +163,7 @@ def parse_primitive_array(hf, heap, reader):
 	data = reader.bytes(length * t.size)
 	data = hprof.heap._DeferredArrayData(t, data)
 	heap._deferred_primarrays.append((objid, strace, data))
-record_parsers[0x23] = parse_primitive_array
+RECORD_PARSERS[0x23] = parse_primitive_array
 
 def create_primarrays(heap, progress):
 	until_report = 0
@@ -196,7 +196,7 @@ def parse_heap(hf, heap, reader, progresscb):
 			lastreport = reader._pos
 			progresscb(lastreport)
 		try:
-			parser = record_parsers[rtype]
+			parser = RECORD_PARSERS[rtype]
 		except KeyError as e:
 			# impossible to handle; we don't know how long this record type is.
 			raise FormatError('unrecognized heap record type 0x%x' % rtype) from e

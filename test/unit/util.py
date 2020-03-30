@@ -116,6 +116,6 @@ class HeapRecordTest(unittest.TestCase):
 		expected_pos = len(data)
 		data.extend(b'sentinel')
 		reader = hprof._parsing.PrimitiveReader(memoryview(data), self.idsize)
-		parser = hprof._heap_parsing.record_parsers[rtype]
+		parser = hprof._heap_parsing.RECORD_PARSERS[rtype]
 		parser(self.hf, self.heap, reader)
 		self.assertEqual(reader._pos, expected_pos, 'parser read more or less than expected')

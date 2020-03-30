@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 from . import error
@@ -16,7 +17,7 @@ class JavaType(_enum.Enum):
 	short = 9
 	int = 10
 	long = 11
-jtype = JavaType # alternate name
+jtype = JavaType # pylint: disable=invalid-name
 
 from ._parsing import open, parse
 

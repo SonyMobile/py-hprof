@@ -1,4 +1,5 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import unittest
@@ -13,7 +14,7 @@ class TestParseHeapRecord(unittest.TestCase):
 		progress = MagicMock()
 		self.assertEqual(len(hf.heaps), 0)
 		reader = hprof._parsing.PrimitiveReader(b'', None)
-		hprof._parsing.record_parsers[0x0c](hf, reader, progress)
+		hprof._parsing.RECORD_PARSERS[0x0c](hf, reader, progress)
 		self.assertEqual(len(hf.heaps), 1)
 		heap, = hf.heaps
 		self.assertEqual(len(heap), 0)
@@ -26,7 +27,7 @@ class TestParseHeapRecord(unittest.TestCase):
 		progress = MagicMock()
 		reader = 'I am a reader'
 		with patch('hprof._heap_parsing.parse_heap', side_effect=check_first) as ph, patch('hprof._heap_parsing.resolve_heap_references') as rhr:
-			hprof._parsing.record_parsers[0x0c](hf, reader, progress)
+			hprof._parsing.RECORD_PARSERS[0x0c](hf, reader, progress)
 		self.assertEqual(len(hf.heaps), 1)
 		heap = hf.heaps[0]
 		self.assertIsInstance(heap, hprof.heap.Heap)
@@ -50,7 +51,7 @@ class TestParseHeapRecord(unittest.TestCase):
 		hf = hprof._parsing.HprofFile()
 		heap = hprof.heap.Heap()
 		reader = hprof._parsing.PrimitiveReader(b'\2\2\2\1\3\6\6\6\2\1\2\4\3', None)
-		with patch('hprof._heap_parsing.record_parsers', dummies):
+		with patch('hprof._heap_parsing.RECORD_PARSERS', dummies):
 			hprof._heap_parsing.parse_heap(hf, heap, reader, progress)
 		self.assertEqual(dummies[1].call_count, 2)
 		self.assertEqual(dummies[2].call_count, 4)
@@ -104,9 +105,9 @@ class TestParseHeapRecord(unittest.TestCase):
 		reader4 = MagicMock()
 		progress = MagicMock()
 		with patch('hprof._heap_parsing.parse_heap') as ph:
-			hprof._parsing.record_parsers[0x1c](hf, reader1, progress)
-			hprof._parsing.record_parsers[0x1c](hf, reader2, progress)
-			hprof._parsing.record_parsers[0x1c](hf, reader3, progress)
+			hprof._parsing.RECORD_PARSERS[0x1c](hf, reader1, progress)
+			hprof._parsing.RECORD_PARSERS[0x1c](hf, reader2, progress)
+			hprof._parsing.RECORD_PARSERS[0x1c](hf, reader3, progress)
 		self.assertEqual(ph.call_count, 3)
 		heap = ph.call_args_list[0][0][1]
 		self.assertEqual(ph.call_args_list[0][0], (hf, heap, reader1, progress))
@@ -114,7 +115,7 @@ class TestParseHeapRecord(unittest.TestCase):
 		self.assertEqual(ph.call_args_list[2][0], (hf, heap, reader3, progress))
 		self.assertEqual(len(hf.heaps), 0)
 
-		hprof._parsing.record_parsers[0x2c](hf, reader4, progress)
+		hprof._parsing.RECORD_PARSERS[0x2c](hf, reader4, progress)
 		self.assertCountEqual(hf.heaps, (heap,))
 		self.assertIsNone(hf._pending_heap)
 
@@ -122,14 +123,14 @@ class TestParseHeapRecord(unittest.TestCase):
 		hf = MagicMock()
 		hf._pending_heap = None
 		with self.assertRaisesRegex(hprof.error.FormatError, 'no pending heap'):
-			hprof._parsing.record_parsers[0x2c](hf, MagicMock(), None)
+			hprof._parsing.RECORD_PARSERS[0x2c](hf, MagicMock(), None)
 
 	def test_nested_heap(self):
 		hf = MagicMock()
 		with patch('hprof._heap_parsing.parse_heap') as ph:
-			hprof._parsing.record_parsers[0x1c](hf, MagicMock(), None)
+			hprof._parsing.RECORD_PARSERS[0x1c](hf, MagicMock(), None)
 			with self.assertRaisesRegex(hprof.error.FormatError, 'unfinished segmented heap'):
-				hprof._parsing.record_parsers[0x0c](hf, MagicMock(), None)
+				hprof._parsing.RECORD_PARSERS[0x0c](hf, MagicMock(), None)
 
 	def test_dangling_heap(self):
 		hf = MagicMock()
