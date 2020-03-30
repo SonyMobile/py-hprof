@@ -584,7 +584,7 @@ def _resolve_references(hf, progresscb):
 	if progresscb: progresscb('resolving stacktraces', None, None)
 	for load in hf.classloads.values():
 		try:
-			if type(load.stacktrace) is int:
+			if isinstance(load.stacktrace, int):
 				load.stacktrace = hf.stacktraces[load.stacktrace]
 		except KeyError as e:
 			msg = 'ClassLoad of %s refers to stacktrace 0x%x, which cannot be found'

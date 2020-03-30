@@ -226,11 +226,11 @@ def resolve_heap_references(heap, progresscb):
 			# it's an array; is it an *object* array?
 			old = obj._hprof_array_data
 			# TODO: this check is probably a bit too fragile
-			if type(old) is not hprof.heap._DeferredArrayData:
+			if not isinstance(old, hprof.heap._DeferredArrayData):
 				obj._hprof_array_data = tuple(lookup(addr) for addr in old)
 		elif isinstance(obj, hprof.heap.JavaClass):
 			for name, val in obj._hprof_sfields.items():
-				if type(val) is DeferredRef:
+				if isinstance(val, DeferredRef):
 					obj._hprof_sfields[name] = lookup(val)
 		else:
 			# TODO: if/when we have fast per-class instance lookups, it may be faster to do

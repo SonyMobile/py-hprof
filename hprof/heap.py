@@ -45,11 +45,11 @@ class Ref(object):
 
 	def __new__(cls, target, reftype):
 		# refs to refs aren't allowed
-		if type(target) is Ref:
+		if type(target) is Ref: # pylint: disable=unidiomatic-typecheck
 			target = Ref._target.__get__(target)
 
 		# ...and no indirection when we just want the exact type
-		if reftype is None or type(target) is reftype:
+		if reftype is None or type(target) is reftype: # pylint: disable=unidiomatic-typecheck
 			return target
 
 		# can't cast to just anything
@@ -230,9 +230,9 @@ class JavaClass(type):
 		return "<JavaClass '%s'>" % str(self)
 
 	def __instancecheck__(cls, instance):
-		if type(instance) is Ref:
+		if type(instance) is Ref: # pylint: disable=unidiomatic-typecheck
 			instance = Ref._target.__get__(instance)
-		if type(instance) is JavaClass:
+		if type(instance) is JavaClass: # pylint: disable=unidiomatic-typecheck
 			# not pretty...
 			if str(cls) in ('java.lang.Object', 'java.lang.Class'):
 				return True
