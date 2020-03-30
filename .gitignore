@@ -1,8 +1,5 @@
+.*
 *.pyc
+*,cover
 *.class
 *.dex
-*,cover
-.*
-
-/*.hprof
-/hprof.html
