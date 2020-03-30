@@ -1,22 +1,23 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import unittest
 
 import hprof
-from hprof import heap
+from hprof import heap, jtype
 
 class CommonClassTests(object):
 	def setUp(self):
-		_, self.obj = heap._create_class(self, self.names['obj'], None, {}, ('shadow',))
-		_, self.cls = heap._create_class(self, self.names['cls'], self.obj, {}, ('secret',))
-		_, self.lst = heap._create_class(self, self.names['lst'], self.obj, {}, ('next',))
-		_, self.inr = heap._create_class(self, self.names['inn'], self.obj, {}, ('this$0',))
-		_, self.shd = heap._create_class(self, self.names['shd'], self.lst, {}, ('shadow','unique'))
+		_, self.obj = heap._create_class(self, self.names['obj'], None, {}, ('shadow',), (jtype.int,))
+		_, self.cls = heap._create_class(self, self.names['cls'], self.obj, {}, ('secret',), (jtype.int,))
+		_, self.lst = heap._create_class(self, self.names['lst'], self.obj, {}, ('next',), (jtype.object,))
+		_, self.inr = heap._create_class(self, self.names['inn'], self.obj, {}, ('this$0',), (jtype.object,))
+		_, self.shd = heap._create_class(self, self.names['shd'], self.lst, {}, ('shadow','unique'), (jtype.object, jtype.int))
 
 	def test_duplicate_class(self):
 		old = self.java.lang.Class
-		_, newcls = heap._create_class(self, self.names['cls'], self.obj, {}, ('secret',))
+		_, newcls = heap._create_class(self, self.names['cls'], self.obj, {}, ('secret',), (jtype.int,))
 		self.assertIs(old, self.java.lang.Class) # same name object
 		self.assertIsNot(newcls, self.cls)
 
@@ -162,7 +163,7 @@ class CommonClassTests(object):
 
 
 	def test_double_dollar(self):
-		_, lambdacls = heap._create_class(self, self.names['lam'], self.obj, {'line': 79}, ('closure_x', 'closure_y'))
+		_, lambdacls = heap._create_class(self, self.names['lam'], self.obj, {'line': 79}, ('closure_x', 'closure_y'), (jtype.int, jtype.int))
 		self.assertEqual(str(lambdacls), 'com.example.Vehicle$$Lambda$1/455659002')
 		lambdaobj = lambdacls(33)
 		self.obj._hprof_ifieldvals.__set__(lambdaobj, (11,))
@@ -186,7 +187,7 @@ class CommonClassTests(object):
 
 	def test_obj_array(self):
 		# the base array class...
-		_, oacls = heap._create_class(self, self.names['oar'], self.obj, {}, ('extrastuff',))
+		_, oacls = heap._create_class(self, self.names['oar'], self.obj, {}, ('extrastuff',), (jtype.int,))
 		self.assertEqual(str(oacls), 'java.lang.Object[]')
 		self.assertEqual(repr(oacls), "<JavaClass 'java.lang.Object[]'>")
 		self.assertTrue(isinstance(oacls, heap.JavaClass))
@@ -234,7 +235,7 @@ class CommonClassTests(object):
 		self.assertEqual(oarr.extrastuff, 49)
 
 		# ...and a subclass
-		_, lacls = heap._create_class(self, self.names['lar'], oacls, {}, ('more',))
+		_, lacls = heap._create_class(self, self.names['lar'], oacls, {}, ('more',), (jtype.int,))
 		self.assertEqual(str(lacls), 'List$$lambda[]')
 		self.assertEqual(repr(lacls), "<JavaClass 'List$$lambda[]'>")
 		self.assertTrue(isinstance(lacls, heap.JavaClass))
@@ -290,7 +291,7 @@ class CommonClassTests(object):
 
 	def test_prim_array_types(self):
 		def check(name, expected):
-			clsname, cls = heap._create_class(self, name, self.obj, {}, ())
+			clsname, cls = heap._create_class(self, name, self.obj, {}, (), ())
 			self.assertIsNone(cls.__module__)
 			self.assertEqual(clsname, expected)
 			self.assertEqual(str(cls), expected)
@@ -324,7 +325,7 @@ class CommonClassTests(object):
 		check(self.names['Jararar'], 'long[][][]')
 
 	def test_prim_array(self):
-		_, sacls = heap._create_class(self, self.names['Sar'], self.obj, {}, ())
+		_, sacls = heap._create_class(self, self.names['Sar'], self.obj, {}, (), ())
 		self.assertEqual(str(sacls), 'short[]')
 		self.assertEqual(repr(sacls), "<JavaClass 'short[]'>")
 		self.assertTrue(isinstance(sacls, heap.JavaClass))
@@ -373,7 +374,7 @@ class CommonClassTests(object):
 
 
 	def test_prim_array_deferred_bool(self):
-		_, acls = heap._create_class(self, self.names['Zar'], self.obj, {}, ())
+		_, acls = heap._create_class(self, self.names['Zar'], self.obj, {}, (), ())
 		arr = acls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.boolean, b'\x23\x10\xff\x10\x00\x00\x21\x78')
 
@@ -391,7 +392,7 @@ class CommonClassTests(object):
 			arr[8]
 
 	def test_prim_array_deferred_char(self):
-		_, acls = heap._create_class(self, self.names['Car'], self.obj, {}, ())
+		_, acls = heap._create_class(self, self.names['Car'], self.obj, {}, (), ())
 		arr = acls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.char, b'\0\x57\0\xf6\0\x72\0\x6c\xd8\x01\xdc\x00\0\x21')
 
@@ -408,7 +409,7 @@ class CommonClassTests(object):
 			arr[7]
 
 	def test_prim_array_deferred_byte(self):
-		_, acls = heap._create_class(self, self.names['Bar'], self.obj, {}, ())
+		_, acls = heap._create_class(self, self.names['Bar'], self.obj, {}, (), ())
 		arr = acls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.byte, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84')
 
@@ -427,7 +428,7 @@ class CommonClassTests(object):
 			arr[9]
 
 	def test_prim_array_deferred_short(self):
-		_, sacls = heap._create_class(self, self.names['Sar'], self.obj, {}, ())
+		_, sacls = heap._create_class(self, self.names['Sar'], self.obj, {}, (), ())
 		sarr = sacls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.short, b'\x23\x10\xff\x10\x00\x00\x21\x78')
 
@@ -449,7 +450,7 @@ class CommonClassTests(object):
 			sarr[4]
 
 	def test_prim_array_deferred_int(self):
-		_, acls = heap._create_class(self, self.names['Iar'], self.obj, {}, ())
+		_, acls = heap._create_class(self, self.names['Iar'], self.obj, {}, (), ())
 		arr = acls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.int, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76')
 
@@ -462,7 +463,7 @@ class CommonClassTests(object):
 			arr[3]
 
 	def test_prim_array_deferred_long(self):
-		_, acls = heap._create_class(self, self.names['Jar'], self.obj, {}, ())
+		_, acls = heap._create_class(self, self.names['Jar'], self.obj, {}, (), ())
 		arr = acls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.long, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76\x12\x34\x56\x78')
 
@@ -474,7 +475,7 @@ class CommonClassTests(object):
 			arr[2]
 
 	def test_prim_array_deferred_float(self):
-		_, acls = heap._create_class(self, self.names['Far'], self.obj, {}, ())
+		_, acls = heap._create_class(self, self.names['Far'], self.obj, {}, (), ())
 		arr = acls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.float, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76')
 
@@ -487,7 +488,7 @@ class CommonClassTests(object):
 			arr[3]
 
 	def test_prim_array_deferred_double(self):
-		_, acls = heap._create_class(self, self.names['Dar'], self.obj, {}, ())
+		_, acls = heap._create_class(self, self.names['Dar'], self.obj, {}, (), ())
 		arr = acls(1)
 		data = hprof.heap._DeferredArrayData(hprof.jtype.double, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76\x12\x34\x56\x78')
 
@@ -526,7 +527,7 @@ class CommonClassTests(object):
 			self.l.sMissing
 
 	def test_refs(self):
-		_, extraclass = heap._create_class(self, self.names['ext'], self.shd, {}, ('shadow',))
+		_, extraclass = heap._create_class(self, self.names['ext'], self.shd, {}, ('shadow',), (jtype.int,))
 		e = extraclass(0xbadf00d)
 		self.obj._hprof_ifieldvals.__set__(e, (1111,))
 		self.lst._hprof_ifieldvals.__set__(e, (708,))
@@ -618,7 +619,7 @@ class CommonClassTests(object):
 		self.assertIs(hprof.cast(o), s)
 
 	def test_refs_to_class(self):
-		_, string = heap._create_class(self, self.names['str'], self.obj, {}, ('chars',))
+		_, string = heap._create_class(self, self.names['str'], self.obj, {}, ('chars',), (jtype.object,))
 		o = hprof.cast(string, self.obj)
 		c = hprof.cast(string, self.cls)
 		self.assertIs(o, string)

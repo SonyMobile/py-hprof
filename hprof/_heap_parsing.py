@@ -1,4 +1,5 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import hprof
@@ -6,8 +7,6 @@ import hprof
 from .error import *
 
 from . import jtype
-
-from collections import OrderedDict
 
 class DeferredRef(int):
 	__slots__ = ()
@@ -60,13 +59,17 @@ def parse_class(hf, heap, reader):
 		val = t.read(reader)
 		staticattrs[name] = val
 
-	instanceattrs = OrderedDict()
+	iattr_names = []
+	iattr_types = []
 	ninstance = reader.u2()
 	for i in range(ninstance):
 		nameid = reader.id()
 		name = hf.names[nameid]
 		vtype = reader.jtype()
-		instanceattrs[name] = vtype
+		iattr_names.append(name)
+		iattr_types.append(vtype)
+	iattr_names = tuple(iattr_names)
+	iattr_types = tuple(iattr_types)
 
 	load = hf.classloads_by_id[objid]
 	if superid == 0:
@@ -77,11 +80,11 @@ def parse_class(hf, heap, reader):
 		except KeyError:
 			if superid not in heap._deferred_classes:
 				heap._deferred_classes[superid] = []
-			heap._deferred_classes[superid].append((objid, load.class_name, staticattrs, instanceattrs))
+			heap._deferred_classes[superid].append((objid, load.class_name, staticattrs, iattr_names, iattr_types))
 			return
 
-	def create(objid, cname, supercls, staticattrs, instanceattrs):
-		clsname, cls = hprof.heap._create_class(heap.classtree, cname, supercls, staticattrs, instanceattrs)
+	def create(objid, cname, supercls, staticattrs, iattr_names, iattr_types):
+		clsname, cls = hprof.heap._create_class(heap.classtree, cname, supercls, staticattrs, iattr_names, iattr_types)
 		heap._instances[cls] = []
 		if clsname not in heap.classes:
 			heap.classes[clsname] = []
@@ -89,10 +92,10 @@ def parse_class(hf, heap, reader):
 		heap[objid] = cls
 		if objid in heap._deferred_classes:
 			deferred = heap._deferred_classes.pop(objid)
-			for objid, cname, staticattrs, instanceattrs in deferred:
-				create(objid, cname, cls, staticattrs, instanceattrs)
+			for objid, cname, staticattrs, iattr_names, iattr_types in deferred:
+				create(objid, cname, cls, staticattrs, iattr_names, iattr_types)
 
-	create(objid, load.class_name, supercls, staticattrs, instanceattrs)
+	create(objid, load.class_name, supercls, staticattrs, iattr_names, iattr_types)
 record_parsers[0x20] = parse_class
 
 def parse_instance(hf, heap, reader):
@@ -118,8 +121,8 @@ def create_instances(heap, idsize, progress):
 		while cls is not hprof.heap.JavaObject:
 			vals = tuple(
 					atype.read(reader)
-					for ix, (aname, atype)
-					in enumerate(cls._hprof_ifields.items())
+					for ix, atype
+					in enumerate(cls._hprof_ifieldtypes)
 			)
 			assert len(vals) == len(cls._hprof_ifieldix), (len(vals), len(cls._hprof_ifieldix))
 			cls._hprof_ifieldvals.__set__(obj, vals)
@@ -233,7 +236,7 @@ def resolve_heap_references(heap, progresscb):
 				old = cls._hprof_ifieldvals.__get__(obj)
 				new = tuple(
 					lookup(old[ix]) if atype is hprof.jtype.object else old[ix]
-					for ix, (aname, atype) in enumerate(cls._hprof_ifields.items())
+					for ix, atype in enumerate(cls._hprof_ifieldtypes)
 				)
 				cls._hprof_ifieldvals.__set__(obj, new)
 				cls, = cls.__bases__

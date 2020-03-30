@@ -1,4 +1,5 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import unittest
@@ -56,15 +57,15 @@ class TestHeapObject(HeapRecordTest):
 				__bases__ = (hprof.heap.JavaObject,))
 		cls1attr = MagicMock(
 				_hprof_ifieldix = {'blah': 0},
-				_hprof_ifields = {'blah': hprof.jtype.object},
+				_hprof_ifieldtypes = (hprof.jtype.object,),
 				_hprof_ifieldvals=PropertyMock(),
 				__bases__ = (hprof.heap.JavaObject,))
 		cls3attr = MagicMock(
 				_hprof_ifieldix = {'some': 0, 'thing': 1},
-				_hprof_ifields = {
-					'some':  hprof.jtype.int,
-					'thing': hprof.jtype.short,
-				},
+				_hprof_ifieldtypes = (
+					hprof.jtype.int,
+					hprof.jtype.short,
+				),
 				_hprof_ifieldvals=PropertyMock(),
 				__bases__ = (cls1attr,)) # inherits from cls1attr
 		self.heap[0x2020] = cls0attr

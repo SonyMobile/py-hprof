@@ -1,4 +1,5 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import re as _re
@@ -191,12 +192,15 @@ class JavaArray(JavaObject):
 class JavaClass(type):
 	__slots__ = ()
 
-	def __new__(meta, name, supercls, static_attrs, instance_attrs):
+	def __new__(meta, name, supercls, static_attrs, iattr_names, iattr_types):
 		assert '.' not in name
 		assert '/' not in name or name.find('/') >= name.find('$$')
 		assert '$' not in name or name.find('$') >= name.find('$$')
 		assert ';' not in name
 		assert isinstance(static_attrs, dict)
+		assert isinstance(iattr_names, tuple)
+		assert isinstance(iattr_types, tuple)
+		assert len(iattr_names) == len(iattr_types)
 		if supercls is None:
 			supercls = JavaObject
 		if meta is JavaArrayClass and not isinstance(supercls, JavaArrayClass):
@@ -209,11 +213,11 @@ class JavaClass(type):
 			'__slots__': slots,
 		})
 		cls._hprof_sfields = static_attrs
-		cls._hprof_ifields = instance_attrs
-		cls._hprof_ifieldix = {name:ix for ix, name in enumerate(instance_attrs)}
+		cls._hprof_ifieldix = {name:ix for ix, name in enumerate(iattr_names)}
+		cls._hprof_ifieldtypes = iattr_types
 		return cls
 
-	def __init__(meta, name, supercls, static_attrs, instance_attrs):
+	def __init__(meta, name, supercls, static_attrs, iattr_names, iattr_types):
 		super().__init__(name, None, None)
 
 	def __str__(self):
@@ -315,7 +319,7 @@ _name_to_typechar = {
 }
 
 
-def _create_class(container, name, supercls, staticattrs, instanceattrs):
+def _create_class(container, name, supercls, staticattrs, iattr_names, iattr_types):
 	# android hprofs may have slightly different class name format...
 	if '.' in name:
 		name = name.replace('.', '/')
@@ -367,9 +371,9 @@ def _create_class(container, name, supercls, staticattrs, instanceattrs):
 	classname = _get_or_create_container(container, name[-1:], JavaClassName)
 	name = name[-1]
 	if nests:
-		cls = JavaArrayClass(name, supercls, staticattrs, instanceattrs)
+		cls = JavaArrayClass(name, supercls, staticattrs, iattr_names, iattr_types)
 	else:
-		cls = JavaClass(name, supercls, staticattrs, instanceattrs)
+		cls = JavaClass(name, supercls, staticattrs, iattr_names, iattr_types)
 	if isinstance(container, JavaClassContainer):
 		type.__setattr__(cls, '__module__', container)
 	else:

@@ -1,8 +1,15 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import unittest
 import hprof._heap_parsing
+
+def deinterlace(*keys_and_vals_interspersed):
+	out = ([], [])
+	for ix, v in enumerate(keys_and_vals_interspersed):
+		out[ix&1].append(v)
+	return tuple(map(tuple, out))
 
 def fold(val, bytes):
 	if val < 0:

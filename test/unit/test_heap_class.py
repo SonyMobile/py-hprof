@@ -1,4 +1,5 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import unittest
@@ -64,7 +65,7 @@ class TestHeapClass(HeapRecordTest):
 			)
 		self.assertEqual(mock.call_count, 1)
 		self.assertEqual(mock.call_args, (
-			(self.heap.classtree, 'java/lang/String', obj, {}, {}),
+			(self.heap.classtree, 'java/lang/String', obj, {}, (), ()),
 			{},
 		))
 		cid = self.id(0x7e577e57)
@@ -108,12 +109,13 @@ class TestHeapClass(HeapRecordTest):
 						.u1(10)     # field type (int)
 			)
 		self.assertEqual(mock.call_count, 1)
-		self.assertEqual(len(mock.call_args[0]), 5)
+		self.assertEqual(len(mock.call_args[0]), 6)
 		self.assertIs(   mock.call_args[0][0], self.heap.classtree)
 		self.assertEqual(mock.call_args[0][1], 'java/lang/String')
 		self.assertIs(   mock.call_args[0][2], obj)
 		self.assertEqual(mock.call_args[0][3], {'foo': 70000})
-		self.assertEqual(mock.call_args[0][4], {'bar': hprof.jtype.int})
+		self.assertEqual(mock.call_args[0][4], ('bar',))
+		self.assertEqual(mock.call_args[0][5], (hprof.jtype.int,))
 		self.assertEqual(mock.call_args[1], {})
 		cid = self.id(0x7e577e57)
 		self.assertIn(cid, self.heap)
@@ -230,7 +232,7 @@ class TestHeapClass(HeapRecordTest):
 			'java/util/ChainedList': ('java.util.ChainedList', ChainedList),
 		}
 
-		with patch('hprof.heap._create_class', side_effect=lambda ct, n, s, sa, ia: retvals[n]) as mock:
+		with patch('hprof.heap._create_class', side_effect=lambda ct, n, s, sa, ian, iat: retvals[n]) as mock:
 			data = (self.build()
 					.id(0x7e577e55) # class object id
 					.u4(0x124)      # stacktrace serial
@@ -282,32 +284,35 @@ class TestHeapClass(HeapRecordTest):
 			self.doit(0x20, data)
 			self.assertEqual(mock.call_count, 3)
 
-			self.assertEqual(len(mock.call_args_list[0][0]), 5)
+			self.assertEqual(len(mock.call_args_list[0][0]), 6)
 			self.assertIs(   mock.call_args_list[0][0][0], self.heap.classtree)
 			self.assertEqual(mock.call_args_list[0][0][1], 'java/util/List')
 			self.assertIs(   mock.call_args_list[0][0][2], None)
 			self.assertEqual(mock.call_args_list[0][0][3], {})
-			self.assertEqual(mock.call_args_list[0][0][4], {})
+			self.assertEqual(mock.call_args_list[0][0][4], ())
+			self.assertEqual(mock.call_args_list[2][0][5], ())
 			self.assertEqual(mock.call_args_list[0][1], {})
 			self.assertEqual(self.heap.classes.get('java.util.List'), [List])
 			self.assertEqual(self.heap.get(self.id(0x7e577e57)), List)
 
-			self.assertEqual(len(mock.call_args_list[1][0]), 5)
+			self.assertEqual(len(mock.call_args_list[1][0]), 6)
 			self.assertIs(   mock.call_args_list[1][0][0], self.heap.classtree)
 			self.assertEqual(mock.call_args_list[1][0][1], 'java/util/LinkedList')
 			self.assertIs(   mock.call_args_list[1][0][2], List)
 			self.assertEqual(mock.call_args_list[1][0][3], {})
-			self.assertEqual(mock.call_args_list[1][0][4], {})
+			self.assertEqual(mock.call_args_list[1][0][4], ())
+			self.assertEqual(mock.call_args_list[2][0][5], ())
 			self.assertEqual(mock.call_args_list[1][1], {})
 			self.assertEqual(self.heap.classes.get('java.util.LinkedList'), [LinkedList])
 			self.assertEqual(self.heap.get(self.id(0x7e577e56)), LinkedList)
 
-			self.assertEqual(len(mock.call_args_list[2][0]), 5)
+			self.assertEqual(len(mock.call_args_list[2][0]), 6)
 			self.assertIs(   mock.call_args_list[2][0][0], self.heap.classtree)
 			self.assertEqual(mock.call_args_list[2][0][1], 'java/util/ChainedList')
 			self.assertIs(   mock.call_args_list[2][0][2], LinkedList)
 			self.assertEqual(mock.call_args_list[2][0][3], {})
-			self.assertEqual(mock.call_args_list[2][0][4], {})
+			self.assertEqual(mock.call_args_list[2][0][4], ())
+			self.assertEqual(mock.call_args_list[2][0][5], ())
 			self.assertEqual(mock.call_args_list[2][1], {})
 			self.assertEqual(self.heap.classes.get('java.util.ChainedList'), [ChainedList])
 			self.assertEqual(self.heap.get(self.id(0x7e577e55)), ChainedList)

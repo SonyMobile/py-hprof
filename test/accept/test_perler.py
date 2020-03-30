@@ -1,4 +1,5 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import unittest
@@ -108,8 +109,8 @@ class TestPerlerParsing(unittest.TestCase):
 		cls, = heap.classes['se.dolkow.imagefiltering.ShrinkFilter']
 		abstract, = heap.classes['se.dolkow.imagefiltering.AbstractImageFilter']
 		self.assertTrue(issubclass(cls, abstract))
-		self.assertCountEqual(cls._hprof_ifields, ('maxw', 'maxh', 'smooth', 'resListener'))
-		self.assertCountEqual(abstract._hprof_ifields, ('active', 'name', 'source', 'description'))
+		self.assertCountEqual(cls._hprof_ifieldix, ('maxw', 'maxh', 'smooth', 'resListener'))
+		self.assertCountEqual(abstract._hprof_ifieldix, ('active', 'name', 'source', 'description'))
 
 	def test_static_fields(self):
 		heap, = self.hf.heaps

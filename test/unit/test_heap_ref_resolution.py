@@ -1,10 +1,12 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import hprof
 import unittest
 
 from unittest.mock import MagicMock
+from .util import deinterlace
 
 resolve = hprof._heap_parsing.resolve_heap_references
 
@@ -20,27 +22,27 @@ class TestHeapRefResolution(unittest.TestCase):
 					'ci': 7,
 					'cp': hprof._heap_parsing.DeferredRef(0xfade),
 				},
-				{
-					'il': hprof.jtype.long,
-					'io': hprof.jtype.object,
-					'ii': hprof.jtype.int,
-					'ip': hprof.jtype.object,
-				},
+				*deinterlace(
+					'il', hprof.jtype.long,
+					'io', hprof.jtype.object,
+					'ii', hprof.jtype.int,
+					'ip', hprof.jtype.object,
+				),
 		)
 		_, self.ObjectArrayCls = hprof.heap._create_class(
-				self.heap.classtree, '[Ljava/lang/Object;', self.ObjectCls, {}, {}
+				self.heap.classtree, '[Ljava/lang/Object;', self.ObjectCls, {}, (), ()
 		)
 		_, self.StringCls = hprof.heap._create_class(
 				self.heap.classtree, 'java/lang/String', self.ObjectCls,
 				{
 					'dummy': hprof._heap_parsing.DeferredRef(0xdead),
 				},
-				{
-					'iattr': hprof.jtype.object,
-				},
+				*deinterlace(
+					'iattr', hprof.jtype.object,
+				),
 		)
 		_, self.IntArrayCls = hprof.heap._create_class(
-				self.heap.classtree, '[I', self.ObjectCls, {}, {}
+				self.heap.classtree, '[I', self.ObjectCls, {}, (), ()
 		)
 
 		self.heap[0x0c]  = self.ObjectCls

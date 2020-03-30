@@ -1,4 +1,5 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import unittest
@@ -11,7 +12,7 @@ class TestClassInstanceLookups(unittest.TestCase):
 		self.heap = hprof.heap.Heap()
 
 		def c(name, supercls):
-			name, cls = _create_class(self.heap.classtree, name, supercls, {}, ())
+			name, cls = _create_class(self.heap.classtree, name, supercls, {}, (), ())
 			self.heap._instances[cls] = []
 			if name not in self.heap.classes:
 				self.heap.classes[name] = []
