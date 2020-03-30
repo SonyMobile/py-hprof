@@ -553,6 +553,7 @@ def _instantiate(hf, idsize, progresscb):
 			raise FormatError('some class dumps never found their super class', heap._deferred_classes)
 
 		def remaining():
+			# pylint: disable=cell-var-from-loop
 			return (
 				len(heap._deferred_objects)
 				+ len(heap._deferred_objarrays)
@@ -562,6 +563,7 @@ def _instantiate(hf, idsize, progresscb):
 		label = 'instantiating heap %d/%d' % (heapix, len(hf.heaps))
 		if progresscb:
 			def localprogress(n):
+				# pylint: disable=cell-var-from-loop
 				progresscb(label, done + n, total)
 		else:
 			def localprogress(n):
@@ -594,6 +596,7 @@ def _resolve_references(hf, progresscb):
 		n = len(heap)
 		label = 'resolving heap %d/%d' % (heapix, len(hf.heaps))
 		def innerprogress(pos):
+			# pylint: disable=cell-var-from-loop
 			progresscb(label, pos, n)
 		if not progresscb:
 			innerprogress = None
