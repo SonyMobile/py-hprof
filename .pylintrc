@@ -5,6 +5,7 @@ argument-rgx=[a-z_][a-z0-9_]*$
 
 [MESSAGES CONTROL]
 disable=
+	locally-disabled,
 	too-many-instance-attributes,
 	too-many-locals,
 	too-many-statements,
