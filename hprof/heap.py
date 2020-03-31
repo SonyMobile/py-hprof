@@ -128,6 +128,16 @@ class JavaObject(object):
 	def __init__(self, objid):
 		JavaObject._hprof_id.__set__(self, objid)
 
+	def __str__(self):
+		objid = JavaObject._hprof_id.__get__(self)
+		simple_name = type(self).__name__
+		outer = type(self).__module__
+		while isinstance(outer, JavaClassName):
+			outername = str(outer).rsplit('.', 1)[-1]
+			simple_name = '%s.%s' % (outername, simple_name)
+			outer = outer.__module__
+		return '%s@%x' % (simple_name, objid)
+
 	def __repr__(self):
 		objid = JavaObject._hprof_id.__get__(self)
 		return '<%s 0x%x>' % (type(self), objid)

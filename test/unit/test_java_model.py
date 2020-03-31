@@ -122,8 +122,8 @@ class CommonClassTests(object):
 		self.assertNotIsInstance(o, self.cls)
 		self.assertNotIsInstance(o, self.lst)
 		self.assertNotIsInstance(o, heap.JavaArray)
-		self.assertEqual(str(o), '<java.lang.Object 0xf00d>')
-		self.assertEqual(repr(o), str(o))
+		self.assertEqual(str(o), 'Object@f00d')
+		self.assertEqual(repr(o), '<java.lang.Object 0xf00d>')
 		self.assertCountEqual(dir(o), ('shadow',))
 		with self.assertRaisesRegex(TypeError, 'has no len'):
 			len(o)
@@ -143,8 +143,8 @@ class CommonClassTests(object):
 		self.assertIsInstance(c, self.obj)
 		self.assertIsInstance(c, self.cls)
 		self.assertNotIsInstance(c, self.lst)
-		self.assertEqual(str(c), '<java.lang.Class 0xdead>')
-		self.assertEqual(repr(c), str(c))
+		self.assertEqual(str(c), 'Class@dead')
+		self.assertEqual(repr(c), '<java.lang.Class 0xdead>')
 		self.assertCountEqual(dir(c), ('shadow', 'secret'))
 
 	def test_inner_instance(self):
@@ -160,8 +160,8 @@ class CommonClassTests(object):
 		self.assertIsInstance(i, self.obj)
 		self.assertIsInstance(i, self.inr)
 		self.assertNotIsInstance(i, self.lst)
-		self.assertEqual(str(i), '<java.util.List.Inner 0x1>')
-		self.assertEqual(repr(i), str(i))
+		self.assertEqual(str(i), 'List.Inner@1')
+		self.assertEqual(repr(i), '<java.util.List.Inner 0x1>')
 		self.assertCountEqual(dir(i), ('shadow', 'this$0'))
 
 
@@ -185,8 +185,8 @@ class CommonClassTests(object):
 		self.assertIsInstance(lambdaobj, heap.JavaObject)
 		self.assertIsInstance(lambdaobj, self.obj)
 		self.assertIsInstance(lambdaobj, lambdacls)
-		self.assertEqual(str(lambdaobj), '<com.example.Vehicle$$Lambda$1/455659002 0x21>')
-		self.assertEqual(repr(lambdaobj), str(lambdaobj))
+		self.assertEqual(str(lambdaobj), 'Vehicle$$Lambda$1/455659002@21')
+		self.assertEqual(repr(lambdaobj), '<com.example.Vehicle$$Lambda$1/455659002 0x21>')
 		self.assertCountEqual(dir(lambdaobj), ('shadow', 'closure_x', 'closure_y', 'line'))
 
 	def test_obj_array(self):
@@ -543,8 +543,8 @@ class CommonClassTests(object):
 		self.assertEqual(e.unique, 33)
 		self.assertEqual(e.next, 708)
 		self.assertCountEqual(dir(e), ('shadow', 'unique', 'next'))
-		self.assertEqual(str(e), '<Extra 0xbadf00d>')
-		self.assertEqual(repr(e), str(e))
+		self.assertEqual(str(e), 'Extra@badf00d')
+		self.assertEqual(repr(e), '<Extra 0xbadf00d>')
 
 		r = heap.Ref(e, extraclass)
 		self.assertIs(r, e) # no reason to use Ref when reftype matches exactly.
