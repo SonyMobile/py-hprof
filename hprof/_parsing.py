@@ -9,8 +9,8 @@ import gc
 from contextlib import contextmanager
 
 from .error import FormatError, HprofError, UnexpectedEof, UnhandledError
+from .heap import Heap
 from . import callstack
-from . import heap
 from . import jtype
 
 class HprofFile(object):
@@ -488,7 +488,7 @@ RECORD_PARSERS[0x0c] = parse_heap_record
 def parse_heap_record_segment(hf, reader, progresscb):
 	from . import _heap_parsing
 	if hf._pending_heap is None:
-		hf._pending_heap = heap.Heap()
+		hf._pending_heap = Heap()
 	_heap_parsing.parse_heap(hf, hf._pending_heap, reader, progresscb)
 RECORD_PARSERS[0x1c] = parse_heap_record_segment
 
