@@ -205,11 +205,11 @@ class JavaClass(type):
 			supercls = JavaObject
 		if meta is JavaArrayClass and not isinstance(supercls, JavaArrayClass):
 			slots = ('_hprof_ifieldvals', '_hprof_array_data')
-			supercls = (JavaArray,supercls)
+			superclasses = (JavaArray,supercls)
 		else:
-			slots = ('_hprof_ifieldvals')
-			supercls = (supercls,)
-		cls = super().__new__(meta, name, supercls, {
+			slots = ('_hprof_ifieldvals',)
+			superclasses = (supercls,)
+		cls = super().__new__(meta, name, superclasses, {
 			'__slots__': slots,
 		})
 		cls._hprof_sfields = static_attrs
@@ -368,13 +368,13 @@ def _create_class(container, name, supercls, staticattrs, iattr_names, iattr_typ
 	if extra:
 		name[-1] += extra
 	name[-1] += nests * '[]'
-	container = _get_or_create_container(container, name[:-1], JavaClassName)
+	container = _get_or_create_container(container, name[:-1], JavaClassName) # pylint: disable=redefined-variable-type
 	classname = _get_or_create_container(container, name[-1:], JavaClassName)
 	name = name[-1]
 	if nests:
 		cls = JavaArrayClass(name, supercls, staticattrs, iattr_names, iattr_types)
 	else:
-		cls = JavaClass(name, supercls, staticattrs, iattr_names, iattr_types)
+		cls = JavaClass(name, supercls, staticattrs, iattr_names, iattr_types) # pylint: disable=redefined-variable-type
 	if isinstance(container, JavaClassContainer):
 		type.__setattr__(cls, '__module__', container)
 	else:

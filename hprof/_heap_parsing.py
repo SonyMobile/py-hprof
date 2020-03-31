@@ -59,17 +59,17 @@ def parse_class(hf, heap, reader):
 		val = t.read(reader)
 		staticattrs[name] = val
 
-	iattr_names = []
-	iattr_types = []
+	namelist = []
+	typelist = []
 	ninstance = reader.u2()
 	for _ in range(ninstance):
 		nameid = reader.id()
 		name = hf.names[nameid]
 		vtype = reader.jtype()
-		iattr_names.append(name)
-		iattr_types.append(vtype)
-	iattr_names = tuple(iattr_names)
-	iattr_types = tuple(iattr_types)
+		namelist.append(name)
+		typelist.append(vtype)
+	iattr_names = tuple(namelist)
+	iattr_types = tuple(typelist)
 
 	load = hf.classloads_by_id[objid]
 	if superid == 0:

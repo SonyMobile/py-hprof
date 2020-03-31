@@ -161,7 +161,7 @@ def _parse_cm(hf, data, progress_callback):
 		while prev is not None:
 			if isinstance(prev, HprofError):
 				raise e
-			prev = prev.__context__
+			prev = prev.__context__ # pylint: disable=redefined-variable-type
 		failures.append(('tmpfile?', e))
 
 	raise TypeError('cannot handle `data` arg', data, *failures)
