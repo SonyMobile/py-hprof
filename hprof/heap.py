@@ -170,6 +170,9 @@ class JavaObject(object):
 
 
 class JavaArray(JavaObject):
+	# _hprof_array_data is not in the slots here because it creates layout
+	# conflicts with multiple bases; it will exist, I promise.
+	# pylint: disable=assigning-non-slot
 	__slots__ = ()
 
 	def __init__(self, objid, array_data):
