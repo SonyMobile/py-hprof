@@ -12,6 +12,7 @@ disable=
 	too-many-boolean-expressions,
 	too-many-branches,
 	too-many-arguments,
+	duplicate-code,
 	cyclic-import,
 	bad-continuation,
 	bad-whitespace,
