@@ -192,6 +192,7 @@ class JavaArray(JavaObject):
 
 	def __len__(self):
 		try:
+			# TODO: may be a good idea to make len() work on deferred array data
 			return len(self._hprof_array_data)
 		except TypeError:
 			self._hprof_array_data = self._hprof_array_data.toarray()
@@ -206,6 +207,19 @@ class JavaArray(JavaObject):
 			except AttributeError:
 				pass # the TypeError was the caller's fault, not ours
 			return self._hprof_array_data[ix]
+
+	def __str__(self):
+		typename = super().__str__().rsplit('@',1)[0]
+		splitix = typename.index('[')
+		typename = '%s%d%s' % (typename[:splitix+1], len(self), typename[splitix+1:])
+		elemstr = ', '.join(repr(e) for e in self)
+		return '%s {%s}' % (typename, elemstr)
+
+	def __repr__(self):
+		typename = str(type(self))
+		splitix = typename.index('[')
+		typename = '%s%d%s' % (typename[:splitix+1], len(self), typename[splitix+1:])
+		return '<%s 0x%x>' % (typename, JavaObject._hprof_id.__get__(self))
 
 class JavaClass(type):
 	__slots__ = ()

@@ -200,31 +200,32 @@ class CommonClassTests(object):
 		self.assertTrue(issubclass(oacls, heap.JavaArray))
 		self.assertTrue(issubclass(oacls, self.obj))
 
-		oarr = oacls(73, (10, 55, 33))
+		oarr = oacls(73, "dummy")
+		oarr._hprof_array_data = (oarr, oacls, 33) # self-referential!
 		self.obj._hprof_ifieldvals.__set__(oarr, (0xbeef,))
 		oarr._hprof_ifieldvals = (49,)
 		self.assertEqual(len(oarr), 3)
-		self.assertEqual(oarr[0], 10)
-		self.assertEqual(oarr[1], 55)
+		self.assertEqual(oarr[0], oarr)
+		self.assertEqual(oarr[1], oacls)
 		self.assertEqual(oarr[2], 33)
 		self.assertEqual(oarr[-1], 33)
-		self.assertEqual(oarr[-2], 55)
-		self.assertEqual(oarr[-3], 10)
-		self.assertEqual(oarr[:], (10, 55, 33))
-		self.assertEqual(oarr[1:], (55, 33))
-		self.assertEqual(oarr[:2], (10, 55))
-		self.assertEqual(oarr[:-1], (10, 55))
+		self.assertEqual(oarr[-2], oacls)
+		self.assertEqual(oarr[-3], oarr)
+		self.assertEqual(oarr[:], (oarr, oacls, 33))
+		self.assertEqual(oarr[1:], (oacls, 33))
+		self.assertEqual(oarr[:2], (oarr, oacls))
+		self.assertEqual(oarr[:-1], (oarr, oacls))
 		self.assertEqual(oarr[2:], (33,))
 		self.assertEqual(oarr[:0], ())
-		self.assertEqual(oarr[:1], (10,))
+		self.assertEqual(oarr[:1], (oarr,))
 		with self.assertRaises(IndexError):
 			oarr[3]
 		with self.assertRaises(IndexError):
 			oarr[-4]
 		with self.assertRaises(TypeError):
 			oarr['hello']
-		self.assertIn(10, oarr)
-		self.assertIn(55, oarr)
+		self.assertIn(oarr, oarr)
+		self.assertIn(oacls, oarr)
 		self.assertIn(33, oarr)
 		self.assertNotIn(11, oarr)
 		self.assertNotIn(12, oarr)
@@ -237,6 +238,8 @@ class CommonClassTests(object):
 		self.assertEqual(oarr._hprof_id, 73)
 		self.assertEqual(oarr.shadow, 0xbeef)
 		self.assertEqual(oarr.extrastuff, 49)
+		self.assertEqual(str(oarr), 'Object[3] {<java.lang.Object[3] 0x49>, <JavaClass \'java.lang.Object[]\'>, 33}')
+		self.assertEqual(repr(oarr), '<java.lang.Object[3] 0x49>')
 
 		# ...and a subclass
 		_, lacls = heap._create_class(self, self.names['lar'], oacls, {}, ('more',), (jtype.int,))
@@ -292,6 +295,8 @@ class CommonClassTests(object):
 		self.assertEqual(larr._hprof_id, 97)
 		self.assertEqual(larr.extrastuff, 56)
 		self.assertEqual(larr.more, 99)
+		self.assertEqual(str(larr), 'List$$lambda[5] {1, 3, 5, 7, 9}')
+		self.assertEqual(repr(larr), '<List$$lambda[5] 0x61>')
 
 	def test_prim_array_types(self):
 		def check(name, expected):
@@ -376,6 +381,9 @@ class CommonClassTests(object):
 			self.assertEqual(x, sarr[i])
 		self.assertEqual(i, 2)
 
+		self.assertEqual(str(sarr), 'short[3] {1, 2, 9}')
+		self.assertEqual(repr(sarr), '<short[3] 0x1>')
+
 
 	def test_prim_array_deferred_bool(self):
 		_, acls = heap._create_class(self, self.names['Zar'], self.obj, {}, (), ())
@@ -395,6 +403,9 @@ class CommonClassTests(object):
 		with self.assertRaises(IndexError):
 			arr[8]
 
+		self.assertEqual(str(arr), 'boolean[8] {True, True, True, True, False, False, True, True}')
+		self.assertEqual(repr(arr), '<boolean[8] 0x1>')
+
 	def test_prim_array_deferred_char(self):
 		_, acls = heap._create_class(self, self.names['Car'], self.obj, {}, (), ())
 		data = hprof.heap._DeferredArrayData(hprof.jtype.char, b'\0\x57\0\xf6\0\x72\0\x6c\xd8\x01\xdc\x00\0\x21')
@@ -411,6 +422,9 @@ class CommonClassTests(object):
 		self.assertEqual(arr[6], '!')
 		with self.assertRaises(IndexError):
 			arr[7]
+
+		self.assertEqual(str(arr), "char[7] {'W', 'ö', 'r', 'l', '\\ud801', '\\udc00', '!'}")
+		self.assertEqual(repr(arr), '<char[7] 0x2>')
 
 	def test_prim_array_deferred_byte(self):
 		_, acls = heap._create_class(self, self.names['Bar'], self.obj, {}, (), ())
@@ -430,6 +444,9 @@ class CommonClassTests(object):
 		self.assertEqual(arr[8], -124)
 		with self.assertRaises(IndexError):
 			arr[9]
+
+		self.assertEqual(str(arr), 'byte[9] {35, 16, -1, -128, 0, 0, 127, 120, -124}')
+		self.assertEqual(repr(arr), '<byte[9] 0x4>')
 
 	def test_prim_array_deferred_short(self):
 		_, sacls = heap._create_class(self, self.names['Sar'], self.obj, {}, (), ())
@@ -454,6 +471,9 @@ class CommonClassTests(object):
 		with self.assertRaises(IndexError):
 			sarr[4]
 
+		self.assertEqual(str(sarr), 'short[4] {8976, -240, 0, 8568}')
+		self.assertEqual(repr(sarr), '<short[4] 0x8>')
+
 	def test_prim_array_deferred_int(self):
 		_, acls = heap._create_class(self, self.names['Iar'], self.obj, {}, (), ())
 		data = hprof.heap._DeferredArrayData(hprof.jtype.int, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76')
@@ -467,6 +487,9 @@ class CommonClassTests(object):
 		with self.assertRaises(IndexError):
 			arr[3]
 
+		self.assertEqual(str(arr), 'int[3] {588316544, 32632, -2077923722}')
+		self.assertEqual(repr(arr), '<int[3] 0x10>')
+
 	def test_prim_array_deferred_long(self):
 		_, acls = heap._create_class(self, self.names['Jar'], self.obj, {}, (), ())
 		data = hprof.heap._DeferredArrayData(hprof.jtype.long, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76\x12\x34\x56\x78')
@@ -478,6 +501,9 @@ class CommonClassTests(object):
 		self.assertEqual(arr[1], 0x8425667612345678 - 0x10000000000000000)
 		with self.assertRaises(IndexError):
 			arr[2]
+
+		self.assertEqual(str(arr), 'long[2] {2526800316175777656, -8924614429267175816}')
+		self.assertEqual(repr(arr), '<long[2] 0xf>')
 
 	def test_prim_array_deferred_float(self):
 		_, acls = heap._create_class(self, self.names['Far'], self.obj, {}, (), ())
@@ -492,6 +518,9 @@ class CommonClassTests(object):
 		with self.assertRaises(IndexError):
 			arr[3]
 
+		self.assertEqual(str(arr), 'float[3] {7.8603598714015e-18, 4.572717148784743e-41, -1.944270454372837e-36}')
+		self.assertEqual(repr(arr), '<float[3] 0xe>')
+
 	def test_prim_array_deferred_double(self):
 		_, acls = heap._create_class(self, self.names['Dar'], self.obj, {}, (), ())
 		data = hprof.heap._DeferredArrayData(hprof.jtype.double, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76\x12\x34\x56\x78')
@@ -503,6 +532,9 @@ class CommonClassTests(object):
 		self.assertEqual(arr[1], -1.0979758629196027e-288)
 		with self.assertRaises(IndexError):
 			arr[2]
+
+		self.assertEqual(str(arr), 'double[2] {8.921154138878651e-140, -1.0979758629196027e-288}')
+		self.assertEqual(repr(arr), '<double[2] 0xd>')
 
 
 	def test_static_vars(self):
