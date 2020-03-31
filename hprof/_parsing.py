@@ -114,7 +114,7 @@ def _parse_cm(hf, data, progress_callback):
 	except (HprofError, BufferError):
 		# _parse failed
 		raise
-	except Exception as e:
+	except Exception as e: # pylint: disable=broad-except
 		# we failed before calling _parse
 		failures.append(('bytes-like?', e))
 
@@ -158,7 +158,7 @@ def _parse_cm(hf, data, progress_callback):
 					return
 	except BufferError as e:
 		raise
-	except Exception as e:
+	except Exception as e: # pylint: disable=broad-except
 		prev = e
 		while prev is not None:
 			if isinstance(prev, HprofError):
