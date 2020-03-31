@@ -8,7 +8,7 @@ import gc
 
 from contextlib import contextmanager
 
-from .error import *
+from .error import FormatError, HprofError, UnexpectedEof, UnhandledError
 from . import callstack
 from . import heap
 from . import jtype

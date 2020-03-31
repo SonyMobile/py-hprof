@@ -5,6 +5,7 @@ argument-rgx=[a-z_][a-z0-9_]*$
 
 [MESSAGES CONTROL]
 disable=
+	cyclic-import,
 	bad-continuation,
 	bad-whitespace,
 	protected-access,

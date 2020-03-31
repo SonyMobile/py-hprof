@@ -3,10 +3,9 @@
 # Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
-from . import error
-
 import enum as _enum
 
+# pylint: disable=wrong-import-position
 class JavaType(_enum.Enum):
 	object = 2
 	boolean = 4
@@ -19,6 +18,6 @@ class JavaType(_enum.Enum):
 	long = 11
 jtype = JavaType # pylint: disable=invalid-name
 
+from . import error
 from ._parsing import open, parse # pylint: disable=redefined-builtin
-
 from .heap import cast
