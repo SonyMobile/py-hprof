@@ -104,19 +104,19 @@ def parse_instance(hf, heap, reader):
 	strace = reader.u4()
 	clsid = reader.id()
 	remaining = reader.u4()
-	bytes = reader.bytes(remaining)
-	heap._deferred_objects.append((objid, strace, clsid, bytes))
+	raw_attrs = reader.bytes(remaining)
+	heap._deferred_objects.append((objid, strace, clsid, raw_attrs))
 RECORD_PARSERS[0x21] = parse_instance
 
 def create_instances(heap, idsize, progress):
 	from ._parsing import PrimitiveReader
 	until_report = 0
-	for ix, (objid, _, clsid, bytes) in enumerate(heap._deferred_objects):
+	for ix, (objid, _, clsid, raw_attrs) in enumerate(heap._deferred_objects):
 		if until_report == 0:
 			until_report = 4096
 			progress(ix)
 		until_report -= 1
-		reader = PrimitiveReader(bytes, idsize)
+		reader = PrimitiveReader(raw_attrs, idsize)
 		exactcls = cls = heap[clsid]
 		obj = cls(objid)
 		while cls is not hprof.heap.JavaObject:
@@ -128,7 +128,7 @@ def create_instances(heap, idsize, progress):
 			assert len(vals) == len(cls._hprof_ifieldix), (len(vals), len(cls._hprof_ifieldix))
 			cls._hprof_ifieldvals.__set__(obj, vals)
 			cls, = cls.__bases__
-		assert reader._pos == len(bytes), (reader._pos, len(bytes))
+		assert reader._pos == len(raw_attrs), (reader._pos, len(raw_attrs))
 		heap._instances[exactcls].append(obj)
 		heap[objid] = obj
 	heap._deferred_objects.clear()

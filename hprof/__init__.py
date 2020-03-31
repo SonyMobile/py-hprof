@@ -19,6 +19,6 @@ class JavaType(_enum.Enum):
 	long = 11
 jtype = JavaType # pylint: disable=invalid-name
 
-from ._parsing import open, parse
+from ._parsing import open, parse # pylint: disable=redefined-builtin
 
 from .heap import cast

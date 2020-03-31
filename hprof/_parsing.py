@@ -62,7 +62,7 @@ class ClassLoad(object):
 			return False
 
 
-def open(path, progress_callback=None):
+def open(path, progress_callback=None): # pylint: disable=redefined-builtin
 	hf = HprofFile()
 	hf._context = _open_cm(hf, path, progress_callback)
 	hf._context.__enter__()
@@ -194,8 +194,8 @@ codecs.register_error('hprof-mutf8', hprof_mutf8_error_handler)
 
 
 class PrimitiveReader(object):
-	def __init__(self, bytes, idsize):
-		self._bytes = bytes
+	def __init__(self, input_bytes, idsize):
+		self._bytes = input_bytes
 		self._pos = 0
 		self._set_idsize(idsize)
 

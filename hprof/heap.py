@@ -250,10 +250,10 @@ class JavaClass(type):
 class _DeferredArrayData(object):
 	__slots__ = ('bytes', 'jtype')
 
-	def __init__(self, jtype, bytes):
-		assert len(bytes) % jtype.size == 0
+	def __init__(self, jtype, raw_bytes):
+		assert len(raw_bytes) % jtype.size == 0
 		self.jtype = jtype
-		self.bytes = bytes
+		self.bytes = raw_bytes
 
 	def toarray(self):
 		from . import jtype
@@ -289,11 +289,11 @@ def _get_or_create_container(container, parts, ctype):
 			assert isinstance(container, ctype), container
 		else:
 			if isinstance(container, JavaClassContainer):
-				next = ctype(str(container) + '.' + p)
+				nxt = ctype(str(container) + '.' + p)
 			else:
-				next = ctype(p)
-			setattr(container, p, next)
-			container = next
+				nxt = ctype(p)
+			setattr(container, p, nxt)
+			container = nxt
 	return container
 
 
