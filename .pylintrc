@@ -5,6 +5,12 @@ argument-rgx=[a-z_][a-z0-9_]*$
 
 [MESSAGES CONTROL]
 disable=
+	too-many-instance-attributes,
+	too-many-locals,
+	too-many-statements,
+	too-many-boolean-expressions,
+	too-many-branches,
+	too-many-arguments,
 	cyclic-import,
 	bad-continuation,
 	bad-whitespace,
