@@ -115,6 +115,7 @@ class CommonClassTests(object):
 		with self.assertRaises(AttributeError):
 			o.blah = 3
 		self.obj._hprof_ifieldvals.__set__(o, (3,))
+		self.assertEqual(o._hprof_id, 0xf00d)
 		self.assertEqual(o.shadow, 3)
 		self.assertIsInstance(o, heap.JavaObject)
 		self.assertIsInstance(o, self.obj)
@@ -135,6 +136,7 @@ class CommonClassTests(object):
 			c.next = 3
 		self.obj._hprof_ifieldvals.__set__(c, (72,))
 		self.cls._hprof_ifieldvals.__set__(c, (78,))
+		self.assertEqual(c._hprof_id, 0xdead)
 		self.assertEqual(c.shadow, 72)
 		self.assertEqual(c.secret, 78)
 		self.assertIsInstance(c, heap.JavaObject)
@@ -151,6 +153,7 @@ class CommonClassTests(object):
 			i.missing
 		self.obj._hprof_ifieldvals.__set__(i, (101,))
 		self.inr._hprof_ifieldvals.__set__(i, (102,))
+		self.assertEqual(i._hprof_id, 0x1)
 		self.assertEqual(i.shadow, 101)
 		self.assertEqual(getattr(i, 'this$0'), 102)
 		self.assertIsInstance(i, heap.JavaObject)
@@ -174,6 +177,7 @@ class CommonClassTests(object):
 			lambdaobj.missing = 3
 		with self.assertRaises(AttributeError):
 			lambdaobj.closure_x = 3
+		self.assertEqual(lambdaobj._hprof_id, 33)
 		self.assertEqual(lambdaobj.shadow, 11)
 		self.assertEqual(lambdaobj.closure_x, 10)
 		self.assertEqual(lambdaobj.closure_y, 20)
@@ -230,6 +234,7 @@ class CommonClassTests(object):
 			self.assertEqual(x, oarr[i])
 		self.assertEqual(i, 2)
 		self.assertCountEqual(dir(oarr), ('shadow','extrastuff'))
+		self.assertEqual(oarr._hprof_id, 73)
 		self.assertEqual(oarr.shadow, 0xbeef)
 		self.assertEqual(oarr.extrastuff, 49)
 
@@ -284,6 +289,7 @@ class CommonClassTests(object):
 		for i, x in enumerate(larr):
 			self.assertEqual(x, larr[i])
 		self.assertEqual(i, 4)
+		self.assertEqual(larr._hprof_id, 97)
 		self.assertEqual(larr.extrastuff, 56)
 		self.assertEqual(larr.more, 99)
 
@@ -336,6 +342,7 @@ class CommonClassTests(object):
 		self.obj._hprof_ifieldvals.__set__(sarr, (0xf00d,))
 
 		self.assertCountEqual(dir(sarr), ('shadow',))
+		self.assertEqual(sarr._hprof_id, 1)
 		self.assertEqual(sarr.shadow, 0xf00d)
 
 		self.assertEqual(len(sarr), 3)
@@ -375,6 +382,7 @@ class CommonClassTests(object):
 		data = hprof.heap._DeferredArrayData(hprof.jtype.boolean, b'\x23\x10\xff\x10\x00\x00\x21\x78')
 		arr = acls(1, data)
 
+		self.assertEqual(arr._hprof_id, 1)
 		self.assertEqual(len(arr), 8)
 		self.assertIs(arr[0], True)
 		self.assertIs(arr[1], True)
@@ -390,8 +398,9 @@ class CommonClassTests(object):
 	def test_prim_array_deferred_char(self):
 		_, acls = heap._create_class(self, self.names['Car'], self.obj, {}, (), ())
 		data = hprof.heap._DeferredArrayData(hprof.jtype.char, b'\0\x57\0\xf6\0\x72\0\x6c\xd8\x01\xdc\x00\0\x21')
-		arr = acls(1, data)
+		arr = acls(2, data)
 
+		self.assertEqual(arr._hprof_id, 2)
 		self.assertEqual(len(arr), 7)
 		self.assertEqual(arr[0], 'W')
 		self.assertEqual(arr[1], 'ö')
@@ -406,8 +415,9 @@ class CommonClassTests(object):
 	def test_prim_array_deferred_byte(self):
 		_, acls = heap._create_class(self, self.names['Bar'], self.obj, {}, (), ())
 		data = hprof.heap._DeferredArrayData(hprof.jtype.byte, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84')
-		arr = acls(1, data)
+		arr = acls(4, data)
 
+		self.assertEqual(arr._hprof_id, 4)
 		self.assertEqual(len(arr), 9)
 		self.assertEqual(arr[0], 0x23)
 		self.assertEqual(arr[1], 0x10)
@@ -424,8 +434,9 @@ class CommonClassTests(object):
 	def test_prim_array_deferred_short(self):
 		_, sacls = heap._create_class(self, self.names['Sar'], self.obj, {}, (), ())
 		data = hprof.heap._DeferredArrayData(hprof.jtype.short, b'\x23\x10\xff\x10\x00\x00\x21\x78')
-		sarr = sacls(1, data)
+		sarr = sacls(8, data)
 
+		self.assertEqual(sarr._hprof_id, 8)
 		self.assertEqual(len(sarr), 4)
 		self.assertEqual(sarr[0], 0x2310)
 		self.assertEqual(sarr[1], 0xff10-0x10000)
@@ -433,6 +444,7 @@ class CommonClassTests(object):
 		self.assertEqual(sarr[3], 0x2178)
 
 		sarr._hprof_array_data = data
+		self.assertEqual(sarr._hprof_id, 8)
 		self.assertEqual(sarr[1], 0xff10-0x10000)
 		self.assertEqual(sarr[3], 0x2178)
 		self.assertEqual(len(sarr), 4)
@@ -445,8 +457,9 @@ class CommonClassTests(object):
 	def test_prim_array_deferred_int(self):
 		_, acls = heap._create_class(self, self.names['Iar'], self.obj, {}, (), ())
 		data = hprof.heap._DeferredArrayData(hprof.jtype.int, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76')
-		arr = acls(1, data)
+		arr = acls(16, data)
 
+		self.assertEqual(arr._hprof_id, 16)
 		self.assertEqual(len(arr), 3)
 		self.assertEqual(arr[0], 0x2310ff80)
 		self.assertEqual(arr[1], 0x00007f78)
@@ -457,8 +470,9 @@ class CommonClassTests(object):
 	def test_prim_array_deferred_long(self):
 		_, acls = heap._create_class(self, self.names['Jar'], self.obj, {}, (), ())
 		data = hprof.heap._DeferredArrayData(hprof.jtype.long, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76\x12\x34\x56\x78')
-		arr = acls(1, data)
+		arr = acls(15, data)
 
+		self.assertEqual(arr._hprof_id, 15)
 		self.assertEqual(len(arr), 2)
 		self.assertEqual(arr[0], 0x2310ff8000007f78)
 		self.assertEqual(arr[1], 0x8425667612345678 - 0x10000000000000000)
@@ -468,8 +482,9 @@ class CommonClassTests(object):
 	def test_prim_array_deferred_float(self):
 		_, acls = heap._create_class(self, self.names['Far'], self.obj, {}, (), ())
 		data = hprof.heap._DeferredArrayData(hprof.jtype.float, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76')
-		arr = acls(1, data)
+		arr = acls(14, data)
 
+		self.assertEqual(arr._hprof_id, 14)
 		self.assertEqual(len(arr), 3)
 		self.assertEqual(arr[0], 7.8603598714015e-18)
 		self.assertEqual(arr[1], 4.572717148784743e-41)
@@ -480,8 +495,9 @@ class CommonClassTests(object):
 	def test_prim_array_deferred_double(self):
 		_, acls = heap._create_class(self, self.names['Dar'], self.obj, {}, (), ())
 		data = hprof.heap._DeferredArrayData(hprof.jtype.double, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76\x12\x34\x56\x78')
-		arr = acls(1, data)
+		arr = acls(13, data)
 
+		self.assertEqual(arr._hprof_id, 13)
 		self.assertEqual(len(arr), 2)
 		self.assertEqual(arr[0], 8.921154138878651e-140)
 		self.assertEqual(arr[1], -1.0979758629196027e-288)

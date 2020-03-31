@@ -8,6 +8,7 @@ _NAMESPLIT = _re.compile(r'\.|/')
 
 class Heap(dict):
 	def __init__(self):
+		super().__init__()
 		self.classes = dict() # JavaClassName -> [JavaClass, ...]
 		self.classtree = JavaHierarchy()
 		self._instances = dict() # JavaClass -> [instance, instance, ...]
@@ -176,6 +177,7 @@ class JavaArray(JavaObject):
 	__slots__ = ()
 
 	def __init__(self, objid, array_data):
+		super().__init__(objid)
 		self._hprof_array_data = array_data
 
 	def __len__(self):
