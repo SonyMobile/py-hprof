@@ -581,7 +581,8 @@ def _instantiate(hf, idsize, progresscb):
 def _resolve_references(hf, progresscb):
 	''' Some objects can have forward references. In those cases, we've saved
 	a serial or id -- now is the time to replace them with real references.'''
-	if progresscb: progresscb('resolving stacktraces', None, None)
+	if progresscb:
+		progresscb('resolving stacktraces', None, None)
 	for load in hf.classloads.values():
 		try:
 			if isinstance(load.stacktrace, int):
