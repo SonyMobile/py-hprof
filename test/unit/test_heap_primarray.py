@@ -1,4 +1,5 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import unittest
@@ -90,23 +91,20 @@ class TestPrimitiveArray(HeapRecordTest):
 		self.assertEqual( boolmock.call_count, 1)
 		self.assertEqual(len(self.heap._deferred_primarrays), 0)
 
-		self.assertEqual(boolmock.call_args_list[0][0], (5,))
+		self.assertEqual(boolmock.call_args_list[0][0], (5, fakes[1][2]))
 		self.assertEqual(boolmock.call_args_list[0][1], {})
 		self.assertIn(5, self.heap)
 		self.assertIs(self.heap[5], out3)
-		self.assertIs(self.heap[5]._hprof_array_data, fakes[1][2])
 
-		self.assertEqual(shortmock.call_args_list[0][0], (1,))
+		self.assertEqual(shortmock.call_args_list[0][0], (1, fakes[0][2]))
 		self.assertEqual(shortmock.call_args_list[0][1], {})
 		self.assertIn(1, self.heap)
 		self.assertIs(self.heap[1], out1)
-		self.assertIs(self.heap[1]._hprof_array_data, fakes[0][2])
 
-		self.assertEqual(shortmock.call_args_list[1][0], (3,))
+		self.assertEqual(shortmock.call_args_list[1][0], (3, fakes[2][2]))
 		self.assertEqual(shortmock.call_args_list[1][1], {})
 		self.assertIn(3, self.heap)
 		self.assertIs(self.heap[3], out2)
-		self.assertIs(self.heap[3]._hprof_array_data, fakes[2][2])
 
 		self.assertCountEqual(self.heap._instances[shortmock], (self.heap[3], self.heap[1]))
 		self.assertCountEqual(self.heap._instances[ boolmock], (self.heap[5],))

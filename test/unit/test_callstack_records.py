@@ -21,10 +21,8 @@ class TestParseStackTraceRecords(unittest.TestCase):
 		assert len(self.hf.names) == 8, repr(self.hf.names) # no dupes.
 		self.dummythread = 'I am definitely a thread'
 		self.hf.threads[0x10000000] = self.dummythread
-		self.hf.classloads[0x12345678] = hprof._parsing.ClassLoad()
-		self.hf.classloads[0x12345678].class_name = 'java.lang.String'
-		self.hf.classloads[0x22345678] = hprof._parsing.ClassLoad()
-		self.hf.classloads[0x22345678].class_name = 'com.example.pkg.SomeClass'
+		self.hf.classloads[0x12345678] = hprof._parsing.ClassLoad(0x12345678, 'java.lang.String', 0)
+		self.hf.classloads[0x22345678] = hprof._parsing.ClassLoad(0x22345678, 'com.example.pkg.SomeClass', 0)
 
 	def addframe(self, indata):
 		reader = hprof._parsing.PrimitiveReader(memoryview(indata), self.idsize)

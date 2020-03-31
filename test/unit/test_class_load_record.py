@@ -93,18 +93,8 @@ class TestParseClassLoadRecord(unittest.TestCase):
 			hprof._parsing._resolve_references(self.hf, None)
 
 	def test_eq(self):
-		a = hprof._parsing.ClassLoad()
-		b = hprof._parsing.ClassLoad()
-		self.assertNotEqual(a, b)
-		self.assertNotEqual(b, a)
-		a.class_id = 7
-		b.class_id = 7
-		a.stacktrace = 9
-		b.stacktrace = 9
-		self.assertNotEqual(a, b) # everything needs to be set.
-		self.assertNotEqual(b, a)
-		a.class_name = 'hello'
-		b.class_name = 'hola'
+		a = hprof._parsing.ClassLoad(7, 'hello', 9)
+		b = hprof._parsing.ClassLoad(7, 'hola',  9)
 		self.assertNotEqual(a, b)
 		self.assertNotEqual(b, a)
 		a.class_name = 'hola'
@@ -114,6 +104,8 @@ class TestParseClassLoadRecord(unittest.TestCase):
 		self.assertNotEqual(a, b)
 		self.assertNotEqual(b, a)
 		b.class_id = 9
+		self.assertEqual(a, b)
+		self.assertEqual(b, a)
 		a.stacktrace = 8
 		self.assertNotEqual(a, b)
 		self.assertNotEqual(b, a)

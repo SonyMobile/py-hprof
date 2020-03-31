@@ -13,9 +13,7 @@ from .util import varyingid, HeapRecordTest
 class TestHeapClass(HeapRecordTest):
 
 	def test_class_class(self):
-		load = hprof._parsing.ClassLoad()
-		load.class_id = self.id(0xc1a55)
-		load.class_name = 'java/lang/Class'
+		load = hprof._parsing.ClassLoad(self.id(0xc1a55), 'java/lang/Class', 0)
 		self.hf.classloads_by_id[load.class_id] = load
 
 		self.doit(0x20, self.build()
@@ -42,9 +40,7 @@ class TestHeapClass(HeapRecordTest):
 
 	def test_minimal(self):
 		expected = object()
-		load = hprof._parsing.ClassLoad()
-		load.class_id = self.id(0x7e577e57)
-		load.class_name = 'java/lang/String'
+		load = hprof._parsing.ClassLoad(self.id(0x7e577e57), 'java/lang/String', 0)
 		self.hf.classloads_by_id[load.class_id] = load
 		self.heap[0x0b1ec7] = obj = object()
 
@@ -77,9 +73,7 @@ class TestHeapClass(HeapRecordTest):
 
 	def test_small(self):
 		expected = object()
-		load = hprof._parsing.ClassLoad()
-		load.class_id = self.id(0x7e577e57)
-		load.class_name = 'java/lang/String'
+		load = hprof._parsing.ClassLoad(self.id(0x7e577e57), 'java/lang/String', 0)
 		self.hf.classloads_by_id[load.class_id] = load
 		self.hf.names[0xf00] = 'foo'
 		self.hf.names[0xbaa] = 'bar'
@@ -125,9 +119,7 @@ class TestHeapClass(HeapRecordTest):
 		self.assertEqual(self.heap._instances[expected], [])
 
 	def test_duplicate_class(self):
-		load = hprof._parsing.ClassLoad()
-		load.class_id = self.id(0x7e577e57)
-		load.class_name = 'java/lang/String'
+		load = hprof._parsing.ClassLoad(self.id(0x7e577e57), 'java/lang/String', 0)
 		self.hf.classloads_by_id[load.class_id] = load
 		self.hf.names[0xf00] = 'foo'
 		self.hf.names[0xbaa] = 'bar'
@@ -161,13 +153,9 @@ class TestHeapClass(HeapRecordTest):
 	def test_duplicate_classname(self):
 		expected1 = object()
 		expected2 = object()
-		load = hprof._parsing.ClassLoad()
-		load.class_id = self.id(0x7e577e57)
-		load.class_name = 'java/lang/String'
+		load = hprof._parsing.ClassLoad(self.id(0x7e577e57), 'java/lang/String', 0)
 		self.hf.classloads_by_id[load.class_id] = load
-		load = hprof._parsing.ClassLoad()
-		load.class_id = self.id(0x7e577e56)
-		load.class_name = 'java/lang/String'
+		load = hprof._parsing.ClassLoad(self.id(0x7e577e56), 'java/lang/String', 0)
 		self.hf.classloads_by_id[load.class_id] = load
 		self.hf.names[0xf00] = 'foo'
 		self.hf.names[0xbaa] = 'bar'
@@ -210,17 +198,11 @@ class TestHeapClass(HeapRecordTest):
 		self.assertEqual(self.heap._instances[expected2], [])
 
 	def test_super_after_subclass(self):
-		load = hprof._parsing.ClassLoad()
-		load.class_id = self.id(0x7e577e57)
-		load.class_name = 'java/util/List'
+		load = hprof._parsing.ClassLoad(self.id(0x7e577e57), 'java/util/List', 0)
 		self.hf.classloads_by_id[load.class_id] = load
-		load = hprof._parsing.ClassLoad()
-		load.class_id = self.id(0x7e577e56)
-		load.class_name = 'java/util/LinkedList'
+		load = hprof._parsing.ClassLoad(self.id(0x7e577e56), 'java/util/LinkedList', 0)
 		self.hf.classloads_by_id[load.class_id] = load
-		load = hprof._parsing.ClassLoad()
-		load.class_id = self.id(0x7e577e55)
-		load.class_name = 'java/util/ChainedList' # which is totally a real thing.
+		load = hprof._parsing.ClassLoad(self.id(0x7e577e55), 'java/util/ChainedList', 0)
 		self.hf.classloads_by_id[load.class_id] = load
 
 		List = object()
@@ -324,17 +306,11 @@ class TestHeapClass(HeapRecordTest):
 			self.assertEqual(self.heap._instances[ChainedList], [])
 
 	def test_super_not_found(self):
-		load = hprof._parsing.ClassLoad()
-		load.class_id = self.id(0x7e577e56)
-		load.class_name = 'java/util/LinkedList'
+		load = hprof._parsing.ClassLoad(self.id(0x7e577e56), 'java/util/LinkedList', 0)
 		self.hf.classloads_by_id[load.class_id] = load
-		load = hprof._parsing.ClassLoad()
-		load.class_id = self.id(0x7e577e55)
-		load.class_name = 'java/util/ChainedList' # which is totally a real thing.
+		load = hprof._parsing.ClassLoad(self.id(0x7e577e55), 'java/util/ChainedList', 0)
 		self.hf.classloads_by_id[load.class_id] = load
-		load = hprof._parsing.ClassLoad()
-		load.class_id = self.id(0x7e577e54)
-		load.class_name = 'java/util/ArrayList'
+		load = hprof._parsing.ClassLoad(self.id(0x7e577e54), 'java/util/ArrayList', 0)
 		self.hf.classloads_by_id[load.class_id] = load
 
 		with patch('hprof.heap._create_class') as mock:

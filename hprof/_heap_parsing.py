@@ -151,8 +151,7 @@ def create_objarrays(heap, progress):
 			progress(ix)
 		until_report -= 1
 		cls = heap[clsid]
-		arr = cls(objid)
-		arr._hprof_array_data = elems
+		arr = cls(objid, elems)
 		heap._instances[cls].append(arr)
 		heap[objid] = arr
 	heap._deferred_objarrays.clear()
@@ -182,8 +181,7 @@ def create_primarrays(heap, progress):
 		assert len(classes) == 1, 'there are %d classes named %s' % (len(classes), clsname)
 		cls, = classes
 		# TODO: speed: the class lookup could be done once per array type
-		arr = cls(objid)
-		arr._hprof_array_data = data
+		arr = cls(objid, data)
 		heap._instances[cls].append(arr)
 		heap[objid] = arr
 	heap._deferred_primarrays.clear()

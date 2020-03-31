@@ -66,11 +66,9 @@ class TestHeapRefResolution(unittest.TestCase):
 		self.ObjectCls._hprof_ifieldvals.__set__(self.dead, (11, 0x0000, 20, 0xfade))
 		self.StringCls._hprof_ifieldvals.__set__(self.dead, (0xbeef,))
 
-		self.beef = self.heap[0xbeef] = self.ObjectArrayCls(0xbeef)
-		self.beef._hprof_array_data = (0xf00d, 0xdead, 0xfade, 0xf00d, 0xfade)
+		self.beef = self.heap[0xbeef] = self.ObjectArrayCls(0xbeef, (0xf00d, 0xdead, 0xfade, 0xf00d, 0xfade))
 
-		self.ints = self.heap[0x1111] = self.IntArrayCls(0x1111)
-		self.ints._hprof_array_data = hprof.heap._DeferredArrayData(hprof.jtype.int, b'abcdefgh')
+		self.ints = self.heap[0x1111] = self.IntArrayCls(0x1111, hprof.heap._DeferredArrayData(hprof.jtype.int, b'abcdefgh'))
 
 	def test_objarray_resolution(self):
 		resolve(self.heap, None)

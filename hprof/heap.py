@@ -172,6 +172,9 @@ class JavaObject(object):
 class JavaArray(JavaObject):
 	__slots__ = ()
 
+	def __init__(self, objid, array_data):
+		self._hprof_array_data = array_data
+
 	def __len__(self):
 		try:
 			return len(self._hprof_array_data)

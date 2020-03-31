@@ -47,6 +47,11 @@ class HprofFile(object):
 class ClassLoad(object):
 	__slots__ = ('class_id', 'class_name', 'stacktrace')
 
+	def __init__(self, clsid, clsname, strace):
+		self.class_id = clsid
+		self.class_name = clsname
+		self.stacktrace = strace
+
 	def __str__(self):
 		return 'ClassLoad<clsid=0x%x name=%s trace=%s>' % (self.class_id, self.class_name, repr(self.stacktrace))
 
@@ -54,12 +59,9 @@ class ClassLoad(object):
 		return str(self)
 
 	def __eq__(self, other):
-		try:
-			return (self.class_id == other.class_id
-			    and self.class_name is other.class_name
-			    and self.stacktrace is other.stacktrace)
-		except AttributeError:
-			return False
+		return (self.class_id == other.class_id
+		    and self.class_name == other.class_name
+		    and self.stacktrace == other.stacktrace)
 
 
 def open(path, progress_callback=None): # pylint: disable=redefined-builtin
@@ -428,10 +430,9 @@ def parse_class_load_record(hf, reader, progresscb):
 	del progresscb # unused
 	serial = reader.u4()
 	clsid  = reader.id()
-	load = ClassLoad()
-	load.class_id = clsid
-	load.stacktrace = reader.u4() # resolve later
-	load.class_name = hf.names[reader.id()]
+	strace = reader.u4() # resolve later
+	clsname= hf.names[reader.id()]
+	load = ClassLoad(clsid, clsname, strace)
 	if serial in hf.classloads:
 		raise FormatError('duplicate class load serial 0x%x' % serial, hf.classloads[serial], load)
 	if clsid in hf.classloads_by_id:

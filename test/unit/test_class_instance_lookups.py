@@ -29,8 +29,8 @@ class TestClassInstanceLookups(unittest.TestCase):
 		self.oarrayCls  = c('[Ljava.lang.Object;', self.objectCls1)
 		self.larrayCls  = c('[Ljava.util.List;', self.oarrayCls)
 
-		def mk(cls, objid):
-			obj = cls(objid)
+		def mk(cls, *args):
+			obj = cls(*args)
 			self.heap._instances[cls].append(obj)
 			return obj
 
@@ -43,9 +43,9 @@ class TestClassInstanceLookups(unittest.TestCase):
 		self.l2 = mk(self.listCls, 30)
 		self.a1 = mk(self.alistCls, 40)
 		self.a2 = mk(self.alistCls, 50)
-		self.ia = mk(self.parrayCls, 7777)
-		self.oa = mk(self.oarrayCls, 7778)
-		self.la = mk(self.larrayCls, 7779)
+		self.ia = mk(self.parrayCls, 7777, ())
+		self.oa = mk(self.oarrayCls, 7778, ())
+		self.la = mk(self.larrayCls, 7779, ())
 
 	def test_objects(self):
 		with self.subTest(scope='exact'):

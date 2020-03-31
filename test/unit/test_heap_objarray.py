@@ -1,4 +1,5 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 import unittest
@@ -74,23 +75,20 @@ class TestObjectArray(HeapRecordTest):
 		self.assertEqual(cls2.call_count, 1)
 		self.assertEqual(len(self.heap._deferred_objarrays), 0)
 
-		self.assertEqual(cls1.call_args_list[0][0], (99,))
+		self.assertEqual(cls1.call_args_list[0][0], (99, fakes[0][3]))
 		self.assertEqual(cls1.call_args_list[0][1], {})
 		self.assertIn(99, self.heap)
 		self.assertIs(self.heap[99], out1)
-		self.assertIs(self.heap[99]._hprof_array_data, fakes[0][3])
 
-		self.assertEqual(cls1.call_args_list[1][0], (78,))
+		self.assertEqual(cls1.call_args_list[1][0], (78, fakes[2][3]))
 		self.assertEqual(cls1.call_args_list[1][1], {})
 		self.assertIn(78, self.heap)
 		self.assertIs(self.heap[78], out2)
-		self.assertIs(self.heap[78]._hprof_array_data, fakes[2][3])
 
-		self.assertEqual(cls2.call_args_list[0][0], (79,))
+		self.assertEqual(cls2.call_args_list[0][0], (79, fakes[1][3]))
 		self.assertEqual(cls2.call_args_list[0][1], {})
 		self.assertIn(79, self.heap)
 		self.assertIs(self.heap[79], out3)
-		self.assertIs(self.heap[79]._hprof_array_data, fakes[1][3])
 
 		self.assertCountEqual(self.heap._instances[cls1], (out1, out2))
 		self.assertCountEqual(self.heap._instances[cls2], (out3,))
