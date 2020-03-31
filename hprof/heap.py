@@ -195,7 +195,7 @@ class JavaArray(JavaObject):
 class JavaClass(type):
 	__slots__ = ()
 
-	def __new__(meta, name, supercls, static_attrs, iattr_names, iattr_types):
+	def __new__(mcs, name, supercls, static_attrs, iattr_names, iattr_types):
 		assert '.' not in name
 		assert '/' not in name or name.find('/') >= name.find('$$')
 		assert '$' not in name or name.find('$') >= name.find('$$')
@@ -206,13 +206,13 @@ class JavaClass(type):
 		assert len(iattr_names) == len(iattr_types)
 		if supercls is None:
 			supercls = JavaObject
-		if meta is JavaArrayClass and not isinstance(supercls, JavaArrayClass):
+		if mcs is JavaArrayClass and not isinstance(supercls, JavaArrayClass):
 			slots = ('_hprof_ifieldvals', '_hprof_array_data')
 			superclasses = (JavaArray,supercls)
 		else:
 			slots = ('_hprof_ifieldvals',)
 			superclasses = (supercls,)
-		cls = super().__new__(meta, name, superclasses, {
+		cls = super().__new__(mcs, name, superclasses, {
 			'__slots__': slots,
 		})
 		cls._hprof_sfields = static_attrs
@@ -220,17 +220,17 @@ class JavaClass(type):
 		cls._hprof_ifieldtypes = iattr_types
 		return cls
 
-	def __init__(meta, name, supercls, static_attrs, iattr_names, iattr_types):
+	def __init__(cls, name, supercls, static_attrs, iattr_names, iattr_types):
 		del supercls, static_attrs, iattr_names, iattr_types # unused
 		super().__init__(name, None, None)
 
-	def __str__(self):
-		if self.__module__:
-			return str(self.__module__) + '.' + self.__name__
-		return self.__name__
+	def __str__(cls):
+		if cls.__module__:
+			return str(cls.__module__) + '.' + cls.__name__
+		return cls.__name__
 
-	def __repr__(self):
-		return "<JavaClass '%s'>" % str(self)
+	def __repr__(cls):
+		return "<JavaClass '%s'>" % str(cls)
 
 	def __instancecheck__(cls, instance):
 		if type(instance) is Ref: # pylint: disable=unidiomatic-typecheck
@@ -241,13 +241,13 @@ class JavaClass(type):
 				return True
 		return super().__instancecheck__(instance)
 
-	def __getattr__(self, name):
-		t = self
+	def __getattr__(cls, name):
+		t = cls
 		while t is not JavaObject:
 			if name in t._hprof_sfields:
 				return t._hprof_sfields[name]
 			t, = t.__bases__
-		raise AttributeError('type %r has no static attribute %r' % (self, name))
+		raise AttributeError('type %r has no static attribute %r' % (cls, name))
 
 
 class _DeferredArrayData(object):
