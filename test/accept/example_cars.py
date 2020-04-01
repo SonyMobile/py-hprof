@@ -1,4 +1,5 @@
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 class TestCars(object):
@@ -25,14 +26,20 @@ class TestCars(object):
 		self.assertEqual(self.cars.redYellow.numWheels, 2)
 
 	def test_vehicle_makes(self):
-		# TODO: add special handling for String, give it special str() and __eq__()
+		# TODO: add special handling for String __eq__()
 		# e.g. self.assertEqual(self.cars.swe.make, 'Lolvo')
-		# and self.assertEqual(str(self.cars.swe.make), 'Lolvo')
 		self.assertIsInstance(self.cars.swe.make, self.stringCls)
 		self.assertIsInstance(self.cars.jap.make, self.stringCls)
 		self.assertIsInstance(self.cars.generic.make, self.stringCls)
 		self.assertIsInstance(self.cars.mine.make, self.stringCls)
 		self.assertIsInstance(self.cars.redYellow.make, self.stringCls)
+
+		# str() of String?
+		self.assertEqual(str(self.cars.swe.make), 'Lolvo')
+		self.assertEqual(str(self.cars.jap.make), 'Toy Yoda')
+		self.assertEqual(str(self.cars.generic.make), 'Stretch')
+		self.assertEqual(str(self.cars.mine.make), 'Fånark')
+		self.assertEqual(str(self.cars.redYellow.make), 'Axes')
 
 	def test_vehicle_array(self):
 		self.assertEqual(len(self.cars.vehicles), 5)

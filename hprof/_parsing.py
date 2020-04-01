@@ -12,6 +12,7 @@ from .error import FormatError, HprofError, UnexpectedEof, UnhandledError
 from .heap import Heap
 from . import callstack
 from . import jtype
+from . import _special_cases
 
 class HprofFile(object):
 	def __init__(self):
@@ -546,6 +547,7 @@ def _parse_hprof(hf, mview, progresscb):
 		progresscb('parsing', len(mview), len(mview))
 	_instantiate(hf, reader._idsize, progresscb)
 	_resolve_references(hf, progresscb)
+	_special_cases.setup_builtins(hf)
 
 def _instantiate(hf, idsize, progresscb):
 	from . import _heap_parsing

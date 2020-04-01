@@ -216,7 +216,7 @@ class TestParseHprof(unittest.TestCase):
 				indata = b'JAVA PROFILE 1.0.%d\0\0\0\0\4\0\1\2\3\4\5\6\7\x50\0\0\0\0\0\0\0\2\x33\x44' % v
 				progress = MagicMock()
 				hf = hprof._parsing.HprofFile()
-				with patch('hprof._parsing.RECORD_PARSERS', {}), patch('hprof._parsing._resolve_references') as resolve:
+				with patch('hprof._parsing.RECORD_PARSERS', {}), patch('hprof._parsing._resolve_references') as resolve, patch('hprof._special_cases.setup_builtins') as set_funcs:
 					hprof._parsing._parse_hprof(hf, indata, progress)
 				self.assertEqual(hf.unhandled, {0x50: 1})
 				self.assertEqual(resolve.call_count, 1)
@@ -229,12 +229,13 @@ class TestParseHprof(unittest.TestCase):
 				self.assertEqual(progress.call_args_list[1][1], {})
 				self.assertEqual(progress.call_args_list[2][0], ('parsing', 42, 42))
 				self.assertEqual(progress.call_args_list[2][1], {})
+				set_funcs.assert_called_once_with(hf)
 
 	def test_one_record_no_progress(self):
 		indata = b'JAVA PROFILE 1.0.1\0\0\0\0\4\0\1\2\3\4\5\6\7\x50\0\0\0\0\0\0\0\2\x33\x44'
 		mock_parsers = { 0x50: unittest.mock.MagicMock() }
 		hf = sentinel.hf
-		with patch('hprof._parsing.RECORD_PARSERS', mock_parsers), patch('hprof._parsing._resolve_references') as resolve, patch('hprof._parsing._instantiate') as instantiate:
+		with patch('hprof._parsing.RECORD_PARSERS', mock_parsers), patch('hprof._parsing._resolve_references') as resolve, patch('hprof._parsing._instantiate') as instantiate, patch('hprof._special_cases.setup_builtins') as set_funcs:
 			hprof._parsing._parse_hprof(sentinel.hf, indata, None)
 		self.assertEqual(mock_parsers[0x50].call_count, 1)
 		self.assertIs(mock_parsers[0x50].call_args[0][0], hf)
@@ -246,6 +247,7 @@ class TestParseHprof(unittest.TestCase):
 		self.assertEqual(instantiate.call_count, 1)
 		self.assertEqual(instantiate.call_args[0], (hf, 4, None))
 		self.assertFalse(instantiate.call_args[1])
+		set_funcs.assert_called_once_with(hf)
 
 	def test_four_records(self):
 		indata = b'JAVA PROFILE 1.0.1\0\5\0\0\5\0\1\2\3\4\5\6\7'
@@ -259,7 +261,7 @@ class TestParseHprof(unittest.TestCase):
 		}
 		progress = MagicMock()
 		hf = hprof._parsing.HprofFile()
-		with patch('hprof._parsing.RECORD_PARSERS', mock_parsers), patch('hprof._parsing._resolve_references') as resolve:
+		with patch('hprof._parsing.RECORD_PARSERS', mock_parsers), patch('hprof._parsing._resolve_references') as resolve, patch('hprof._special_cases.setup_builtins') as set_funcs:
 			hprof._parsing._parse_hprof(hf, indata, progress)
 
 		self.assertEqual(mock_parsers[0x50].call_count, 2)
@@ -269,6 +271,7 @@ class TestParseHprof(unittest.TestCase):
 		self.assertEqual(resolve.call_count, 1)
 		self.assertEqual(resolve.call_args[0], (hf,progress))
 		self.assertFalse(resolve.call_args[1])
+		set_funcs.assert_called_once_with(hf)
 
 		self.assertEqual(progress.call_count, 6)
 		self.assertEqual(progress.call_args_list[0][0], ('parsing', 0, 79))
