@@ -1,5 +1,6 @@
 #!/bin/bash
 # Copyright (C) 2019 Snild Dolkow
+# Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
 function fail() {
@@ -16,6 +17,11 @@ echo
 echo
 echo 'COVERAGE:'
 python3-coverage report -m --fail-under=100 || fail 'INCOMPLETE COVERAGE'
+
+echo
+echo
+echo 'Running DOC tests...'
+python3 -m unittest test.docs || fail 'DOC TEST FAILURES'
 
 echo
 echo
