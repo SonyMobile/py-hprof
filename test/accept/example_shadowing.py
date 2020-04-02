@@ -40,3 +40,5 @@ class TestShadowing(object):
 					pass # TODO:
 					#with self.assertRaisesRegex(AttributeError, 'non-static'):
 					#	cls.val
+
+	# TODO: test casting.
