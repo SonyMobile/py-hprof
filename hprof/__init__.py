@@ -40,6 +40,8 @@ Vehicle[5] {<com.example.cars.Car 0x...>, <com.example...}
 <com.example.cars.Car 0x...>
 >>> print(carex.vehicles[0]) # doctest: +ELLIPSIS
 Car@...
+>>> print(carex.vehicles[0].make)
+Lolvo
 '''
 
 import enum as _enum
