@@ -1,6 +1,11 @@
 # Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
+'''
+This module contains code for handling some Java classes in specific ways, e.g.
+making str() return the actual text of a java.lang.String.
+'''
+
 import codecs
 
 def _jstr_to_str(self):
@@ -47,6 +52,7 @@ def _jstr_to_str(self):
 
 def _wrap_with_fallback(old, new):
 	def fallback_wrapper(*args, **kwargs):
+		''' calls the replacement function; if it fails, calls the original. '''
 		try:
 			return new(*args, **kwargs)
 		except Exception: # pylint: disable=broad-except
@@ -56,6 +62,7 @@ def _wrap_with_fallback(old, new):
 	return fallback_wrapper
 
 def add(hprof_file, clsname, method_name, func):
+	''' add a special function onto a class. '''
 	for heap in hprof_file.heaps:
 		for cls in heap.classes.get(clsname, ()):
 			old = getattr(cls, method_name, None)
@@ -63,4 +70,5 @@ def add(hprof_file, clsname, method_name, func):
 			setattr(cls, method_name, wrapper)
 
 def setup_builtins(hf):
+	''' setup all special case builtins. '''
 	add(hf, 'java.lang.String', '__str__', _jstr_to_str)

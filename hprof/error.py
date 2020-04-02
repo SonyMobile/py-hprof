@@ -4,8 +4,18 @@
 
 # pylint: disable=multiple-statements
 
-class HprofError(Exception): pass
-class FormatError(HprofError): pass
-class UnexpectedEof(HprofError): pass
-class UnhandledError(HprofError): pass
-class MissingObject(HprofError): pass
+'''
+Various errors that hprof may raise.
+'''
+
+class HprofError(Exception):
+	''' Base class of all errors from the hprof library '''
+class FormatError(HprofError):
+	''' Raised when we could not make sense of the file data. '''
+class UnexpectedEof(HprofError):
+	''' Raised when the file data ended at an unexpected point. '''
+class UnhandledError(HprofError):
+	''' Raised for any unexpected error that hprof encounters. '''
+class MissingObject(HprofError):
+	''' Raised when a referenced object could not be found. '''
+

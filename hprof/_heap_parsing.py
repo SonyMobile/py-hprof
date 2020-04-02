@@ -2,10 +2,16 @@
 # Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
+'''
+Parses the content of hprof files' heap dump records.
+'''
+
 from . import jtype, heap as hprof_heap
 from .error import FormatError, MissingObject, UnexpectedEof
 
 class DeferredRef(int):
+	''' Used to seperate int values from ref values that should be resolved when
+	the heap is complete. Not expected to be used by outsiders. '''
 	__slots__ = ()
 
 RECORD_PARSERS = {}
@@ -28,6 +34,7 @@ RECORD_PARSERS[0x8e] = lambda f, h, r: (r.id(), r.u4(), r.u4())
 RECORD_PARSERS[0xfe] = lambda f, h, r: (r.u4(), r.id())
 
 def parse_class(hf, heap, reader):
+	''' Reads in one class instance, adds it to the heap. '''
 	objid   = reader.id()
 	_       = reader.u4() # stacktrace id
 	superid = reader.id()
@@ -81,6 +88,8 @@ def parse_class(hf, heap, reader):
 			return
 
 	def create(objid, cname, supercls, staticattrs, iattr_names, iattr_types):
+		''' Creates a class instance. There may be deferred classes waiting for
+		this one; create those too. '''
 		clsname, cls = hprof_heap._create_class(heap.classtree, cname, supercls, staticattrs, iattr_names, iattr_types)
 		heap._instances[cls] = []
 		if clsname not in heap.classes:
@@ -96,6 +105,7 @@ def parse_class(hf, heap, reader):
 RECORD_PARSERS[0x20] = parse_class
 
 def parse_instance(hf, heap, reader):
+	''' Reads in one object instance, adds it to the queue. '''
 	del hf # unused
 	objid = reader.id()
 	strace = reader.u4()
@@ -106,6 +116,7 @@ def parse_instance(hf, heap, reader):
 RECORD_PARSERS[0x21] = parse_instance
 
 def create_instances(heap, idsize, progress):
+	''' Creates all the queued object instances, adds them to the heap. '''
 	from ._parsing import PrimitiveReader
 	until_report = 0
 	for ix, (objid, _, clsid, raw_attrs) in enumerate(heap._deferred_objects):
@@ -131,6 +142,7 @@ def create_instances(heap, idsize, progress):
 	heap._deferred_objects.clear()
 
 def parse_object_array(hf, heap, reader):
+	''' Reads in one object array, adds it to the queue. '''
 	del hf # unused
 	objid = reader.id()
 	strace = reader.u4()
@@ -141,6 +153,7 @@ def parse_object_array(hf, heap, reader):
 RECORD_PARSERS[0x22] = parse_object_array
 
 def create_objarrays(heap, progress):
+	''' Creates all the queued object arrays, adds them to the heap. '''
 	until_report = 0
 	for ix, (objid, _, clsid, elems) in enumerate(heap._deferred_objarrays):
 		if until_report == 0:
@@ -154,6 +167,7 @@ def create_objarrays(heap, progress):
 	heap._deferred_objarrays.clear()
 
 def parse_primitive_array(hf, heap, reader):
+	''' Reads in one primitive array, adds it to the queue. '''
 	del hf # unused
 	objid  = reader.id()
 	strace = reader.u4()
@@ -165,6 +179,7 @@ def parse_primitive_array(hf, heap, reader):
 RECORD_PARSERS[0x23] = parse_primitive_array
 
 def create_primarrays(heap, progress):
+	''' Creates all the queued primitive arrays, adds them to the heap. '''
 	until_report = 0
 	for ix, (objid, _, data) in enumerate(heap._deferred_primarrays):
 		if until_report == 0:
@@ -184,6 +199,7 @@ def create_primarrays(heap, progress):
 	heap._deferred_primarrays.clear()
 
 def parse_heap(hf, heap, reader, progresscb):
+	''' parse a heap dump or heap dump segment '''
 	lastreport = 0
 	while True:
 		try:
@@ -201,7 +217,9 @@ def parse_heap(hf, heap, reader, progresscb):
 		parser(hf, heap, reader)
 
 def resolve_heap_references(heap, progresscb):
+	''' Concretize all heap references from addresses to actual object refs. '''
 	def lookup(addr):
+		''' return the object at addr, or None if addr is 0. '''
 		if not addr:
 			return None
 		try:

@@ -14,6 +14,7 @@ def setup(test):
 	if hf is None:
 		hf = hprof.open('testdata/example-java.hprof.bz2')
 	test.globs['hf'] = hf
+	test.globs['heap'], = hf.heaps
 
 @atexit.register
 def cleanup():
@@ -31,5 +32,9 @@ def modules(m, seen):
 
 def load_tests(loader, tests, ignore):
 	for module in modules(hprof, set()):
-		tests.addTests(doctest.DocTestSuite(module, setUp=setup))
+		tests.addTests(doctest.DocTestSuite(
+			module,
+			setUp=setup,
+			optionflags=doctest.ELLIPSIS
+		))
 	return tests

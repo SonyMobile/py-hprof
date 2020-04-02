@@ -2,11 +2,50 @@
 # Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
+'''
+Classes and functions implementing a Java-like object model.
+'''
+
 import re as _re
 
 _NAMESPLIT = _re.compile(r'\.|/')
 
 class Heap(dict):
+	''' A heap dump from an hprof file. An hprof file can technically contain
+	several of these, but they usually don't.
+
+	>>> heap, = hf.heaps
+	>>> print(len(heap), 'objects')
+	24465 objects
+
+	If you happen to know the id of an object, you can get at it very quickly:
+
+	>>> print(heap[0xce7e8000].make)
+	Fånark
+
+	Otherwise, you can find instances by class:
+
+	>>> bikes = list(heap.exact_instances('com.example.cars.Bike'))
+	>>> mine = bikes[0]
+	>>> print(mine)
+	Bike@ce7e8000
+	>>> print(mine.make)
+	Fånark
+	>>> print(mine.make.value) # the String's backing byte array
+	byte[6] {70, -27, 110, 97, 114, 107}
+
+	Note that a Java heap may contain multiple classes with the same name -- one
+	is allowed in each class loader. Therefore, `heap.classes` map class names
+	to a list of classes:
+
+	>>> heap.classes[heap.classtree.com.example.cars.Bike]
+	[<JavaClass 'com.example.cars.Bike'>]
+
+	Members:
+	classes -- a dict mapping java class names to class instance lists.
+	classtree -- a JavaHierarchy object, allowing tab completion of class names
+	'''
+
 	def __init__(self):
 		super().__init__()
 		self.classes = dict() # JavaClassName -> [JavaClass, ...]
@@ -24,7 +63,19 @@ class Heap(dict):
 			yield from self.classes[cls_or_name]
 
 	def exact_instances(self, cls_or_name):
-		''' returns an iterable over all objects of exactly this class. '''
+		''' returns an iterable over all objects of exactly this class.
+
+		The argument may be a class instance:
+
+		>>> car_cls, = heap.classes['com.example.cars.Car']
+		>>> list(heap.exact_instances(car_cls))
+		[<com.example.cars.Car 0x...>, <com.example.cars.Car 0x...>]
+
+		...or a fully qualified class name:
+
+		>>> list(heap.exact_instances('com.example.cars.Car'))
+		[<com.example.cars.Car 0x...>, <com.example.cars.Car 0x...>]
+		'''
 		for cls in self._classes(cls_or_name):
 			if cls in self.classes.get('java.lang.Class', ()):
 				for lst in self.classes.values():
@@ -32,16 +83,60 @@ class Heap(dict):
 			yield from self._instances[cls]
 
 	def all_instances(self, cls_or_name):
-		''' returns an iterable over all objects of this class or any of its subclasses. '''
+		''' returns an iterable over all objects of this class or any of its subclasses.
+
+		The argument may be a class instance:
+
+		>>> car_cls, = heap.classes['com.example.cars.Car']
+		>>> list(heap.all_instances(car_cls))
+		[<com.example.cars.Car 0x...>, <com.example.cars.Car 0x...>, <com.example.cars.Limo 0x...>]
+
+		...or a fully qualified class name:
+
+		>>> list(heap.all_instances('com.example.cars.Car'))
+		[<com.example.cars.Car 0x...>, <com.example.cars.Car 0x...>, <com.example.cars.Limo 0x...>]
+		'''
 		for cls in self._classes(cls_or_name):
 			yield from self.exact_instances(cls)
 			for subcls in cls.__subclasses__():
 				yield from self.all_instances(subcls)
 
 class JavaHierarchy(object):
+	''' Accessible as Heap.classtree. Allows tab completion of class names.
+
+	>>> heap.classtree.com.example.cars.Bike
+	<JavaClassName 'com.example.cars.Bike'>
+	'''
 	pass
 
 class Ref(object):
+	''' A reference to an object, where the reference type is different from the
+	object type.
+
+	>>> supercls, = heap.classes['com.example.ShadowI']
+	>>> subcls,   = heap.classes['com.example.ShadowII']
+	>>> issubclass(subcls, supercls)
+	True
+
+	ShadowI declares a field 'val', initialized to 4. ShadowII shadows 'val'
+	with its own declaration, initializing it to 5.
+
+	>>> a, = heap.exact_instances(supercls)
+	>>> b, = heap.exact_instances(subcls)
+	>>> a.val
+	4
+	>>> b.val
+	5
+
+	By casting b to its superclass, we can access the shadowed field.
+
+	>>> b = cast(b, supercls)
+	>>> b
+	<Ref of type com.example.ShadowI to com.example.ShadowII 0x...>
+	>>> b.val
+	4
+
+	'''
 	__slots__ = ('_target', '_reftype')
 
 	def __new__(cls, target, reftype):
@@ -88,10 +183,13 @@ class Ref(object):
 
 
 def cast(obj, desired=None):
+	''' A perhaps more reader-friendly way of saying Ref(obj, desired). '''
 	return Ref(obj, desired)
 
 
 class JavaClassContainer(object):
+	''' Common ancestor of JavaPackage and JavaClassName. '''
+
 	__slots__ = ('_name')
 
 	def __init__(self, name):
@@ -107,20 +205,25 @@ class JavaClassContainer(object):
 		return self is other or self._name == str(other)
 
 class JavaPackage(JavaClassContainer):
-	''' a Java package, containing JavaClassName objects '''
+	''' a Java package, containing JavaPackage and JavaClassName objects '''
 	def __repr__(self):
 		return "<JavaPackage '%s'>" % self
 
 
 class JavaClassName(JavaClassContainer):
 	''' a Java class name that can be used to look up JavaClass objects.
-	    May contain nested JavaClassName objects. '''
+	    May contain nested JavaClassName objects.
+
+	    These can be used anywhere class names are accepted.
+	    '''
 
 	def __repr__(self):
 		return "<JavaClassName '%s'>" % self
 
 
 class JavaObject(object):
+	''' Base class for all Java objects that are not classes. '''
+
 	__slots__ = (
 		'_hprof_id',       # object id
 	)
@@ -181,6 +284,8 @@ class JavaObject(object):
 
 
 class JavaArray(JavaObject):
+	''' Base class for all Java arrays. '''
+
 	# _hprof_array_data is not in the slots here because it creates layout
 	# conflicts with multiple bases; it will exist, I promise.
 	# pylint: disable=assigning-non-slot
@@ -222,6 +327,8 @@ class JavaArray(JavaObject):
 		return '<%s 0x%x>' % (typename, JavaObject._hprof_id.__get__(self))
 
 class JavaClass(type):
+	''' Base class for all Java classes. '''
+
 	__slots__ = ()
 
 	def __new__(mcs, name, supercls, static_attrs, iattr_names, iattr_types):
@@ -288,6 +395,7 @@ class _DeferredArrayData(object):
 		self.bytes = raw_bytes
 
 	def toarray(self):
+		''' concretize to a real array '''
 		from . import jtype
 		if self.jtype is jtype.char:
 			import codecs
@@ -306,6 +414,7 @@ class _DeferredArrayData(object):
 			return struct.unpack(fmt, self.bytes)
 
 class JavaArrayClass(JavaClass):
+	''' Base class for all Java array classes. '''
 	__slots__ = ()
 
 

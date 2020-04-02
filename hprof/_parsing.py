@@ -2,6 +2,10 @@
 # Copyright (C) 2020 Sony Mobile Communications Inc.
 # Licensed under the LICENSE.
 
+'''
+Parses hprof files' main record stream.
+'''
+
 import struct
 import codecs
 import gc
@@ -15,6 +19,10 @@ from . import jtype
 from . import _special_cases
 
 class HprofFile(object):
+	''' Your hprof file. Must stay open as long as you have references to any
+	heaps or heap objects, or you may get nasty BufferErrors.
+	'''
+
 	def __init__(self):
 		self._context = None
 		self.unhandled = {} # record tag -> count
@@ -40,12 +48,16 @@ class HprofFile(object):
 			return ctx.__exit__(exc_type, exc_val, tb)
 
 	def close(self):
+		''' Close the file. '''
 		self.__exit__(None, None, None)
 
 	def __del__(self):
 		self.close()
 
 class ClassLoad(object):
+	''' A record detailing parameters of a loaded class. Not to be confused with
+	a class instance, which can be found in the heap dump using class_id. '''
+
 	__slots__ = ('class_id', 'class_name', 'stacktrace')
 
 	def __init__(self, clsid, clsname, strace):
@@ -66,6 +78,15 @@ class ClassLoad(object):
 
 
 def open(path, progress_callback=None): # pylint: disable=redefined-builtin
+	''' Open an hprof file.
+
+	Accepts .bz2, .gz, and .xz compressed hprof files for your convenience.
+
+	progress_callback, if supplied, will be called periodically with three
+	parameters: (label, done, total). `label` is a string describing the current
+	action. `done` and `total` are ints describing the progress of that action.
+	`done` and `total` may be `None`.
+	'''
 	hf = HprofFile()
 	hf._context = _open_cm(hf, path, progress_callback)
 	hf._context.__enter__()
@@ -97,6 +118,7 @@ def _open_cm(hf, path, progress_callback):
 				yield hf
 
 def parse(data, progress_callback=None):
+	''' Like `open()`, but when you already have the data in memory. '''
 	hf = HprofFile()
 	hf._context = _parse_cm(hf, data, progress_callback)
 	hf._context.__enter__()
@@ -171,6 +193,15 @@ def _parse_cm(hf, data, progress_callback):
 
 
 def hprof_mutf8_error_handler(err):
+	''' Java VMs are fond of their "modified UTF-8" string encoding. Most
+	notably, the largest code points are double-encoded. It's super annoying.
+
+	https://source.android.com/devices/tech/dalvik/dex-format#mutf-8
+
+	This error handler fixes up the parts of the decoding process that python's
+	standard utf-8 decoder can't handle.
+	'''
+
 	obj = err.object
 	ix = err.start
 	if obj[ix:ix+2] == b'\xc0\x80':
@@ -197,6 +228,11 @@ codecs.register_error('hprof-mutf8', hprof_mutf8_error_handler)
 
 
 class PrimitiveReader(object):
+	''' Supports linear reads of various types.
+
+	One source of complications is that different hprof files may use different
+	byte counts for the "id" type, which is used for e.g. object references.
+	'''
 	def __init__(self, input_bytes, idsize):
 		self._bytes = input_bytes
 		self._pos = 0
@@ -216,6 +252,7 @@ class PrimitiveReader(object):
 
 	@property
 	def remaining(self):
+		''' How many bytes are left to read? '''
 		return len(self._bytes) - self._pos
 
 	def bytes(self, nbytes):
@@ -268,6 +305,7 @@ class PrimitiveReader(object):
 		return out
 
 	def u1(self): # pylint: disable=invalid-name
+		''' Read an unsigned 8-bit value. '''
 		try:
 			out = self._bytes[self._pos]
 		except IndexError as e:
@@ -276,6 +314,7 @@ class PrimitiveReader(object):
 		return out
 
 	def u2(self): # pylint: disable=invalid-name
+		''' Read an unsigned 16-bit value. '''
 		bs = self._bytes
 		pos = self._pos
 		try:
@@ -287,6 +326,7 @@ class PrimitiveReader(object):
 		return out
 
 	def u4(self): # pylint: disable=invalid-name
+		''' Read an unsigned 32-bit value. '''
 		bs = self._bytes
 		pos = self._pos
 		try:
@@ -300,6 +340,7 @@ class PrimitiveReader(object):
 		return out
 
 	def u8(self): # pylint: disable=invalid-name
+		''' Read an unsigned 64-bit value. '''
 		bs = self._bytes
 		pos = self._pos
 		try:
@@ -317,6 +358,7 @@ class PrimitiveReader(object):
 		return out
 
 	def i1(self): # pylint: disable=invalid-name
+		''' Read a signed 8-bit value. '''
 		try:
 			out = (self._bytes[self._pos] ^ 0x80) - 0x80
 		except IndexError as e:
@@ -325,6 +367,7 @@ class PrimitiveReader(object):
 		return out
 
 	def i2(self): # pylint: disable=invalid-name
+		''' Read a signed 16-bit value. '''
 		bs = self._bytes
 		pos = self._pos
 		try:
@@ -337,6 +380,7 @@ class PrimitiveReader(object):
 		return out
 
 	def i4(self): # pylint: disable=invalid-name
+		''' Read a signed 32-bit value. '''
 		bs = self._bytes
 		pos = self._pos
 		try:
@@ -351,6 +395,7 @@ class PrimitiveReader(object):
 		return out
 
 	def i8(self): # pylint: disable=invalid-name
+		''' Read a signed 64-bit value. '''
 		bs = self._bytes
 		pos = self._pos
 		try:
@@ -369,6 +414,7 @@ class PrimitiveReader(object):
 		return out
 
 	def jtype(self):
+		''' Read a `hprof.jtype` value, as in "which type?". '''
 		typeval = self.u1()
 		try:
 			return jtype(typeval)
@@ -376,16 +422,20 @@ class PrimitiveReader(object):
 			raise FormatError() from e
 
 	def jboolean(self):
+		''' Read a java boolean value. '''
 		return self.u1() != 0
 
 	def jchar(self):
+		''' Read a java (16-bit) char value. Almost utf16. '''
 		return codecs.decode(self.bytes(2), 'utf-16-be', 'surrogatepass')
 
 	def jfloat(self):
+		''' Read a java float value. '''
 		v, = struct.unpack('>f', self.bytes(4))
 		return v
 
 	def jdouble(self):
+		''' Read a java double value. '''
 		v, = struct.unpack('>d', self.bytes(8))
 		return v
 
@@ -419,6 +469,11 @@ jtype.long.packfmt = 'q'
 RECORD_PARSERS = {}
 
 def parse_name_record(hf, reader, progresscb):
+	''' Parse an hprof name record.
+
+	These will be referenced in various other records for things like class,
+	field, and method names.
+	'''
 	del progresscb # unused
 	nameid = reader.id()
 	name = reader.utf8(reader.remaining)
@@ -428,6 +483,7 @@ def parse_name_record(hf, reader, progresscb):
 RECORD_PARSERS[0x01] = parse_name_record
 
 def parse_class_load_record(hf, reader, progresscb):
+	''' See `ClassLoad`. '''
 	del progresscb # unused
 	serial = reader.u4()
 	clsid  = reader.id()
@@ -449,6 +505,7 @@ def parse_class_load_record(hf, reader, progresscb):
 RECORD_PARSERS[0x02] = parse_class_load_record
 
 def parse_stack_frame_record(hf, reader, progresscb):
+	''' Parse information about a single stack frame. '''
 	del progresscb # unused
 	frame = callstack.Frame()
 	fid = reader.id()
@@ -463,6 +520,7 @@ def parse_stack_frame_record(hf, reader, progresscb):
 RECORD_PARSERS[0x04] = parse_stack_frame_record
 
 def parse_stack_trace_record(hf, reader, progresscb):
+	''' Parse information about a stack trace. '''
 	del progresscb # unused
 	trace = callstack.Trace()
 	serial = reader.u4()
@@ -480,6 +538,7 @@ def parse_stack_trace_record(hf, reader, progresscb):
 RECORD_PARSERS[0x05] = parse_stack_trace_record
 
 def parse_heap_record(hf, reader, progresscb):
+	''' Parse a heap dump record. This is what gives us heaps to inspect. '''
 	if hf._pending_heap is not None:
 		raise FormatError('found non-segmented heap, but have unfinished segmented heap')
 	parse_heap_record_segment(hf, reader, progresscb)
@@ -487,6 +546,9 @@ def parse_heap_record(hf, reader, progresscb):
 RECORD_PARSERS[0x0c] = parse_heap_record
 
 def parse_heap_record_segment(hf, reader, progresscb):
+	''' Like `parse_heap_record()`, but when the heap is segmented across
+	multiple records.
+	'''
 	from . import _heap_parsing
 	if hf._pending_heap is None:
 		hf._pending_heap = Heap()
@@ -494,6 +556,7 @@ def parse_heap_record_segment(hf, reader, progresscb):
 RECORD_PARSERS[0x1c] = parse_heap_record_segment
 
 def parse_heap_record_seg_end(hf, reader, progresscb):
+	''' Ends a segmented heap. '''
 	del reader, progresscb # unused
 	if hf._pending_heap is None:
 		raise FormatError('no pending heap to end')
@@ -521,6 +584,7 @@ def _parse_hprof(hf, mview, progresscb):
 	reader.u8() # timestamp; ignore.
 	lastreport = -1<<32
 	def innerprogress(pos):
+		''' progress helper sent to record parsers '''
 		progresscb('parsing', innerprogress.base + pos, len(mview))
 	if not progresscb:
 		innerprogress = None
@@ -556,6 +620,7 @@ def _instantiate(hf, idsize, progresscb):
 			raise FormatError('some class dumps never found their super class', heap._deferred_classes)
 
 		def remaining():
+			''' how many objects are left to instantiate? '''
 			# pylint: disable=cell-var-from-loop
 			return (
 				len(heap._deferred_objects)
@@ -566,10 +631,12 @@ def _instantiate(hf, idsize, progresscb):
 		label = 'instantiating heap %d/%d' % (heapix, len(hf.heaps))
 		if progresscb:
 			def localprogress(n):
+				''' progress helper '''
 				# pylint: disable=cell-var-from-loop
 				progresscb(label, done + n, total)
 		else:
 			def localprogress(n):
+				''' dummy progress callback '''
 				del n # unused
 
 		done = 0
@@ -600,6 +667,7 @@ def _resolve_references(hf, progresscb):
 		n = len(heap)
 		label = 'resolving heap %d/%d' % (heapix, len(hf.heaps))
 		def innerprogress(pos):
+			''' progress helper '''
 			# pylint: disable=cell-var-from-loop
 			progresscb(label, pos, n)
 		if not progresscb:
