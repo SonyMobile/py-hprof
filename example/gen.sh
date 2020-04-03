@@ -8,7 +8,7 @@ DATADIR='../testdata'
 APROF=$DATADIR/example-android.hprof
 JPROF=$DATADIR/example-java.hprof
 
-find . -name '*.class' | xargs rm -f
+find . -name '*.class' -print0 | xargs -0 rm -f
 javac Main.java
 
 # generate JVM hprof
