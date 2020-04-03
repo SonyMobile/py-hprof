@@ -25,6 +25,12 @@ python3 -m unittest test.docs || fail 'DOC TEST FAILURES'
 
 echo
 echo
+echo 'Running PYLINT...'
+pylint3 -rn hprof || fail 'PYLINT FAILURES'
+echo 'OK'
+
+echo
+echo
 echo 'Running ACCEPTANCE tests...'
 python3 _run_acceptance.py "$@" || fail 'ACCEPTANCE TEST FAILURES'
 
