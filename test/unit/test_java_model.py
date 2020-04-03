@@ -713,3 +713,16 @@ class TestAndroidClass(CommonClassTests, unittest.TestCase):
 			'Car':    'char[]', 'Carar':    'char[][]', 'Cararar':    'char[][][]',
 		}
 		super().setUp()
+
+	def test_dollar_prefix_class_name(self):
+		for clsname in ('java.reflect.$Proxy2', '$Proxy3'):
+			with self.subTest(clsname):
+				outname, proxy_class = heap._create_class(self, clsname, self.obj, {'I_AM_A_PROXY': True}, ('proxied',), (jtype.object,))
+				self.assertTrue(issubclass(proxy_class, self.obj))
+				self.assertFalse(issubclass(self.obj, proxy_class))
+				self.assertEqual(outname, clsname)
+				self.assertIs(proxy_class.I_AM_A_PROXY, True)
+		self.assertIsInstance(self.java, heap.JavaPackage)
+		self.assertIsInstance(self.java.reflect, heap.JavaPackage)
+		self.assertIsInstance(getattr(self.java.reflect, '$Proxy2'), heap.JavaClassName)
+		self.assertIsInstance(getattr(self, '$Proxy3'), heap.JavaClassName)

@@ -505,7 +505,10 @@ def _create_class(container, name, supercls, staticattrs, iattr_names, iattr_typ
 
 	name = name.split('/')
 	container = _get_or_create_container(container, name[:-1], JavaPackage)
-	name = name[-1].split('$')
+	if name[-1].startswith('$'):
+		name = name[-1:]
+	else:
+		name = name[-1].split('$')
 	if extra:
 		name[-1] += extra
 	name[-1] += nests * '[]'
