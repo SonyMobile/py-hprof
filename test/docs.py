@@ -37,4 +37,9 @@ def load_tests(loader, tests, ignore):
 			setUp=setup,
 			optionflags=doctest.ELLIPSIS
 		))
+	tests.addTests(doctest.DocFileSuite(
+		'../README.md',
+		setUp=setup,
+		optionflags=doctest.ELLIPSIS
+	))
 	return tests
