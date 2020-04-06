@@ -269,11 +269,7 @@ a[name] {
 				gen = Generator('The hprof library', 'hprof', hprof)
 
 				gen.labels[hprof.heap] = 'Java Heap Model'
-				#gen.labels[hprof.record] = 'Records'
 				gen.order[hprof] = (
 					hprof.open, hprof.parse,
 				)
-				#gen.order[hprof.HprofFile] = (
-				#	hprof.HprofFile.records, hprof.HprofFile.dumps, hprof.HprofFile.close,
-				#)
 				gen.generate()
