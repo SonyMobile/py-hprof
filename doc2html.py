@@ -208,7 +208,7 @@ if __name__ == '__main__':
 				print('''
 body {
 	font-family: sans-serif;
-	background-color: #666666;
+	background-color: #444466;
 	color: #ffffff;
 }
 
@@ -221,13 +221,19 @@ div#content {
 	padding: 0.1em;
 	padding-left: 1em;
 	padding-right: 1em;
-	background-color: #fcfcfc;
+	background-color: #ffffff;
 	margin-bottom: 1em;
 	color: #222222;
 }
 
+.docstr {
+	padding-left: 2em;
+	padding-right: 2em;
+}
+
 h3, h4 {
 	background-color: #eeeeee;
+	border-bottom: 1px solid #6666ff;
 	margin-bottom: 0;
 }
 
@@ -254,7 +260,8 @@ h3, h4 {
 }
 
 pre {
-	color: #333333;
+	color: #333366;
+	background-color: #ffffdd
 }
 
 a[name] {
