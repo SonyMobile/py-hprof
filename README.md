@@ -53,6 +53,12 @@ Accessing a field, printing a `java.lang.String`:
 
 ## Limitations
 
+### Supports heap dumps only
+
+At least for now.
+
+.hprof files are quite versatile, with many different record types. The `hprof` library currently supports only the records that were needed to support heap dump analysis.
+
 ### Reference types
 
 .hprof files don't contain information about the declared type of object references. Hence, there is no way to tell the difference between `a` and `b` in this case:
@@ -81,6 +87,20 @@ Our model of the Java class hierarchy breaks down at the top where `java.lang.Ob
 There are some special cases in functions like `isinstance()` that try to patch this up, but there will probably be holes remaining.
 
 This should not be a problem for most use cases, but may be good to know if you're doing really advanced stuff.
+
+### High memory usage
+
+The `hprof` library instantiates all heap objects when you open your file. This makes the implementation a little simpler, and explicitly ensures that all heap references are valid at load time, so that you won't have nasty surprises later.
+
+This can be quite memory intensive, especially when working with large .hprof files.
+
+### Callstacks not supported (yet?)
+
+.hprof files may contain various callstacks, perhaps most interestingly allocation callstacks. The `hprof` library currently skips over them while parsing.
+
+### Does not expose all heap dump information (yet?)
+
+The `hprof` library does not expose all information available in the heap dumps. If your tool needs something, feel free to contribute to the library!
 
 ## Contributions
 
