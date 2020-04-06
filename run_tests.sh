@@ -31,6 +31,12 @@ echo 'OK'
 
 echo
 echo
+echo 'Running DOC GENERATION...'
+./doc2html.py > hprof.html || fail 'DOC GENERATION FAILED'
+echo 'OK'
+
+echo
+echo
 echo 'Running ACCEPTANCE tests...'
 python3 _run_acceptance.py "$@" || fail 'ACCEPTANCE TEST FAILURES'
 
