@@ -106,10 +106,10 @@ The `hprof` library does not expose all information available in the heap dumps.
 
 Contributions of all kinds are welcome!
 
-Please see [CONTRIBUTING.md] for details.
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Credits
 
 Originally written by Snild Dolkow at Sony Mobile Communications Inc.
 
-Please see [AUTHORS] and the git log for other contributors and detailed history.
+Please see [AUTHORS](AUTHORS) and the git log for other contributors and detailed history.
