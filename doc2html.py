@@ -130,6 +130,8 @@ class Generator(object):
 				typeorder = 1
 			elif inspect.isclass(member):
 				typeorder = 2
+			elif inspect.ismodule(member):
+				typeorder = 3
 			try:
 				return (order.index(member), typeorder, name)
 			except ValueError:
