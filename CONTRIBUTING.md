@@ -2,7 +2,7 @@
 Contributions in all forms are welcome!
 
 ## Reporting bugs and suggesting features
-Submit a bug report on the [issue tracker](https://github.com/dolkow/py-hprof/issues).
+Submit a bug report on the [issue tracker](https://github.com/SonyMobile/py-hprof/issues).
 
 When reporting a bug, please include:
 * your library version (available as `hprof.version`)
