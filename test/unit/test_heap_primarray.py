@@ -5,6 +5,8 @@
 import unittest
 import hprof
 
+from hprof._parsing import jtype
+
 from unittest.mock import MagicMock
 
 from .util import varyingid, HeapRecordTest
@@ -27,7 +29,7 @@ class TestPrimitiveArray(HeapRecordTest):
 		self.assertEqual(objid, self.id(0x0b1ec7))
 		self.assertEqual(strace, 0x57acc)
 		self.assertIs(type(adata), hprof.heap._DeferredArrayData)
-		self.assertIs(adata.jtype, hprof.jtype.boolean)
+		self.assertIs(adata.jtype, jtype.boolean)
 		self.assertEqual(adata.bytes, b'')
 
 	def test_one(self):
@@ -48,7 +50,7 @@ class TestPrimitiveArray(HeapRecordTest):
 		self.assertEqual(objid, self.id(0x0b1ec72))
 		self.assertEqual(strace, 0x57acc)
 		self.assertIs(type(adata), hprof.heap._DeferredArrayData)
-		self.assertIs(adata.jtype, hprof.jtype.short)
+		self.assertIs(adata.jtype, jtype.short)
 		self.assertEqual(adata.bytes, b'\xbe\xa7')
 
 	def test_three(self):
@@ -66,14 +68,14 @@ class TestPrimitiveArray(HeapRecordTest):
 		objid, strace, adata = self.heap._deferred_primarrays[0]
 		self.assertEqual(objid, self.id(0x0b1ec72))
 		self.assertIs(type(adata), hprof.heap._DeferredArrayData)
-		self.assertIs(adata.jtype, hprof.jtype.short)
+		self.assertIs(adata.jtype, jtype.short)
 		self.assertEqual(adata.bytes, b'\x50\x40\xbe\xa7\x66\x77')
 
 	def test_create_primarrays(self):
 		fakes = (
-			(1, 20, hprof.heap._DeferredArrayData(hprof.jtype.short, b'\x50\x40\xbe\xa7\x66\x77')),
-			(5, 20, hprof.heap._DeferredArrayData(hprof.jtype.boolean, b'\x01')),
-			(3, 10, hprof.heap._DeferredArrayData(hprof.jtype.short, b'')),
+			(1, 20, hprof.heap._DeferredArrayData(jtype.short, b'\x50\x40\xbe\xa7\x66\x77')),
+			(5, 20, hprof.heap._DeferredArrayData(jtype.boolean, b'\x01')),
+			(3, 10, hprof.heap._DeferredArrayData(jtype.short, b'')),
 		)
 		out1 = MagicMock()
 		out2 = MagicMock()

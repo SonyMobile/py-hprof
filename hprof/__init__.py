@@ -44,28 +44,6 @@ Car@...
 Lolvo
 '''
 
-import enum as _enum
-
-# pylint: disable=wrong-import-position
-class JavaType(_enum.Enum):
-	''' The various variable types supported by hprof files.
-
-	Note that the format makes no distinction between different object reference
-	types. This means that it's impossible to know the declared type of a
-	non-primitive variable.
-	'''
-
-	object = 2
-	boolean = 4
-	char = 5
-	float = 6
-	double = 7
-	byte = 8
-	short = 9
-	int = 10
-	long = 11
-jtype = JavaType # pylint: disable=invalid-name
-
 from . import error
 from ._parsing import open, parse # pylint: disable=redefined-builtin
 from .heap import cast

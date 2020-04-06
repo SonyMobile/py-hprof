@@ -5,6 +5,8 @@
 import unittest
 import hprof
 
+from hprof._parsing import jtype
+
 from unittest.mock import patch
 
 from .util import varyingid, HeapRecordTest
@@ -109,7 +111,7 @@ class TestHeapClass(HeapRecordTest):
 		self.assertIs(   mock.call_args[0][2], obj)
 		self.assertEqual(mock.call_args[0][3], {'foo': 70000})
 		self.assertEqual(mock.call_args[0][4], ('bar',))
-		self.assertEqual(mock.call_args[0][5], (hprof.jtype.int,))
+		self.assertEqual(mock.call_args[0][5], (jtype.int,))
 		self.assertEqual(mock.call_args[1], {})
 		cid = self.id(0x7e577e57)
 		self.assertIn(cid, self.heap)

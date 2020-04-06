@@ -270,7 +270,6 @@ a[name] {
 				#gen.labels[hprof.record] = 'Records'
 				gen.order[hprof] = (
 					hprof.open,
-					hprof.JavaType,
 					hprof.heap,
 					hprof.error,
 				)

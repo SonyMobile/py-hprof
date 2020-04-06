@@ -6,7 +6,8 @@
 Parses the content of hprof files' heap dump records.
 '''
 
-from . import jtype, heap as hprof_heap
+from . import heap as hprof_heap
+from ._parsing import jtype
 from .error import FormatError, MissingObject, UnexpectedEof
 
 class DeferredRef(int):

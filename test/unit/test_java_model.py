@@ -5,7 +5,8 @@
 import unittest
 
 import hprof
-from hprof import heap, jtype
+from hprof import heap
+from hprof._parsing import jtype
 
 class CommonClassTests(object):
 	def setUp(self):
@@ -387,7 +388,7 @@ class CommonClassTests(object):
 
 	def test_prim_array_deferred_bool(self):
 		_, acls = heap._create_class(self, self.names['Zar'], self.obj, {}, (), ())
-		data = hprof.heap._DeferredArrayData(hprof.jtype.boolean, b'\x23\x10\xff\x10\x00\x00\x21\x78')
+		data = hprof.heap._DeferredArrayData(jtype.boolean, b'\x23\x10\xff\x10\x00\x00\x21\x78')
 		arr = acls(1, data)
 
 		self.assertEqual(arr._hprof_id, 1)
@@ -408,7 +409,7 @@ class CommonClassTests(object):
 
 	def test_prim_array_deferred_char(self):
 		_, acls = heap._create_class(self, self.names['Car'], self.obj, {}, (), ())
-		data = hprof.heap._DeferredArrayData(hprof.jtype.char, b'\0\x57\0\xf6\0\x72\0\x6c\xd8\x01\xdc\x00\0\x21')
+		data = hprof.heap._DeferredArrayData(jtype.char, b'\0\x57\0\xf6\0\x72\0\x6c\xd8\x01\xdc\x00\0\x21')
 		arr = acls(2, data)
 
 		self.assertEqual(arr._hprof_id, 2)
@@ -428,7 +429,7 @@ class CommonClassTests(object):
 
 	def test_prim_array_deferred_byte(self):
 		_, acls = heap._create_class(self, self.names['Bar'], self.obj, {}, (), ())
-		data = hprof.heap._DeferredArrayData(hprof.jtype.byte, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84')
+		data = hprof.heap._DeferredArrayData(jtype.byte, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84')
 		arr = acls(4, data)
 
 		self.assertEqual(arr._hprof_id, 4)
@@ -450,7 +451,7 @@ class CommonClassTests(object):
 
 	def test_prim_array_deferred_short(self):
 		_, sacls = heap._create_class(self, self.names['Sar'], self.obj, {}, (), ())
-		data = hprof.heap._DeferredArrayData(hprof.jtype.short, b'\x23\x10\xff\x10\x00\x00\x21\x78')
+		data = hprof.heap._DeferredArrayData(jtype.short, b'\x23\x10\xff\x10\x00\x00\x21\x78')
 		sarr = sacls(8, data)
 
 		self.assertEqual(sarr._hprof_id, 8)
@@ -476,7 +477,7 @@ class CommonClassTests(object):
 
 	def test_prim_array_deferred_int(self):
 		_, acls = heap._create_class(self, self.names['Iar'], self.obj, {}, (), ())
-		data = hprof.heap._DeferredArrayData(hprof.jtype.int, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76')
+		data = hprof.heap._DeferredArrayData(jtype.int, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76')
 		arr = acls(16, data)
 
 		self.assertEqual(arr._hprof_id, 16)
@@ -492,7 +493,7 @@ class CommonClassTests(object):
 
 	def test_prim_array_deferred_long(self):
 		_, acls = heap._create_class(self, self.names['Jar'], self.obj, {}, (), ())
-		data = hprof.heap._DeferredArrayData(hprof.jtype.long, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76\x12\x34\x56\x78')
+		data = hprof.heap._DeferredArrayData(jtype.long, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76\x12\x34\x56\x78')
 		arr = acls(15, data)
 
 		self.assertEqual(arr._hprof_id, 15)
@@ -507,7 +508,7 @@ class CommonClassTests(object):
 
 	def test_prim_array_deferred_float(self):
 		_, acls = heap._create_class(self, self.names['Far'], self.obj, {}, (), ())
-		data = hprof.heap._DeferredArrayData(hprof.jtype.float, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76')
+		data = hprof.heap._DeferredArrayData(jtype.float, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76')
 		arr = acls(14, data)
 
 		self.assertEqual(arr._hprof_id, 14)
@@ -523,7 +524,7 @@ class CommonClassTests(object):
 
 	def test_prim_array_deferred_double(self):
 		_, acls = heap._create_class(self, self.names['Dar'], self.obj, {}, (), ())
-		data = hprof.heap._DeferredArrayData(hprof.jtype.double, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76\x12\x34\x56\x78')
+		data = hprof.heap._DeferredArrayData(jtype.double, b'\x23\x10\xff\x80\x00\x00\x7f\x78\x84\x25\x66\x76\x12\x34\x56\x78')
 		arr = acls(13, data)
 
 		self.assertEqual(arr._hprof_id, 13)

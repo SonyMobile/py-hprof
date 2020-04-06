@@ -396,7 +396,7 @@ class _DeferredArrayData(object):
 
 	def toarray(self):
 		''' concretize to a real array '''
-		from . import jtype
+		from ._parsing import jtype
 		if self.jtype is jtype.char:
 			import codecs
 			# Decode bytes pair-by-pair.

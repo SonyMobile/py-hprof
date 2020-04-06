@@ -4,6 +4,8 @@
 import unittest
 import hprof
 
+from hprof._parsing import jtype
+
 class TestPrimitiveReader(unittest.TestCase):
 
 	def setUp(self):
@@ -199,116 +201,116 @@ class TestPrimitiveReader(unittest.TestCase):
 
 	def test_jobject(self):
 		with self.assertRaises(AttributeError):
-			hprof.jtype.object.size # object/id is special. :(
+			jtype.object.size # object/id is special. :(
 		for idsize, expected in ((3, 0x030405), (4, 0x03040506), (5, 0x0304050607)):
 			for t in (bytes, memoryview):
 				with self.subTest(t, idsize=idsize):
 					r = hprof._parsing.PrimitiveReader(t(b'\2\3\4\5\6\7\10\11'), idsize)
-					self.assertIs(r.jtype(), hprof.jtype.object)
-					self.assertEqual(hprof.jtype.object.read(r), expected)
+					self.assertIs(r.jtype(), jtype.object)
+					self.assertEqual(jtype.object.read(r), expected)
 
 	def test_jboolean(self):
-		self.assertEqual(hprof.jtype.boolean.size, 1)
+		self.assertEqual(jtype.boolean.size, 1)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\4\1\0\2\0\3\4\xff'), None)
-				self.assertIs(r.jtype(), hprof.jtype.boolean)
-				self.assertIs(hprof.jtype.boolean.read(r), True)
-				self.assertIs(hprof.jtype.boolean.read(r), False)
-				self.assertIs(hprof.jtype.boolean.read(r), True)
-				self.assertIs(hprof.jtype.boolean.read(r), False)
-				self.assertIs(hprof.jtype.boolean.read(r), True)
-				self.assertIs(hprof.jtype.boolean.read(r), True)
-				self.assertIs(hprof.jtype.boolean.read(r), True)
+				self.assertIs(r.jtype(), jtype.boolean)
+				self.assertIs(jtype.boolean.read(r), True)
+				self.assertIs(jtype.boolean.read(r), False)
+				self.assertIs(jtype.boolean.read(r), True)
+				self.assertIs(jtype.boolean.read(r), False)
+				self.assertIs(jtype.boolean.read(r), True)
+				self.assertIs(jtype.boolean.read(r), True)
+				self.assertIs(jtype.boolean.read(r), True)
 				with self.assertRaises(hprof.error.UnexpectedEof):
-					hprof.jtype.boolean.read(r)
+					jtype.boolean.read(r)
 
 	def test_jchar(self):
-		self.assertEqual(hprof.jtype.char.size, 2)
+		self.assertEqual(jtype.char.size, 2)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\5\0\x20\0\x61\xd8\x3d\xdf\x1b\xee'), None)
-				self.assertIs(r.jtype(), hprof.jtype.char)
-				self.assertEqual(hprof.jtype.char.read(r), ' ')
-				self.assertEqual(hprof.jtype.char.read(r), 'a')
-				self.assertEqual(hprof.jtype.char.read(r), '\ud83d')
-				self.assertEqual(hprof.jtype.char.read(r), '\udf1b')
+				self.assertIs(r.jtype(), jtype.char)
+				self.assertEqual(jtype.char.read(r), ' ')
+				self.assertEqual(jtype.char.read(r), 'a')
+				self.assertEqual(jtype.char.read(r), '\ud83d')
+				self.assertEqual(jtype.char.read(r), '\udf1b')
 				with self.assertRaises(hprof.error.UnexpectedEof):
-					hprof.jtype.char.read(r)
+					jtype.char.read(r)
 
 	def test_jfloat(self):
-		self.assertEqual(hprof.jtype.float.size, 4)
+		self.assertEqual(jtype.float.size, 4)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\6\x3f\x80\x00\x00\x7f\x80\x00\x00\x41\xc0\x00\x40\xee'), None)
-				self.assertIs(r.jtype(), hprof.jtype.float)
-				self.assertEqual(hprof.jtype.float.read(r), 1.0)
-				self.assertEqual(hprof.jtype.float.read(r), float('inf'))
-				self.assertEqual(hprof.jtype.float.read(r), 24 + 1 / 8192)
+				self.assertIs(r.jtype(), jtype.float)
+				self.assertEqual(jtype.float.read(r), 1.0)
+				self.assertEqual(jtype.float.read(r), float('inf'))
+				self.assertEqual(jtype.float.read(r), 24 + 1 / 8192)
 				with self.assertRaises(hprof.error.UnexpectedEof):
-					hprof.jtype.float.read(r)
+					jtype.float.read(r)
 
 	def test_jdouble(self):
-		self.assertEqual(hprof.jtype.double.size, 8)
+		self.assertEqual(jtype.double.size, 8)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\7\x3f\xf0\x00\x00\x00\x00\x00\x00\xee'), None)
-				self.assertIs(r.jtype(), hprof.jtype.double)
-				self.assertEqual(hprof.jtype.double.read(r), 1.0)
+				self.assertIs(r.jtype(), jtype.double)
+				self.assertEqual(jtype.double.read(r), 1.0)
 				with self.assertRaises(hprof.error.UnexpectedEof):
-					hprof.jtype.double.read(r)
+					jtype.double.read(r)
 
 	def test_jbyte(self):
-		self.assertEqual(hprof.jtype.byte.size, 1)
+		self.assertEqual(jtype.byte.size, 1)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\x08\0\x20\0\x61\xd8\x3d\xdf\x1b\xee'), None)
-				self.assertIs(r.jtype(), hprof.jtype.byte)
-				self.assertEqual(hprof.jtype.byte.read(r), 0)
-				self.assertEqual(hprof.jtype.byte.read(r), 0x20)
-				self.assertEqual(hprof.jtype.byte.read(r), 0)
-				self.assertEqual(hprof.jtype.byte.read(r), 0x61)
-				self.assertEqual(hprof.jtype.byte.read(r), 0xd8 - 0x100)
-				self.assertEqual(hprof.jtype.byte.read(r), 0x3d)
-				self.assertEqual(hprof.jtype.byte.read(r), 0xdf - 0x100)
-				self.assertEqual(hprof.jtype.byte.read(r), 0x1b)
-				self.assertEqual(hprof.jtype.byte.read(r), 0xee - 0x100)
+				self.assertIs(r.jtype(), jtype.byte)
+				self.assertEqual(jtype.byte.read(r), 0)
+				self.assertEqual(jtype.byte.read(r), 0x20)
+				self.assertEqual(jtype.byte.read(r), 0)
+				self.assertEqual(jtype.byte.read(r), 0x61)
+				self.assertEqual(jtype.byte.read(r), 0xd8 - 0x100)
+				self.assertEqual(jtype.byte.read(r), 0x3d)
+				self.assertEqual(jtype.byte.read(r), 0xdf - 0x100)
+				self.assertEqual(jtype.byte.read(r), 0x1b)
+				self.assertEqual(jtype.byte.read(r), 0xee - 0x100)
 				with self.assertRaises(hprof.error.UnexpectedEof):
-					hprof.jtype.byte.read(r)
+					jtype.byte.read(r)
 
 	def test_jshort(self):
-		self.assertEqual(hprof.jtype.short.size, 2)
+		self.assertEqual(jtype.short.size, 2)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\x09\0\x20\0\x61\xd8\x3d\xdf\x1b\x0e'), None)
-				self.assertIs(r.jtype(), hprof.jtype.short)
-				self.assertEqual(hprof.jtype.short.read(r), 0x20)
-				self.assertEqual(hprof.jtype.short.read(r), 0x61)
-				self.assertEqual(hprof.jtype.short.read(r), 0xd83d - 0x10000)
-				self.assertEqual(hprof.jtype.short.read(r), 0xdf1b - 0x10000)
+				self.assertIs(r.jtype(), jtype.short)
+				self.assertEqual(jtype.short.read(r), 0x20)
+				self.assertEqual(jtype.short.read(r), 0x61)
+				self.assertEqual(jtype.short.read(r), 0xd83d - 0x10000)
+				self.assertEqual(jtype.short.read(r), 0xdf1b - 0x10000)
 				with self.assertRaises(hprof.error.UnexpectedEof):
-					hprof.jtype.short.read(r)
+					jtype.short.read(r)
 
 	def test_jint(self):
-		self.assertEqual(hprof.jtype.int.size, 4)
+		self.assertEqual(jtype.int.size, 4)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\x0a\0\x20\0\x61\xd8\x3d\xdf\x1b\xee'), None)
-				self.assertIs(r.jtype(), hprof.jtype.int)
-				self.assertEqual(hprof.jtype.int.read(r), 0x00200061)
-				self.assertEqual(hprof.jtype.int.read(r), 0xd83ddf1b - 0x100000000)
+				self.assertIs(r.jtype(), jtype.int)
+				self.assertEqual(jtype.int.read(r), 0x00200061)
+				self.assertEqual(jtype.int.read(r), 0xd83ddf1b - 0x100000000)
 				with self.assertRaises(hprof.error.UnexpectedEof):
-					hprof.jtype.int.read(r)
+					jtype.int.read(r)
 
 	def test_jlong(self):
-		self.assertEqual(hprof.jtype.long.size, 8)
+		self.assertEqual(jtype.long.size, 8)
 		for t in (bytes, memoryview):
 			with self.subTest(t):
 				r = hprof._parsing.PrimitiveReader(t(b'\x0b\x80\x20\0\x61\xd8\x3d\xdf\x1b\xee'), None)
-				self.assertIs(r.jtype(), hprof.jtype.long)
-				self.assertEqual(hprof.jtype.long.read(r), 0x80200061d83ddf1b - 0x10000000000000000)
+				self.assertIs(r.jtype(), jtype.long)
+				self.assertEqual(jtype.long.read(r), 0x80200061d83ddf1b - 0x10000000000000000)
 				with self.assertRaises(hprof.error.UnexpectedEof):
-					hprof.jtype.long.read(r)
+					jtype.long.read(r)
 
 	def test_bad_jtype(self):
 		for t in (bytes, memoryview):

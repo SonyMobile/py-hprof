@@ -5,6 +5,8 @@
 import hprof
 import unittest
 
+from hprof._parsing import jtype
+
 from unittest.mock import MagicMock
 from .util import deinterlace
 
@@ -23,10 +25,10 @@ class TestHeapRefResolution(unittest.TestCase):
 					'cp': hprof._heap_parsing.DeferredRef(0xfade),
 				},
 				*deinterlace(
-					'il', hprof.jtype.long,
-					'io', hprof.jtype.object,
-					'ii', hprof.jtype.int,
-					'ip', hprof.jtype.object,
+					'il', jtype.long,
+					'io', jtype.object,
+					'ii', jtype.int,
+					'ip', jtype.object,
 				),
 		)
 		_, self.ObjectArrayCls = hprof.heap._create_class(
@@ -38,7 +40,7 @@ class TestHeapRefResolution(unittest.TestCase):
 					'dummy': hprof._heap_parsing.DeferredRef(0xdead),
 				},
 				*deinterlace(
-					'iattr', hprof.jtype.object,
+					'iattr', jtype.object,
 				),
 		)
 		_, self.IntArrayCls = hprof.heap._create_class(
@@ -68,7 +70,7 @@ class TestHeapRefResolution(unittest.TestCase):
 
 		self.beef = self.heap[0xbeef] = self.ObjectArrayCls(0xbeef, (0xf00d, 0xdead, 0xfade, 0xf00d, 0xfade))
 
-		self.ints = self.heap[0x1111] = self.IntArrayCls(0x1111, hprof.heap._DeferredArrayData(hprof.jtype.int, b'abcdefgh'))
+		self.ints = self.heap[0x1111] = self.IntArrayCls(0x1111, hprof.heap._DeferredArrayData(jtype.int, b'abcdefgh'))
 
 	def test_objarray_resolution(self):
 		resolve(self.heap, None)

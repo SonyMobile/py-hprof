@@ -5,6 +5,8 @@
 import unittest
 import hprof
 
+from hprof._parsing import jtype
+
 from unittest.mock import MagicMock, PropertyMock
 
 from .util import varyingid, HeapRecordTest
@@ -57,14 +59,14 @@ class TestHeapObject(HeapRecordTest):
 				__bases__ = (hprof.heap.JavaObject,))
 		cls1attr = MagicMock(
 				_hprof_ifieldix = {'blah': 0},
-				_hprof_ifieldtypes = (hprof.jtype.object,),
+				_hprof_ifieldtypes = (jtype.object,),
 				_hprof_ifieldvals=PropertyMock(),
 				__bases__ = (hprof.heap.JavaObject,))
 		cls3attr = MagicMock(
 				_hprof_ifieldix = {'some': 0, 'thing': 1},
 				_hprof_ifieldtypes = (
-					hprof.jtype.int,
-					hprof.jtype.short,
+					jtype.int,
+					jtype.short,
 				),
 				_hprof_ifieldvals=PropertyMock(),
 				__bases__ = (cls1attr,)) # inherits from cls1attr
